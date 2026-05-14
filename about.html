@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Taiwan Big Two AI</title>
+    <style>
+        body {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: white;
+            font-family: 'Inter', -apple-system, sans-serif;
+            margin: 0;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+            text-align: center;
+            -webkit-app-region: drag;
+        }
+        .logo {
+            font-size: 64px;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 0 20px rgba(155, 89, 182, 0.5));
+        }
+        h1 {
+            font-size: 24px;
+            color: #9b59b6;
+            margin: 0 0 10px 0;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .version {
+            font-family: monospace;
+            color: #64748b;
+            font-size: 14px;
+            margin-bottom: 25px;
+        }
+        .detail {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #cbd5e1;
+            max-width: 300px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="logo">🎴</div>
+    <h1 id="about-title">Taiwan Big Two AI</h1>
+    <div class="version" id="version">v1.0.1.1025</div>
+    <div class="detail" id="about-detail">
+        A research project exploring autonomous LLM personas in strategic card games.
+        <br><br>
+        Developed by mesmerli
+    </div>
+
+
+    <script>
+        const { ipcRenderer } = require('electron');
+        const pkg = require('./package.json');
+        const I18N = require('./src/i18n.js');
+
+        // Get language from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const lang = urlParams.get('lang') || 'zh';
+        const t = (key, params = {}) => {
+            let str = I18N[lang][key] || I18N['en'][key] || key;
+            for (const [k, v] of Object.entries(params)) {
+                str = str.replace(`{${k}}`, v);
+            }
+            return str;
+        };
+
+        // Update UI
+        document.getElementById('about-title').textContent = t('title');
+        document.getElementById('version').textContent = 'v' + (pkg.buildVersion || pkg.version);
+
+        document.getElementById('about-detail').innerHTML = t('aboutDetail', { 
+            version: pkg.buildVersion || pkg.version, 
+            author: pkg.author || 'mesmerli' 
+        }).replace(/\n/g, '<br>');
+
+
+
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') window.close();
+        });
+    </script>
+</body>
+</html>

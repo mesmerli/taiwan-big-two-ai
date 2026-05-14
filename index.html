@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Taiwan Big Two AI</title>
+    <link rel="stylesheet" href="src/styles.css">
+</head>
+
+<body>
+    <div id="game-container">
+        <!-- Controls Top -->
+        <div id="top-controls">
+            <div id="lang-toggle" class="control-icon" title="Switch Language">EN/中</div>
+            <div id="info-icon" class="control-icon" title="Game Rules">i</div>
+        </div>
+
+        <!-- Alert Modal -->
+        <div id="alert-modal" class="modal hidden">
+            <div class="modal-content alert-content">
+                <p id="alert-message"></p>
+            </div>
+
+        </div>
+
+        <!-- Confirm Modal -->
+        <div id="confirm-modal" class="modal hidden">
+            <div class="modal-content confirm-content">
+                <p id="confirm-message"></p>
+                <div class="confirm-btns">
+                    <button id="confirm-yes" class="premium-btn" data-i18n="yes">Yes</button>
+                    <button id="confirm-no" class="premium-btn secondary" data-i18n="no">No</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rules Modal -->
+        <div id="rules-modal" class="modal hidden">
+            <div class="modal-content">
+                <span class="close-btn">&times;</span>
+                <h2 data-i18n="rulesTitle">Game Rules (大老二規則)</h2>
+                <div class="rules-sections">
+                    <section>
+                        <h3 data-i18n="handsTitle">Hands (牌型)</h3>
+                        <ul>
+                            <li><strong data-i18n="rank">Rank:</strong> 2 > A > K > Q > J > 10 > 9 > 8 > 7 > 6 > 5 > 4 >
+                                3</li>
+                            <li><strong data-i18n="suit">Suit:</strong> Spade ♠ > Heart ♥ > Diamond ♦ > Club ♣</li>
+                            <li data-i18n="dragon">Dragon: 13-card sequence. Wins immediately! (2x)</li>
+                            <li data-i18n="fiveCard">Five-card: Str. Flush > 4-of-a-Kind > Full House > Straight</li>
+                        </ul>
+                    </section>
+                    <section>
+                        <h3 data-i18n="scoringTitle">Scoring (計分)</h3>
+                        <ul>
+                            <li data-i18n="baseScore">Base: 1 point per card left.</li>
+                            <li data-i18n="winnerX2">Winner x2: Ends with "2", Pair, or 5-card hand.</li>
+                            <li data-i18n="winnerX4">Winner x4: Ends with 4-of-a-Kind or Str. Flush.</li>
+                            <li data-i18n="loser10">Loser x2: Left with 10+ cards.</li>
+                            <li data-i18n="loserTwo">Loser x2: Per "2" card in hand.</li>
+                            <li data-i18n="loserSpecial">Loser x2: Per 4-of-a-Kind or Str. Flush in hand.</li>
+                        </ul>
+                    </section>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Settings Modal -->
+        <div id="ai-settings-modal" class="modal hidden">
+            <div class="modal-content settings-content">
+                <h2 data-i18n="aiSettingsTitle">AI Settings</h2>
+                <div class="form-group">
+                    <label for="ai-api-url">API URL</label>
+                    <input type="text" id="ai-api-url" placeholder="http://127.0.0.1:1234/v1/chat/completions">
+                </div>
+                <div class="form-group">
+                    <label for="ai-model-id" data-i18n="modelId">Model ID</label>
+                    <input type="text" id="ai-model-id" list="ai-model-list" placeholder="e.g., google/gemma-4-e2b (Leave blank for auto-detect)">
+                    <datalist id="ai-model-list"></datalist>
+                </div>
+                <div class="form-group">
+                    <label for="ai-extra-prompt" data-i18n="extraPrompt">Extra Prompt</label>
+                    <textarea id="ai-extra-prompt" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <div class="label-with-action">
+                        <label data-i18n="pastLearnings">Past Learnings (Memory)</label>
+                        <div class="action-btns">
+                            <button id="ai-import-learnings" class="text-btn" title="Import Memory">📤</button>
+                            <button id="ai-export-learnings" class="text-btn" title="Export Memory">📥</button>
+                            <button id="ai-clear-learnings" class="text-btn" title="Clear Memory">🗑️</button>
+                            <input type="file" id="ai-import-file" class="hidden" accept=".json">
+                        </div>
+                    </div>
+                    <div id="ai-learnings-container" class="learnings-list">
+                        <!-- Dynamic learnings will appear here -->
+                    </div>
+                </div>
+                <div class="settings-btns">
+                    <button id="ai-settings-reset" class="premium-btn secondary" data-i18n="reset">Reset</button>
+                </div>
+
+            </div>
+        </div>
+
+
+        <div class="player p2 ai" id="player-2">
+            <div class="avatar">🦊</div>
+            <div class="settings-icon hidden">⚙️</div>
+            <div class="speech-bubble hidden">拉</div>
+            <div class="info">
+                <span class="name">Alex (NPC)</span>
+                <span class="cards-count">13 cards</span>
+            </div>
+            <div id="played-2" class="played-cards-slot"></div>
+        </div>
+        <div class="player p3 ai" id="player-3">
+            <div class="avatar">🐰</div>
+            <div class="settings-icon hidden">⚙️</div>
+            <div class="speech-bubble hidden">拉</div>
+            <div class="info">
+                <span class="name">Bella (NPC)</span>
+                <span class="cards-count">13 cards</span>
+            </div>
+            <div id="played-3" class="played-cards-slot"></div>
+        </div>
+        <div class="player p4 ai" id="player-4">
+            <div class="avatar">✨</div>
+            <div class="settings-icon hidden">⚙️</div>
+            <div class="speech-bubble hidden">拉</div>
+            <div class="info">
+                <span class="name">Diana (LLM)</span>
+                <span class="cards-count">13 cards</span>
+            </div>
+            <div id="played-4" class="played-cards-slot"></div>
+        </div>
+
+        <!-- Table Center -->
+        <div id="table-center">
+            <div id="status-message">Waiting for game to start...</div>
+        </div>
+
+        <!-- Human Player -->
+        <div id="human-area" class="player p1 human">
+            <div class="avatar">🐼</div>
+            <div class="settings-icon hidden">⚙️</div>
+            <div class="speech-bubble hidden">拉</div>
+            <div class="info"><span class="name">You</span></div>
+            <div id="played-1" class="played-cards-slot"></div>
+            <div id="human-cards" class="hand">
+                <!-- Cards will be dynamically inserted here -->
+            </div>
+            <div id="controls">
+                <button id="btn-play" class="premium-btn" data-i18n="play">Play</button>
+                <button id="btn-pass" class="premium-btn secondary" data-i18n="pass">Pass</button>
+                <button id="btn-shout" class="premium-btn highlight hidden" data-i18n="shout">Shout LA!</button>
+                <button id="btn-new" class="premium-btn ghost" data-i18n="newGame">New Game</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="src/audio.js"></script>
+    <script src="src/gameLogic.js"></script>
+    <script src="src/ai.js"></script>
+    <script src="src/i18n.js"></script>
+    <script src="src/renderer.js"></script>
+</body>
+
+</html>

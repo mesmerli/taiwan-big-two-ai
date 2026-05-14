@@ -1,0 +1,64 @@
+{
+  "name": "taiwan-big-two-ai",
+  "version": "1.1.1108",
+  "description": "Modern Big Two game with LLM-powered AI integration",
+  "license": "MIT",
+  "main": "main.js",
+
+  "scripts": {
+    "start": "electron .",
+    "pack": "npm run increment-build && electron-builder --dir",
+    "dist": "npm run increment-build && electron-builder",
+    "dist:msix": "npm run increment-build && electron-builder --win appx",
+    "package": "npm run increment-build && electron-packager . \"Taiwan Big Two AI\" --platform=win32 --arch=x64 --out=dist --overwrite",
+    "increment-build": "node scripts/increment-build.js",
+    "test": "node tests/logic.test.js && node tests/ui.test.js",
+    "test:ui": "node tests/ui.test.js"
+  },
+  "build": {
+    "appId": "mesmerli.TaiwanBigTwoAI",
+    "buildVersion": "1.1.1108.0",
+    "buildNumber": "1108",
+    "productName": "Taiwan Big Two AI",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "portable",
+        "appx"
+      ],
+      "icon": "src/assets/logo.png",
+      "artifactName": "Taiwan Big Two AI_1.1.1108.0.${ext}"
+    },
+    "appx": {
+      "identityName": "mesmerli.TaiwanBigTwoAI",
+      "publisher": "CN=B50F36C9-7E5E-4652-A715-0185D35ADE64",
+      "publisherDisplayName": "mesmerli",
+      "applicationId": "mesmerli.TaiwanBigTwoAI",
+      "languages": [
+        "en-US",
+        "zh-TW"
+      ]
+    },
+    "files": [
+      "**/*",
+      "!dist/*"
+    ]
+  },
+  "keywords": [
+    "bigtwo",
+    "poker",
+    "electron",
+    "ai"
+  ],
+  "author": "mesmerli",
+  "license": "GPL-2.0",
+  "devDependencies": {
+    "electron": "^30.0.0",
+    "electron-builder": "^26.8.1",
+    "electron-packager": "^17.1.2",
+    "playwright": "^1.60.0"
+  }
+}

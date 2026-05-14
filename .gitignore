@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnp/
+.pnp.js
+
+# Build Output
+dist/
+release/
+out/
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# OS
+*.log
+*.tmp
+*.bak
+
+# Project Specific
+*.json.bak
+memory_backups/
+test-results/
+
+# Playwright
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+palmOS/
+
