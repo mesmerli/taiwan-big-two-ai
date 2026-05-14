@@ -1,4 +1,4 @@
-# Taiwan Big Two AI (v1.2)
+# Taiwan Big Two AI
 
 This project presents a modernized Big Two card game built with Electron. It combines a sophisticated heuristic AI with an advanced multi-persona research engine powered by Large Language Models (LLM), designed for autonomous strategic gameplay analysis.
 
