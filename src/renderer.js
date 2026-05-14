@@ -50,7 +50,7 @@ function updateLanguage() {
         const aiData = window.AI.getNames();
         // Update all names and avatars (indices 0 to 3)
         for (let i = 0; i <= 3; i++) {
-            const playerEl = document.getElementById(i === 0 ? 'human-area' : `player-${i+1}`);
+            const playerEl = document.getElementById(i === 0 ? 'human-area' : `player-${i + 1}`);
             if (!playerEl) continue;
 
             if (aiData[i]) {
@@ -61,9 +61,9 @@ function updateLanguage() {
                 } else {
                     suffix = currentLang === 'zh' ? ' (電腦)' : ' (NPC)';
                 }
-                
+
                 PLAYER_NAMES[i] = data.name + suffix;
-                
+
                 const avatarEl = playerEl.querySelector('.avatar');
                 if (avatarEl) {
                     avatarEl.textContent = data.avatar;
@@ -140,7 +140,7 @@ function initGame() {
     }
 
     // Generate deck
-    let deck = Array.from({length: 52}, (_, i) => i);
+    let deck = Array.from({ length: 52 }, (_, i) => i);
     // Shuffle
     for (let i = deck.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -157,7 +157,7 @@ function initGame() {
 
     // Sort human hand
     gameState.players[0] = GameLogic.sortCards(gameState.players[0]);
-    
+
     // Find who has 3 of Clubs (Card 0)
     for (let i = 0; i < 4; i++) {
         if (gameState.players[i].includes(0)) {
@@ -181,10 +181,10 @@ function initGame() {
     gameState.canFinish = [true, true, true, true];
     gameState.gameEnded = false;
     btnShout.classList.add('hidden');
-    
+
     renderAll();
     updateStatus();
-    
+
     const isHumanTurn = (gameState.turn === 0 && (!window.AI || !window.AI.getCharacter(0)));
     if (!isHumanTurn) {
         const delay = (window.AI && window.AI.getCharacter(0)) ? 100 : 1000;
@@ -236,13 +236,13 @@ function createCardElement(cardId) {
 
 function renderAIPlayers() {
     for (let i = 1; i < 4; i++) {
-        const el = document.getElementById(`player-${i+1}`);
+        const el = document.getElementById(`player-${i + 1}`);
         const countEl = el.querySelector('.cards-count');
         const nameEl = el.querySelector('.name');
         const scoreEl = el.querySelector('.score') || createScoreElement(el);
-        
+
         scoreEl.textContent = `Score: ${gameState.scores[i]}`;
-        
+
         // Show cards if game ended, otherwise show count
         if (gameState.gameEnded) {
             countEl.innerHTML = '';
@@ -257,15 +257,15 @@ function renderAIPlayers() {
             countEl.textContent = `${gameState.players[i].length} cards`;
             countEl.style.display = 'block';
         }
-        
+
         nameEl.textContent = PLAYER_NAMES[i];
-        
+
         if (gameState.shouted[i]) {
             nameEl.classList.add('shouted-name');
         } else {
             nameEl.classList.remove('shouted-name');
         }
-        
+
         const hasLead = (gameState.lastPlayerIndex === -1 && i === gameState.turn) || (gameState.lastPlayerIndex === i);
         if (hasLead) {
             el.classList.add('has-lead');
@@ -283,7 +283,7 @@ function renderAIPlayers() {
     const humanEl = document.getElementById('human-area');
     const humanNameEl = humanEl.querySelector('.name');
     const humanScoreEl = humanEl.querySelector('.score') || createScoreElement(humanEl);
-    
+
     if (humanNameEl) {
         humanNameEl.textContent = PLAYER_NAMES[0];
         humanScoreEl.textContent = `Score: ${gameState.scores[0]}`;
@@ -293,14 +293,14 @@ function renderAIPlayers() {
             humanNameEl.classList.remove('shouted-name');
         }
     }
-    
+
     const hasLeadHuman = (gameState.lastPlayerIndex === -1 && gameState.turn === 0) || (gameState.lastPlayerIndex === 0);
     if (hasLeadHuman) {
         humanEl.classList.add('has-lead');
     } else {
         humanEl.classList.remove('has-lead');
     }
-    
+
     if (gameState.turn === 0) {
         humanEl.classList.add('active');
     } else {
@@ -310,13 +310,13 @@ function renderAIPlayers() {
 
 function renderPlayerActions() {
     for (let i = 0; i < 4; i++) {
-        const slot = document.getElementById(`played-${i+1}`);
+        const slot = document.getElementById(`played-${i + 1}`);
         if (!slot) continue;
         slot.innerHTML = '';
-        
+
         const action = gameState.playerLastActions[i];
         if (!action) continue;
-        
+
         if (action === "PASS") {
             const passEl = document.createElement('div');
             passEl.className = 'slot-pass';
@@ -348,7 +348,7 @@ function updateStatus() {
         }
         return;
     }
-    
+
     const isHumanTurn = (gameState.turn === 0 && (!window.AI || !window.AI.getCharacter(0)));
     if (isHumanTurn) {
         statusMessage.textContent = t('yourTurn');
@@ -368,7 +368,7 @@ function updatePlayButtonVisibility() {
         btnShout.classList.add('hidden');
         return;
     }
-    
+
     // Hide buttons if not human turn
     const isHumanTurn = (gameState.turn === 0 && (!window.AI || !window.AI.getCharacter(0)));
     if (!isHumanTurn) {
@@ -377,11 +377,11 @@ function updatePlayButtonVisibility() {
         btnShout.classList.add('hidden');
         return;
     }
-    
+
     // --- Button Visibility Logic ---
     let canMove = true;
     const hasLead = (gameState.lastPlayerIndex === -1 || gameState.lastPlayerIndex === 0);
-    
+
     if (!hasLead) {
         if (gameState.shouted[0]) {
             // If shouted, must play ENTIRE hand.
@@ -450,10 +450,10 @@ function updatePlayButtonVisibility() {
 
 function playCards(shoutArg = false) {
     if (gameState.turn !== 0) return;
-    
+
     const selected = Array.from(gameState.selectedCards);
     if (selected.length === 0) return;
-    
+
     const isShouting = shoutArg === true;
     const hand = gameState.players[0];
 
@@ -503,7 +503,7 @@ function playCards(shoutArg = false) {
     // Check if remaining cards form a last hand
     const remaining = hand.filter(c => !selected.includes(c));
     const willBeLastHand = GameLogic.isLastHand(remaining);
-    
+
     if (willBeLastHand && !gameState.shouted[0]) {
         // We need to ask the user if they want to shout LA now
         // If the button is already visible, it means they might have clicked it
@@ -518,7 +518,7 @@ function playCards(shoutArg = false) {
             gameState.canFinish[0] = false;
         }
     }
-    
+
     btnShout.classList.add('hidden');
     executePlay(0, selected);
 }
@@ -529,7 +529,7 @@ function passTurn() {
         showAlert(t('cannotPass'));
         return;
     }
-    
+
     AudioPlayer.playPass();
     gameState.playerLastActions[0] = "PASS";
     gameState.gameLog.push({ turn: gameState.gameLog.length, player: 0, action: "PASS" });
@@ -540,7 +540,7 @@ function passTurn() {
 function executePlay(playerIndex, cards) {
     AudioPlayer.playCardPlay();
     gameState.players[playerIndex] = gameState.players[playerIndex].filter(c => !cards.includes(c));
-    
+
     // Clear all slots if this is a new round (taking the lead)
     if (gameState.lastPlayerIndex === -1 || gameState.lastPlayerIndex === playerIndex) {
         gameState.playerLastActions = [null, null, null, null];
@@ -550,11 +550,11 @@ function executePlay(playerIndex, cards) {
     gameState.lastPlay = cards;
     gameState.lastPlayerIndex = playerIndex;
     gameState.selectedCards.clear();
-    
+
     // Track played cards and log action
     gameState.playedCards.push(...cards);
     gameState.gameLog.push({ turn: gameState.gameLog.length, player: playerIndex, action: cards });
-    
+
     // Check for "La" (Shout) for all AI-controlled players
     for (let i = 0; i < 4; i++) {
         const char = window.AI ? window.AI.getCharacter(i) : null;
@@ -572,7 +572,7 @@ function executePlay(playerIndex, cards) {
         renderAll();
         AudioPlayer.playWin();
         setTimeout(() => showAlert(t('winner', { name: PLAYER_NAMES[playerIndex] })), 100);
-        
+
         if (window.AI && typeof window.AI.postGameReflection === 'function') {
             window.AI.postGameReflection(gameState.gameLog, playerIndex, gameState.players);
         }
@@ -590,13 +590,13 @@ function executePlay(playerIndex, cards) {
         }
         return;
     }
-    
+
     nextTurn();
 }
 
 function nextTurn() {
     if (gameState.gameEnded) return;
-    
+
     // Clear any pending AI timeouts
     if (aiTurnTimeout) {
         clearTimeout(aiTurnTimeout);
@@ -606,7 +606,7 @@ function nextTurn() {
     gameState.turn = (gameState.turn + 1) % 4;
     renderAll();
     updateStatus();
-    
+
     const isHumanTurn = (gameState.turn === 0 && (!window.AI || !window.AI.getCharacter(0)));
     if (!isHumanTurn) {
         const delay = (window.AI && window.AI.getCharacter(0)) ? 100 : 1000;
@@ -618,64 +618,64 @@ function nextTurn() {
 
 async function aiTurn() {
     if (gameState.gameEnded || aiProcessing) return;
-    
+
     aiProcessing = true;
     try {
         const isHumanTurn = (gameState.turn === 0 && (!window.AI || !window.AI.getCharacter(0)));
         if (isHumanTurn) return;
-    
-    const hand = gameState.players[gameState.turn];
-    const lastPlay = (gameState.lastPlayerIndex === gameState.turn) ? null : gameState.lastPlay;
 
-    // Assess strategic pressure: detect if any player is close to winning
-    let nearWin = false; // "Near Win" state: any player has fewer than 3 cards
-    let lastCardMode = false; // "Last Card" threat: any player has exactly 1 card remaining
-    for (let i = 0; i < 4; i++) {
-        if (gameState.players[i].length < 3) nearWin = true;
-        if (gameState.players[i].length === 1) lastCardMode = true;
-    }
+        const hand = gameState.players[gameState.turn];
+        const lastPlay = (gameState.lastPlayerIndex === gameState.turn) ? null : gameState.lastPlay;
+
+        // Assess strategic pressure: detect if any player is close to winning
+        let nearWin = false; // "Near Win" state: any player has fewer than 3 cards
+        let lastCardMode = false; // "Last Card" threat: any player has exactly 1 card remaining
+        for (let i = 0; i < 4; i++) {
+            if (gameState.players[i].length < 3) nearWin = true;
+            if (gameState.players[i].length === 1) lastCardMode = true;
+        }
 
 
-    // AI Brain Call
-    const aiContext = {
-        hand: hand,
-        lastPlay: lastPlay,
-        lastPlayerIndex: gameState.lastPlayerIndex,
-        players: gameState.players,
-        shouted: gameState.shouted,
-        canFinish: gameState.canFinish,
-        nearWin: nearWin,
-        lastCardMode: lastCardMode,
-        playedCards: gameState.playedCards,
-        playerLastActions: gameState.playerLastActions,
-        playerNames: PLAYER_NAMES
-    };
+        // AI Brain Call
+        const aiContext = {
+            hand: hand,
+            lastPlay: lastPlay,
+            lastPlayerIndex: gameState.lastPlayerIndex,
+            players: gameState.players,
+            shouted: gameState.shouted,
+            canFinish: gameState.canFinish,
+            nearWin: nearWin,
+            lastCardMode: lastCardMode,
+            playedCards: gameState.playedCards,
+            playerLastActions: gameState.playerLastActions,
+            playerNames: PLAYER_NAMES
+        };
 
-    let play = null;
-    try {
-        play = await AI.findPlay(gameState.turn, aiContext);
-    } catch (e) {
-        console.error("AI Error:", e);
-    }
-    
-    if (play) {
-        // Enforce canFinish constraint for AI
-        if (!gameState.shouted[gameState.turn] && !gameState.canFinish[gameState.turn]) {
-            if (play.length === hand.length) {
-                // AI must split! Try smaller combinations
-                if (play.length > 1) {
-                    // Just play the first card as single
-                    play = [play[0]];
-                    // Verify if this single can beat lastPlay
-                    if (lastPlay && GameLogic.compareCards(play[0], lastPlay[0]) <= 0) {
-                        play = null; // AI can't split and beat lastPlay
+        let play = null;
+        try {
+            play = await AI.findPlay(gameState.turn, aiContext);
+        } catch (e) {
+            console.error("AI Error:", e);
+        }
+
+        if (play) {
+            // Enforce canFinish constraint for AI
+            if (!gameState.shouted[gameState.turn] && !gameState.canFinish[gameState.turn]) {
+                if (play.length === hand.length) {
+                    // AI must split! Try smaller combinations
+                    if (play.length > 1) {
+                        // Just play the first card as single
+                        play = [play[0]];
+                        // Verify if this single can beat lastPlay
+                        if (lastPlay && GameLogic.compareCards(play[0], lastPlay[0]) <= 0) {
+                            play = null; // AI can't split and beat lastPlay
+                        }
+                    } else {
+                        play = null; // Can't play last card
                     }
-                } else {
-                    play = null; // Can't play last card
                 }
             }
         }
-    }
 
         if (play && play.length > 0) {
             executePlay(gameState.turn, play);
@@ -716,26 +716,26 @@ function calculateScores(winnerIndex) {
     let totalGained = 0;
     for (let i = 0; i < 4; i++) {
         if (i === winnerIndex) continue;
-        
+
         let hand = gameState.players[i];
         let baseLost = hand.length;
         let loserMult = 1;
-        
+
         // a. 10 cards penalty
         if (baseLost >= 10) loserMult *= 2;
-        
+
         // b. Each '2' penalty
         const twosCount = hand.filter(c => GameLogic.getRank(c) === 12).length;
         loserMult *= Math.pow(2, twosCount);
-        
+
         // c. Each Four of a Kind penalty
         const fkCount = GameLogic.countFourOfAKinds(hand);
         loserMult *= Math.pow(2, fkCount);
-        
+
         // d. Each Straight Flush penalty
         const sfCount = GameLogic.countStraightFlushes(hand);
         loserMult *= Math.pow(2, sfCount);
-        
+
         const finalLost = baseLost * winnerMult * loserMult;
         gameState.scores[i] -= finalLost;
         totalGained += finalLost;
@@ -784,7 +784,7 @@ function shoutLa() {
     const selected = Array.from(gameState.selectedCards);
     const hand = gameState.players[0];
     const remaining = hand.filter(c => !selected.includes(c));
-    
+
     if (!GameLogic.isLastHand(remaining)) {
         showAlert(t('shoutFailed'));
         return;
@@ -796,7 +796,7 @@ function shoutLa() {
         showAlert(t('invalidHand'));
         return;
     }
-    
+
     // Check if it beats last play
     if (gameState.lastPlay && gameState.lastPlayerIndex !== 0) {
         if (selected.length !== gameState.lastPlay.length) {
@@ -814,7 +814,7 @@ function shoutLa() {
     gameState.canFinish[0] = true;
     AudioPlayer.playLa();
     triggerShoutEffect(0, "拉");
-    
+
     playCards(true);
 }
 
@@ -823,7 +823,7 @@ function updateShoutButton() {
         btnShout.classList.add('hidden');
         return;
     }
-    
+
     const selected = Array.from(gameState.selectedCards);
     const hand = gameState.players[0];
 
@@ -831,7 +831,7 @@ function updateShoutButton() {
         btnShout.classList.add('hidden');
         return;
     }
-    
+
     // Validate current selection first
     if (!GameLogic.getHandInfo(selected)) {
         btnShout.classList.add('hidden');
@@ -886,7 +886,7 @@ function showPassIndicator(playerIndex) {
 
 function triggerShoutEffect(playerIndex, message = "拉", shake = true) {
     const container = document.getElementById('game-container');
-    const playerEl = playerIndex === 0 ? document.getElementById('human-area') : document.getElementById(`player-${playerIndex+1}`);
+    const playerEl = playerIndex === 0 ? document.getElementById('human-area') : document.getElementById(`player-${playerIndex + 1}`);
     if (!playerEl) return;
 
     const bubble = playerEl.querySelector('.speech-bubble');
@@ -924,6 +924,16 @@ window.addEventListener('keydown', (e) => {
     }
 });
 
+// Close Modal Logic for all Close Buttons
+document.querySelectorAll('.close-btn').forEach(btn => {
+    btn.onclick = () => {
+        const modal = btn.closest('.modal');
+        if (modal) modal.classList.add('hidden');
+    };
+});
+
+
+
 window.onclick = (event) => {
     const settingsModal = document.getElementById('ai-settings-modal');
     if (event.target === rulesModal || event.target === alertModal || event.target === confirmModal || event.target === settingsModal) {
@@ -956,7 +966,7 @@ function setupAvatarClickListeners() {
             learnings.forEach(item => {
                 const div = document.createElement('div');
                 div.className = 'learning-item';
-                
+
                 // Extract tip from object or use string
                 const tipText = typeof item === 'string' ? item : item.tip;
                 const priority = typeof item === 'string' ? 'P1' : (item.priority || 'P1');
@@ -980,7 +990,7 @@ function setupAvatarClickListeners() {
     }
 
     for (let i = 0; i <= 3; i++) {
-        const playerEl = document.getElementById(i === 0 ? 'human-area' : `player-${i+1}`);
+        const playerEl = document.getElementById(i === 0 ? 'human-area' : `player-${i + 1}`);
         if (!playerEl) continue;
 
         const avatarEl = playerEl.querySelector('.avatar');
@@ -989,7 +999,7 @@ function setupAvatarClickListeners() {
         if (avatarEl) {
             avatarEl.style.cursor = 'pointer';
             avatarEl.title = "Left click: Swap";
-            
+
             // Left Click: Swap
             avatarEl.onclick = (e) => {
                 if (window.AI && typeof window.AI.swapCharacter === 'function') {
@@ -999,7 +1009,7 @@ function setupAvatarClickListeners() {
                         setTimeout(() => { avatarEl.style.transform = ''; }, 200);
                         updateLanguage();
                         AudioPlayer.playCardSelect();
-                        
+
                         // If swapping during this slot's turn, trigger action immediately
                         if (gameState.turn === i) {
                             if (aiTurnTimeout) clearTimeout(aiTurnTimeout);
@@ -1024,7 +1034,7 @@ function setupAvatarClickListeners() {
             gearIcon.onclick = async (e) => {
                 e.stopPropagation();
                 if (!window.AI) return;
-                
+
                 const char = window.AI.getCharacter(i);
                 if (char && char.isLLM) {
                     currentEditingIndex = i;
@@ -1033,7 +1043,7 @@ function setupAvatarClickListeners() {
                     modelIdInput.value = settings.modelId || '';
                     extraPromptInput.value = settings.extraPrompt || '';
                     settingsModal.classList.remove('hidden');
-                    
+
                     // Fetch models immediately when opening
                     fetchAvailableModels(apiUrlInput.value);
 
@@ -1070,7 +1080,7 @@ function setupAvatarClickListeners() {
                     learnings: char.learnings,
                     stats: char.stats
                 };
-                
+
                 const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
@@ -1086,7 +1096,7 @@ function setupAvatarClickListeners() {
 
     const importLearningsBtn = document.getElementById('ai-import-learnings');
     const importFileInput = document.getElementById('ai-import-file');
-    
+
     importLearningsBtn.onclick = () => {
         importFileInput.click();
     };
@@ -1131,11 +1141,14 @@ function setupAvatarClickListeners() {
 
         if (!apiUrl) return;
 
+        const apiError = document.getElementById('ai-api-error');
+        if (apiError) apiError.textContent = '';
+
         try {
             const urlObj = new URL(apiUrl);
             // Derive /v1/models from current completion URL
             const modelsUrl = `${urlObj.protocol}//${urlObj.host}/v1/models`;
-            
+
             console.log(`[UI] Fetching models from: ${modelsUrl}`);
             const response = await fetch(modelsUrl);
             if (response.ok) {
@@ -1151,7 +1164,11 @@ function setupAvatarClickListeners() {
             }
         } catch (e) {
             console.warn("[UI] Failed to fetch models for dropdown:", e);
+            const apiError = document.getElementById('ai-api-error');
+            if (apiError) apiError.textContent = `(${t('apiError')})`;
         }
+
+
     }
 
     const autoSave = () => {
@@ -1181,7 +1198,7 @@ function setupAvatarClickListeners() {
                 if (char && char.isLLM) {
                     // Remove specific character settings from storage
                     localStorage.removeItem(char.settingsKey || `ai_settings_${char.name}`);
-                    
+
                     if (typeof char.loadSettings === 'function') {
                         char.loadSettings(); // Reload default values (Hardcoded defaults in class)
                         apiUrlInput.value = char.apiUrl;

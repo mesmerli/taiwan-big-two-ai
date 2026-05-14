@@ -2,6 +2,26 @@
 
 All notable changes to the **Taiwan Big Two AI** project will be documented in this file.
 
+## [1.2.0] - 2026-05-15
+
+### Added
+- **Connectivity Monitoring**: Real-time "Connection Failed" feedback in AI settings.
+- **Native Experience**: A new, frameless "About" window with a dedicated close button.
+- **Localized Error Feedback**: Connection alerts now respect the current language setting.
+
+### Changed
+- **UI Layout Refresh**: Relocated "New Game" button to the top-right corner to maximize the game table area.
+- **Modernized Iconography**: 
+  - Language toggle now uses a universal globe icon (🌐).
+  - Rules icon now features an artistic serif italic "i".
+- **Enhanced AI Reflection**: Optimized the reflection extraction regex to better handle diverse LLM outputs.
+
+### Fixed
+- **UI Reference Error**: Resolved a crash when attempting to fetch models before the error indicator was initialized.
+- **Frameless Navigation**: Added a functional "X" close button to the About window to improve usability in frameless mode.
+
+
+
 ## [1.1.0] - 2026-05-14
 
 ### Added

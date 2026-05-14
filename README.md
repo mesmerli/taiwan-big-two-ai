@@ -1,4 +1,4 @@
-# Taiwan Big Two AI
+# Taiwan Big Two AI (v1.2)
 
 This project presents a modernized Big Two card game built with Electron. It combines a sophisticated heuristic AI with an advanced multi-persona research engine powered by Large Language Models (LLM), designed for autonomous strategic gameplay analysis.
 
@@ -23,15 +23,10 @@ The engine is strictly aligned with traditional **Taiwanese Big Two** rules:
 - **Dragon**: 13-card sequence (3-2) wins immediately.
 
 ### 4. Developer & Research Tools
-- **Unified Testing**: Run `npm test` to execute the full test suite:
-  - **Logic**: Verifies card rankings, hand identification, and Taiwanese rule consistency.
-  - **UI (Playwright)**: Automates verification of the entire interface, including:
-    - Modals (Rules, About, AI Settings).
-    - Gameplay (Card selection, Mandatory Shout verification, Turn skipping).
-    - Character Swapping (Active persona cycling).
-- **Microsoft Store Readiness (MSIX)**: Full support for official distribution via Microsoft Store.
+- **Unified Testing**: Run `npm test` for full suite (Logic & UI).
+- **Microsoft Store Readiness (MSIX)**: Full compliance with store requirements (Version format A.B.C.0).
 - **Auto-Build Pipeline**: 
-  - The build version (e.g., `1.1.0.1100`) automatically increments.
+  - The build version (e.g., `1.2.0.1`) automatically increments.
   - **Artifact Naming**: Generated files automatically include the 4-part version number in the filename.
   - **Icon Factory**: Includes a PowerShell script (`scripts/generate-icons.ps1`) to automatically generate all 6 required Windows Store icon sizes from a single base logo.
 - **Escape & Click-Outside Closure**: All modals and the About window support global `ESC` key and "click-outside" dismissal for a seamless experience.
@@ -70,6 +65,7 @@ npm start
 ## UI Operation Guide
 
 ### Gameplay
+- **New Game**: Click the **New Game** button in the top-right corner to restart.
 - **Selecting Cards**: Click on cards in your hand to select/deselect them.
 - **Play / Pass**: Use the primary buttons to make your move. 
 - **Mandatory Shout LA!**: 
@@ -80,13 +76,13 @@ npm start
 - **Switching Characters**: Click on any player's **Avatar** to cycle through the available personalities (Alex, Bella, Chris, Diana, Ares). 
 - **AI Settings**: Click the **Gear Icon (⚙️)** next to an LLM character to:
   - Configure the **API URL** and **Model ID** (auto-detected).
-  - All changes are **auto-saved** instantly when you leave the input field.
+  - **Inline Feedback**: Shows **(Connection Failed)** in vivid red if the API is unreachable.
   - **Export/Import Memory**: Save or load their learned strategic rules as JSON files.
 
 ### System Controls
-- **Language**: Click the **EN/中** icon (top-left) to switch the entire UI.
-- **Rules & Info**: Click the **"i" icon** or use the taskbar Jump List to access game rules or the About window.
-- **Closing Modals**: Simply click the dark overlay area outside any modal or press `ESC` to close.
+- **Language**: Click the **Globe icon (🌐)** in the top-right to switch the entire UI.
+- **Rules & Info**: Click the **italic "i" icon** to access game rules or the About window.
+- **Closing Windows**: Use the **"X" button** in the top-right corner of any window, or press `ESC`.
 
 ## Using LLM with LM Studio
 

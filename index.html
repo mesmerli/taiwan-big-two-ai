@@ -12,13 +12,16 @@
     <div id="game-container">
         <!-- Controls Top -->
         <div id="top-controls">
-            <div id="lang-toggle" class="control-icon" title="Switch Language">EN/中</div>
+            <button id="btn-new" class="premium-btn ghost mini" data-i18n="newGame">New Game</button>
+            <div id="lang-toggle" class="control-icon" title="Switch Language">🌐</div>
+
             <div id="info-icon" class="control-icon" title="Game Rules">i</div>
         </div>
 
         <!-- Alert Modal -->
         <div id="alert-modal" class="modal hidden">
             <div class="modal-content alert-content">
+                <span class="close-btn">&times;</span>
                 <p id="alert-message"></p>
             </div>
 
@@ -69,14 +72,17 @@
         <!-- AI Settings Modal -->
         <div id="ai-settings-modal" class="modal hidden">
             <div class="modal-content settings-content">
+                <span class="close-btn">&times;</span>
                 <h2 data-i18n="aiSettingsTitle">AI Settings</h2>
                 <div class="form-group">
-                    <label for="ai-api-url">API URL</label>
+                    <label for="ai-api-url">API URL <span id="ai-api-error" class="api-error-text"></span></label>
+
                     <input type="text" id="ai-api-url" placeholder="http://127.0.0.1:1234/v1/chat/completions">
                 </div>
                 <div class="form-group">
                     <label for="ai-model-id" data-i18n="modelId">Model ID</label>
-                    <input type="text" id="ai-model-id" list="ai-model-list" placeholder="e.g., google/gemma-4-e2b (Leave blank for auto-detect)">
+                    <input type="text" id="ai-model-id" list="ai-model-list"
+                        placeholder="e.g., google/gemma-4-e2b (Leave blank for auto-detect)">
                     <datalist id="ai-model-list"></datalist>
                 </div>
                 <div class="form-group">
@@ -155,7 +161,6 @@
                 <button id="btn-play" class="premium-btn" data-i18n="play">Play</button>
                 <button id="btn-pass" class="premium-btn secondary" data-i18n="pass">Pass</button>
                 <button id="btn-shout" class="premium-btn highlight hidden" data-i18n="shout">Shout LA!</button>
-                <button id="btn-new" class="premium-btn ghost" data-i18n="newGame">New Game</button>
             </div>
         </div>
     </div>

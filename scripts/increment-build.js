@@ -8,9 +8,9 @@ let versionParts = packageJson.version.split('.');
 const majorMinor = versionParts.slice(0, 2).join('.'); // "1.1"
 
 // Use the 3rd part for build number because Microsoft Store requires 4th part to be 0
-let currentBuild = parseInt(packageJson.build.buildNumber || "1100");
-if (currentBuild < 1000) currentBuild = 1100; // Ensure consistency
+let currentBuild = parseInt(packageJson.build.buildNumber || "0");
 let nextBuild = currentBuild + 1;
+
 
 const baseVersion = `${majorMinor}.${nextBuild}`; // "1.1.1107"
 const fullVersion = `${baseVersion}.0`; // "1.1.1107.0"

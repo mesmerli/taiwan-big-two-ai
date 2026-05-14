@@ -44,13 +44,30 @@
             color: #cbd5e1;
             max-width: 300px;
         }
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #64748b;
+            transition: color 0.2s;
+            -webkit-app-region: no-drag;
+            z-index: 100;
+        }
+        .close-btn:hover {
+            color: white;
+        }
 
     </style>
 </head>
 <body>
+    <span class="close-btn" onclick="window.close()">&times;</span>
     <div class="logo">🎴</div>
+
     <h1 id="about-title">Taiwan Big Two AI</h1>
-    <div class="version" id="version">v1.0.1.1025</div>
+    <div class="version" id="version">v1.2.0.0</div>
+
     <div class="detail" id="about-detail">
         A research project exploring autonomous LLM personas in strategic card games.
         <br><br>

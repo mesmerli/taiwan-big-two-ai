@@ -80,13 +80,13 @@ class AICharacter {
 
     generatePrompt(context) {
         const { hand, lastPlay, players } = context;
-        
+
         let prompt = `Current State:
 - My Hand: [${hand.map(c => this.cardToVerboseString(c)).join(', ')}]
 - Table Play to Beat: ${lastPlay && lastPlay.length > 0 ? `[${lastPlay.map(c => this.cardToVerboseString(c)).join(', ')}]` : 'None (You lead)'}
 - Opponent Card Counts: ${players.map((p, i) => {
             if (i === context.playerIndex) return '';
-            const name = (context.playerNames && context.playerNames[i]) ? context.playerNames[i] : `P${i+1}`;
+            const name = (context.playerNames && context.playerNames[i]) ? context.playerNames[i] : `P${i + 1}`;
             return `${name}:${p.length}`;
         }).filter(s => s).join(', ')}
 
@@ -179,10 +179,10 @@ class BellaAI extends AICharacter {
         const Logic = this.getLogic();
         const pairs = Logic.findPairs(sorted);
         if (pairs.length > 0) return pairs[0];
-        
+
         const five = Logic.findFiveCardHands(sorted);
         if (five.length > 0) return five[0];
-        
+
         return [sorted[0]];
     }
 }
@@ -199,9 +199,9 @@ class ChrisAI extends AICharacter {
     async chooseLead(sorted, context) {
         const Logic = this.getLogic();
         const five = Logic.findFiveCardHands(sorted);
-        if (five.length > 0) return five[five.length - 1]; 
+        if (five.length > 0) return five[five.length - 1];
         const nonTwos = sorted.filter(c => Logic.getRank(c) < 12);
-        if (nonTwos.length > 0) return [nonTwos[nonTwos.length - 1]]; 
+        if (nonTwos.length > 0) return [nonTwos[nonTwos.length - 1]];
         return [sorted[sorted.length - 1]];
     }
 }
@@ -216,11 +216,11 @@ class BaseLLMAI extends AICharacter {
         this.avatar = avatar;
         this.type = "LLM";
         this.isLLM = true;
-        
+
         // Storage keys based on name
         this.settingsKey = `ai_settings_${this.name}`;
         this.memoryKey = `ai_memory_${this.name}`;
-        
+
         // Handle migration for Diana (legacy keys)
         if (this.name === "Diana") {
             if (!localStorage.getItem(this.settingsKey) && localStorage.getItem('ai_settings_Diana')) {
@@ -247,7 +247,7 @@ class BaseLLMAI extends AICharacter {
                 desc: "You are a patient hunter. You allow others to lead early while you save your big cards (Kings, Aces, 2s). You aim to take absolute control in the final half of the game to deliver a crushing blow."
             }
         ];
-        
+
         // Ares specific persona override if needed
         if (this.name === "Ares") {
             personas.push({
@@ -285,7 +285,7 @@ class BaseLLMAI extends AICharacter {
             if (memory) {
                 const parsedMem = JSON.parse(memory);
                 this.learnings = (parsedMem.learnings || []).map(item => {
-                    let obj = typeof item === 'string' 
+                    let obj = typeof item === 'string'
                         ? { tip: item, count: 1, priority: "P1", timestamp: Date.now() }
                         : item;
                     obj.tip = obj.tip.replace(/^(Next time,\s*)?I should\s*/i, '').trim();
@@ -337,7 +337,7 @@ class BaseLLMAI extends AICharacter {
     pruneLearnings() {
         // Priority Weights: P0=0 (Highest), P1=1, P2=2
         const pWeights = { "P0": 0, "P1": 1, "P2": 2 };
-        
+
         // Sort by Priority, then by frequency (Count), then by Recency (Timestamp)
         this.learnings.sort((a, b) => {
             if (pWeights[a.priority] !== pWeights[b.priority]) {
@@ -364,21 +364,21 @@ class BaseLLMAI extends AICharacter {
         };
         const k1 = getKeywords(tip1);
         const k2 = getKeywords(tip2);
-        
+
         // Fallback to exact match if no significant keywords found
         if (k1.length === 0 || k2.length === 0) return tip1.toLowerCase() === tip2.toLowerCase();
-        
+
         // Calculate overlap score (Intersection over larger set to prevent short rules from absorbing long ones)
         const intersection = k1.filter(w => k2.includes(w));
         const score = intersection.length / Math.max(k1.length, k2.length);
-        
+
         return score >= 0.6; // Slightly lower threshold but stricter denominator
     }
 
     async decide(context) {
         const Logic = this.getLogic();
         const { hand, lastPlay } = context;
-        
+
         console.log(`%c[${this.name} Engine] Generating legal moves...`, 'color: #9b59b6;');
         const legalMoves = this.getAllLegalMoves(context);
 
@@ -393,9 +393,9 @@ class BaseLLMAI extends AICharacter {
         }
 
         console.log(`%c[${this.name} Engine] Requesting Strategic Selection...`, 'color: #9b59b6; font-weight: bold;');
-        
+
         const userPrompt = this.generatePrompt(context, legalMoves);
-        
+
         // Dynamic Profile
         let profile = "Balanced";
         const totalGames = this.stats.wins + this.stats.losses;
@@ -472,7 +472,7 @@ ${this.extraPrompt ? `Additional Custom Instructions:\n${this.extraPrompt}` : ''
                 }),
                 signal: controller.signal
             });
-            
+
             clearTimeout(timeoutId);
 
             if (!response.ok) {
@@ -480,12 +480,12 @@ ${this.extraPrompt ? `Additional Custom Instructions:\n${this.extraPrompt}` : ''
                 throw new Error(`HTTP ${response.status}: ${errorText}`);
             }
 
-        console.log(`%c[${this.name} Engine] System Prompt:`, 'color: #34495e; font-weight: bold;', systemPrompt);
-        console.log(`%c[${this.name} Engine] User Prompt:`, 'color: #34495e; font-weight: bold;', userPrompt);
-        
-        const data = await response.json();
+            console.log(`%c[${this.name} Engine] System Prompt:`, 'color: #34495e; font-weight: bold;', systemPrompt);
+            console.log(`%c[${this.name} Engine] User Prompt:`, 'color: #34495e; font-weight: bold;', userPrompt);
 
-            
+            const data = await response.json();
+
+
             if (!data.choices || data.choices.length === 0) {
                 console.warn(`[${this.name} Engine] No choices returned from API.`);
                 return await this.localDecide(context);
@@ -497,7 +497,7 @@ ${this.extraPrompt ? `Additional Custom Instructions:\n${this.extraPrompt}` : ''
 
             // Clean up possible markdown blocks and robustly extract JSON
             let jsonStr = content.replace(/```json/g, '').replace(/```/g, '').trim();
-            
+
             try {
                 const decision = JSON.parse(jsonStr);
                 console.log(`%c[${this.name} Strategy]:`, 'color: #9b59b6; font-style: italic;', decision.strategy);
@@ -519,7 +519,19 @@ ${this.extraPrompt ? `Additional Custom Instructions:\n${this.extraPrompt}` : ''
 
         } catch (e) {
             console.error(`[${this.name} Engine] Error:`, e);
+            // Show vivid error in settings modal
+            const apiError = document.getElementById('ai-api-error');
+            if (apiError) {
+                // Use global t if available, otherwise fallback
+                const msg = (typeof t === 'function') ? t('apiError') : 'Connection Failed';
+                apiError.textContent = `(${msg})`;
+            }
         }
+
+        // Clear error on new request attempt
+        const apiError = document.getElementById('ai-api-error');
+        if (apiError && !aiProcessing) apiError.textContent = '';
+
 
         return await this.localDecide(context);
     }
@@ -528,7 +540,7 @@ ${this.extraPrompt ? `Additional Custom Instructions:\n${this.extraPrompt}` : ''
         if (!name) return null;
         const suits = ['Club', 'Diamond', 'Heart', 'Spade'];
         const ranks = ['3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A', '2'];
-        
+
         let foundSuit = -1;
         suits.forEach((s, i) => {
             if (name.toLowerCase().includes(s.toLowerCase())) foundSuit = i;
@@ -550,7 +562,7 @@ ${this.extraPrompt ? `Additional Custom Instructions:\n${this.extraPrompt}` : ''
         const Logic = this.getLogic();
         const { hand, lastPlay, lastPlayerIndex, playerIndex, shouted } = context;
         const moves = [];
-        
+
         const isLead = !lastPlay || lastPlay.length === 0;
         const isFirstRound = lastPlayerIndex === -1 || lastPlayerIndex === undefined;
         const hasThreeOfClubs = hand.includes(0);
@@ -567,7 +579,7 @@ ${this.extraPrompt ? `Additional Custom Instructions:\n${this.extraPrompt}` : ''
             if (!isLead) {
                 moves.push({ cards: [], description: "PASS (Must preserve your last hand to win)" });
             }
-            
+
             // The only other option is to play the WHOLE hand
             const sortedHand = Logic.sortCards(hand);
             if (isLead) {
@@ -579,7 +591,7 @@ ${this.extraPrompt ? `Additional Custom Instructions:\n${this.extraPrompt}` : ''
                     moves.push({ cards: sortedHand, description: `[${sortedHand.map(c => this.cardToVerboseString(c)).join(', ')}] (FINAL HAND: ${info.type} beats table)` });
                 }
             }
-            
+
             // If no moves possible, and we couldn't add PASS (because leading), 
             // this shouldn't happen because isLead is always true if table is empty.
             return moves;
@@ -596,7 +608,7 @@ ${this.extraPrompt ? `Additional Custom Instructions:\n${this.extraPrompt}` : ''
         if (isLead) {
             // Singles
             sortedHand.forEach(c => {
-                if (isFirstRound && hasThreeOfClubs && c !== 0) return; 
+                if (isFirstRound && hasThreeOfClubs && c !== 0) return;
                 moves.push({ cards: [c], description: `[${this.cardToVerboseString(c)}] (SINGLE)` });
             });
             // Pairs
@@ -662,18 +674,18 @@ ${this.extraPrompt ? `Additional Custom Instructions:\n${this.extraPrompt}` : ''
 
         let prompt = `[GAME STATE]\n`;
         prompt += `- Your Hand: [${hand.map(c => this.cardToVerboseString(c)).join(', ')}]\n`;
-        
+
         // Opponent Profiling
         prompt += `- Opponents Status:\n`;
         for (let i = 0; i < 4; i++) {
             if (i === context.playerIndex) continue;
             const count = players[i].length;
-            const name = (context.playerNames && context.playerNames[i]) ? context.playerNames[i] : `P${i+1}`;
+            const name = (context.playerNames && context.playerNames[i]) ? context.playerNames[i] : `P${i + 1}`;
             let labels = [];
-            
+
             if (count <= 2) labels.push("CRITICAL: Near win!");
             if (count <= 5 && count > 2) labels.push("WARNING: Low cards");
-            
+
             const lastAction = context.playerLastActions ? context.playerLastActions[i] : null;
             if (Array.isArray(lastAction)) {
                 const hasBigCard = lastAction.some(c => Logic.getRank(c) >= 11); // Ace or 2
@@ -682,16 +694,16 @@ ${this.extraPrompt ? `Additional Custom Instructions:\n${this.extraPrompt}` : ''
                     labels.push(`AGGRESSIVE: Just played ${lastAction.length > 1 ? 'a strong hand' : 'a big card'}`);
                 }
             }
-            
+
             prompt += `  * ${name}: ${count} cards ${labels.length > 0 ? `[${labels.join(', ')}]` : ''}\n`;
         }
-        
+
         // Tracked Cards (Aces and 2s) logic
         if (context.playedCards) {
             const summary = this.getTrackedCardsSummary(context.playedCards, hand);
             prompt += `- Tracked Cards: ${summary}\n`;
         }
-        
+
         if (lastPlay && lastPlay.length > 0) {
             const info = Logic.getHandInfo(lastPlay);
             prompt += `- Last Play on Table: [${lastPlay.map(c => this.cardToVerboseString(c)).join(', ')}] (${info ? info.type : 'Unknown'})\n`;
@@ -701,7 +713,7 @@ ${this.extraPrompt ? `Additional Custom Instructions:\n${this.extraPrompt}` : ''
 
         prompt += `\n[LEGAL_MOVES]\n`;
         const isOpponentCritical = players.some((p, i) => i !== context.playerIndex && p.length <= 2);
-        
+
         legalMoves.forEach((move, i) => {
             let heuristic = "";
             if (move.cards.length === 0) {
@@ -735,10 +747,10 @@ ${this.extraPrompt ? `Additional Custom Instructions:\n${this.extraPrompt}` : ''
         const bigRanks = [10, 11, 12]; // King, Ace, 2
         const suits = ['Club', 'Diamond', 'Heart', 'Spade'];
         const rankNames = { 10: 'King', 11: 'Ace', 12: '2' };
-        
+
         let summary = [];
         let bossCards = [];
-        
+
         // 1. Track Big Cards Remaining
         for (let r of bigRanks) {
             let unplayedInSuit = [];
@@ -748,7 +760,7 @@ ${this.extraPrompt ? `Additional Custom Instructions:\n${this.extraPrompt}` : ''
                     unplayedInSuit.push(suits[s]);
                 }
             }
-            
+
             if (unplayedInSuit.length === 0) {
                 summary.push(`All ${rankNames[r]}s are accounted for`);
             } else {
@@ -764,7 +776,7 @@ ${this.extraPrompt ? `Additional Custom Instructions:\n${this.extraPrompt}` : ''
         }
         const sortedUnplayed = Logic.sortCards(allUnplayed);
         const highestOverall = sortedUnplayed[sortedUnplayed.length - 1];
-        
+
         if (myHand.includes(highestOverall)) {
             bossCards.push(this.cardToVerboseString(highestOverall));
         }
@@ -773,7 +785,7 @@ ${this.extraPrompt ? `Additional Custom Instructions:\n${this.extraPrompt}` : ''
         if (bossCards.length > 0) {
             result += ` YOU HAVE THE BOSS CARD: ${bossCards.join(', ')}. Use it to take control!`;
         }
-        
+
         return result;
     }
 
@@ -781,7 +793,7 @@ ${this.extraPrompt ? `Additional Custom Instructions:\n${this.extraPrompt}` : ''
         if (settings.apiUrl !== undefined) this.apiUrl = settings.apiUrl;
         if (settings.modelId !== undefined) this.modelId = settings.modelId;
         if (settings.extraPrompt !== undefined) this.extraPrompt = settings.extraPrompt;
-        
+
         // Save to persistent storage using character-specific key
         try {
             localStorage.setItem(this.settingsKey, JSON.stringify({
@@ -814,22 +826,22 @@ ${this.extraPrompt ? `Additional Custom Instructions:\n${this.extraPrompt}` : ''
 
         // Simplify log for prompt (translate P-indices to Names)
         let logStr = gameLog.map(l => {
-            const pName = l.player === myIndex ? "You" : (characterNames[l.player] || `P${l.player+1}`);
+            const pName = l.player === myIndex ? "You" : (characterNames[l.player] || `P${l.player + 1}`);
             let actionStr = "skipped (PASS)";
             if (Array.isArray(l.action)) {
                 actionStr = `played [${l.action.map(c => this.cardToString(c)).join(',')}]`;
             }
             return `T${l.turn}: ${pName} ${actionStr}`;
         }).join('\n');
-        
+
         // Truncate to only the last 10 turns
         const logLines = logStr.split('\n');
         if (logLines.length > 10) {
             logStr = "...(earlier turns omitted)...\n" + logLines.slice(-10).join('\n');
         }
 
-        const handStr = finalHand && finalHand.length > 0 
-            ? `[${finalHand.map(c => this.cardToVerboseString(c)).join(', ')}]` 
+        const handStr = finalHand && finalHand.length > 0
+            ? `[${finalHand.map(c => this.cardToVerboseString(c)).join(', ')}]`
             : `None`;
 
         const prompt = `[${this.name} Reflection Prompt]
@@ -893,17 +905,17 @@ ${logStr}
             if (response.ok) {
                 const data = await response.json();
                 console.log(`[${this.name} Engine] Raw Reflection Data:`, data);
-                
+
                 if (data.choices && data.choices.length > 0 && data.choices[0].message) {
                     const msg = data.choices[0].message;
                     // Support models that put output in reasoning_content
                     let rawContent = (msg.content || msg.reasoning_content || "").trim();
                     console.log(`[${this.name} Engine] Parsed Rule Candidate (Raw):`, rawContent);
-                    
+
                     // EXTRACTION: Small models often ignore instructions to skip thinking.
                     // We look for the specific required prefix.
                     let rule = "";
-                    const match = rawContent.match(/Next time, I should[\s\S]*/i);
+                    const match = rawContent.match(/, I should[\s\S]*/i);
                     if (match) {
                         // Capture until the first double newline or end of string
                         rule = match[0].split("\n\n")[0].trim();
@@ -912,11 +924,11 @@ ${logStr}
                     }
 
                     // Clean up common LLM artifacts and thinking blocks
-                    rule = rule.replace(/<think>[\s\S]*?<\/think>/g, ''); 
-                    rule = rule.replace(/Thinking Process:[\s\S]*?\n\n/gi, ''); 
+                    rule = rule.replace(/<think>[\s\S]*?<\/think>/g, '');
+                    rule = rule.replace(/Thinking Process:[\s\S]*?\n\n/gi, '');
                     rule = rule.replace(/^[\d.\s*-]+/, ''); // Remove leading numbers/bullets like "1. " or "- "
                     rule = rule.replace(/^["'*]+|["'*]+$/g, '').replace(/^Rule: /i, '').trim();
-                    
+
                     // Robust prefix stripping
                     rule = rule.replace(/^(Next time,\s*)?I should\s*/i, '').trim();
                     if (rule) rule = rule.charAt(0).toUpperCase() + rule.slice(1);
@@ -938,7 +950,7 @@ ${logStr}
                             existing.timestamp = Date.now();
                             // If the new rule is slightly different but similar, keep the shorter one
                             if (rule.length < existing.tip.length) existing.tip = rule;
-                            existing.priority = priority; 
+                            existing.priority = priority;
                         } else {
                             this.learnings.push({
                                 tip: rule,
@@ -991,7 +1003,7 @@ class BigTwoAI {
         this.gameLogic = gameLogic;
         // All available character blueprints (null = Human)
         this.availableBlueprints = [null, AlexAI, BellaAI, ChrisAI, DianaAI, AresAI];
-        
+
         // Active characters in slots 0, 1, 2, 3
         this.characters = {
             0: null, // Human
@@ -1021,12 +1033,12 @@ class BigTwoAI {
 
         // Find current index in the pool
         let currentIndex = this.availableBlueprints.indexOf(currentBlueprint);
-        
+
         // Search for the next available character in a circle
         for (let i = 1; i <= this.availableBlueprints.length; i++) {
             let nextIndex = (currentIndex + i) % this.availableBlueprints.length;
             let candidateBlueprint = this.availableBlueprints[nextIndex];
-            
+
             // Prevention: Only slot 0 (the player) can be 'null' (Human). 
             // This prevents CPUs in slots 1-3 from accidentally becoming Human.
             if (playerIndex > 0 && candidateBlueprint === null) continue;
@@ -1034,24 +1046,24 @@ class BigTwoAI {
             if (!otherActiveBlueprints.includes(candidateBlueprint)) {
                 if (candidateBlueprint === null) {
                     this.characters[playerIndex] = null;
-                    console.log(`%c[AI Manager] Player ${playerIndex+1} is now Human control`, 'color: #3498db; font-weight: bold;');
+                    console.log(`%c[AI Manager] Player ${playerIndex + 1} is now Human control`, 'color: #3498db; font-weight: bold;');
                     return { name: "You", avatar: "🐼", type: "Human", isLLM: false };
                 } else {
                     const newCharacter = new candidateBlueprint(this.gameLogic);
                     this.characters[playerIndex] = newCharacter;
-                    console.log(`%c[AI Manager] Swapped Player ${playerIndex+1} to ${newCharacter.name}`, 'color: #3498db; font-weight: bold;');
+                    console.log(`%c[AI Manager] Swapped Player ${playerIndex + 1} to ${newCharacter.name}`, 'color: #3498db; font-weight: bold;');
                     return newCharacter;
                 }
             }
         }
-        
+
         return this.characters[playerIndex] || { name: "You", avatar: "🐼", type: "Human", isLLM: false };
     }
 
     async findPlay(playerIndex, context) {
         const character = this.characters[playerIndex];
         if (!character) return null;
-        
+
         const enhancedContext = { ...context, playerIndex };
         return await character.decide(enhancedContext);
     }
@@ -1085,7 +1097,7 @@ class BigTwoAI {
 
     postGameReflection(gameLog, winnerIndex, finalHands) {
         const names = this.getNames();
-        
+
         // Helper to get a readable name for any slot
         const getPlayerName = (idx) => {
             if (names[idx]) return names[idx].name;
@@ -1093,7 +1105,7 @@ class BigTwoAI {
         };
 
         const winnerName = getPlayerName(winnerIndex);
-        
+
         const characterNames = {
             0: getPlayerName(0),
             1: getPlayerName(1),
@@ -1117,4 +1129,5 @@ if (typeof module !== 'undefined') {
     module.exports = { BigTwoAI, AlexAI, BellaAI, DianaAI };
 }
 
+window.AI = new BigTwoAI(window.GameLogic || (typeof GameLogic !== 'undefined' ? GameLogic : null));
 window.AI = new BigTwoAI(window.GameLogic || (typeof GameLogic !== 'undefined' ? GameLogic : null));

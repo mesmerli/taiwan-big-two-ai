@@ -47,7 +47,8 @@ const I18N = {
         save: "Save",
         reset: "Reset to Default",
         cancel: "Cancel",
-        pastLearnings: "Past Learnings (Memory)"
+        pastLearnings: "Past Learnings (Memory)",
+        apiError: "Connection Failed"
     },
     zh: {
         title: "Taiwan Big Two AI",
@@ -97,8 +98,10 @@ const I18N = {
         save: "儲存",
         reset: "重設回預設值",
         cancel: "取消",
-        pastLearnings: "歷史戰略記憶 (Memory)"
+        pastLearnings: "歷史戰略記憶 (Memory)",
+        apiError: "連線失敗"
     }
+
 };
 
 if (typeof module !== 'undefined') {
