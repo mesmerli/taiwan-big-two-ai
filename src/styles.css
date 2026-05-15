@@ -108,6 +108,17 @@
     gap: 30px;
 }
 
+.rules-footer {
+    margin-top: 25px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #64748b;
+    font-family: monospace;
+}
+
 .rules-sections section {
     flex: 1;
 }

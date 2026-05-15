@@ -1,6 +1,11 @@
-const { app, BrowserWindow, Menu, dialog, ipcMain } = require('electron');
+const { app, BrowserWindow, Menu, dialog, ipcMain, shell } = require('electron');
 const path = require('path');
 const I18N = require('./src/i18n.js');
+
+// Set AppUserModelId for Windows Taskbar/JumpList consistency
+if (process.platform === 'win32') {
+  app.setAppUserModelId('mesmerli.TaiwanBigTwoAI.debug');
+}
 
 let currentLang = 'zh'; // Default
 
@@ -29,6 +34,13 @@ function createWindow() {
   win.setMenu(null);
   win.loadFile('index.html');
   
+  // Microsoft Store Trial Support Integration
+  win.once('ready-to-show', () => {
+    if (process.platform === 'win32') {
+      checkStoreLicense();
+    }
+  });
+
   // Alternative to F12: Ctrl+Shift+I to toggle DevTools (Detached mode)
   win.webContents.on('before-input-event', (event, input) => {
     if (input.control && input.shift && input.key.toLowerCase() === 'i') {
@@ -85,19 +97,18 @@ if (!gotTheLock) {
 function updateJumpList() {
   if (process.platform !== 'win32') return;
 
-  const appPath = path.join(__dirname, '.');
   const t = (key) => I18N[currentLang][key] || key;
 
-  app.setUserTasks([
+  // 不再手動指定 program 路徑，讓 Electron 自動選取目前的執行序
+  const success = app.setUserTasks([
     {
-      program: process.execPath,
-      arguments: `"${appPath}" --about`,
-      iconPath: process.execPath,
-      iconIndex: 0,
+      arguments: '--about', // 簡化參數
       title: t('menuAbout'),
       description: 'Taiwan Big Two AI'
     }
   ]);
+
+  console.log(`[JumpList] User Tasks set success: ${success}`);
 }
 
 function showAboutDialog() {
@@ -133,3 +144,83 @@ app.on('window-all-closed', () => {
     app.quit();
   }
 });
+
+// --- Microsoft Store Licensing Logic ---
+let storeBridge = null;
+const STORE_PRODUCT_ID = "9N2NBJLSCSN9"; // Official Microsoft Store Product ID
+
+async function checkStoreLicense() {
+  if (process.platform !== 'win32' || !win) return;
+
+  try {
+    // 載入原生 C++ 插件
+    if (!storeBridge) {
+      try {
+        storeBridge = require('./StoreBridge/build/Release/StoreBridge.node');
+      } catch (e) {
+        console.warn('[Store] 找不到 StoreBridge.node 插件，略過授權檢查。');
+        return;
+      }
+    }
+
+    const hwnd = win.getNativeWindowHandle().readBigInt64LE();
+    const license = await storeBridge.getLicenseStatus(hwnd);
+    
+    console.log('[Store] 取得授權狀態:', license);
+    await processLicense(license);
+
+  } catch (err) {
+    console.error('[Store] 授權檢查異常:', err);
+  }
+}
+
+async function processLicense(license) {
+  // --- 測試模擬區 (正式上架前請將此段刪除) ---
+  /*
+  console.log('[Store] 正在模擬過期狀態...');
+  license.isActive = true;           // 模擬已取得授權
+  license.isTrial = true;            // 模擬為試用版
+  license.expirationDate = '2020-01-01T00:00:00Z'; // 模擬一個已過去的日期
+  */
+  // ---------------------------------------
+
+  if (!license || !license.isActive) {
+    console.warn('[Store] 無法取得有效授權。');
+    return;
+  }
+
+  if (license.isTrial) {
+    const now = new Date();
+    const expirationDate = new Date(license.expirationDate);
+    console.log(`[Store] 試用版運作中，到期日: ${expirationDate}`);
+
+    if (now >= expirationDate) {
+      console.error('[Store] 試用期已屆滿！');
+      handleTrialExpired();
+    } else {
+      const daysLeft = Math.ceil((expirationDate - now) / (1000 * 60 * 60 * 24));
+      console.log(`[Store] 試用剩餘天數: ${daysLeft} 天`);
+    }
+  } else {
+    console.log('[Store] 檢測到完整版，感謝購買！');
+    if (win) win.webContents.send('license-status', { isFullVersion: true });
+  }
+}
+
+function handleTrialExpired() {
+  // Inform the user and redirect to the Store page
+  const result = dialog.showMessageBoxSync(win, {
+    type: 'warning',
+    title: 'Trial Expired',
+    message: 'Your trial period for Taiwan Big Two AI has expired. Would you like to purchase the full version from the Microsoft Store?',
+    buttons: ['Purchase Now', 'Close App'],
+    defaultId: 0,
+    cancelId: 1
+  });
+
+  if (result === 0) {
+    shell.openExternal(`ms-windows-store://pdp/?ProductId=${STORE_PRODUCT_ID}`);
+  }
+  
+  app.quit();
+}

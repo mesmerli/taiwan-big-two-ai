@@ -1,6 +1,6 @@
 {
   "name": "taiwan-big-two-ai",
-  "version": "1.4.0",
+  "version": "1.4.2",
   "description": "Modern Big Two game with LLM-powered AI integration",
   "license": "MIT",
   "main": "main.js",
@@ -12,12 +12,13 @@
     "package": "npm run increment-build && electron-packager . \"Taiwan Big Two AI\" --platform=win32 --arch=x64 --out=dist --overwrite",
     "increment-build": "node scripts/increment-build.js",
     "test": "node tests/logic.test.js && node tests/ui.test.js",
-    "test:ui": "node tests/ui.test.js"
+    "test:ui": "node tests/ui.test.js",
+    "build-StoreBridge": "node-gyp clean configure build --directory=StoreBridge"
   },
   "build": {
     "appId": "mesmerli.TaiwanBigTwoAI",
-    "buildVersion": "1.4.0.0",
-    "buildNumber": "1",
+    "buildVersion": "1.4.2.0",
+    "buildNumber": "2",
     "productName": "Taiwan Big Two AI",
     "directories": {
       "output": "dist"
@@ -29,7 +30,7 @@
         "appx"
       ],
       "icon": "src/assets/logo.png",
-      "artifactName": "Taiwan Big Two AI_1.4.0.0.${ext}"
+      "artifactName": "Taiwan Big Two AI_1.4.2.0.${ext}"
     },
     "appx": {
       "identityName": "mesmerli.TaiwanBigTwoAI",
@@ -54,9 +55,13 @@
   ],
   "author": "mesmerli",
   "devDependencies": {
+    "@microsoft/winappcli": "latest",
     "electron": "^30.0.0",
     "electron-builder": "^26.8.1",
     "electron-packager": "^17.1.2",
+    "nan": "^2.27.0",
+    "node-addon-api": "^8.7.0",
+    "node-gyp": "^12.3.0",
     "playwright": "^1.60.0"
   }
 }

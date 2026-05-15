@@ -53,9 +53,10 @@ const I18N = {
         unmute: "Unmute",
         soundModeAll: "Sound: All ON",
         soundModeSFX: "Sound: SFX Only (No Music/Voice)",
-        soundModeNone: "Sound: All OFF"
+        soundModeNone: "Sound: All OFF",
+        author: "Author"
     },
-    zh: {
+    'zh': {
         title: "Taiwan Big Two AI",
         rulesTitle: "遊戲規則 (台灣大老二)",
         handsTitle: "牌型",
@@ -109,7 +110,8 @@ const I18N = {
         unmute: "取消靜音",
         soundModeAll: "音效：全開",
         soundModeSFX: "音效：僅特效 (關閉音樂與語音)",
-        soundModeNone: "音效：全關"
+        soundModeNone: "音效：全關",
+        author: "作者"
     }
 
 };

@@ -36,3 +36,18 @@ blob-report/
 playwright/.cache/
 palmOS/
 
+
+# Windows SDK packages and generated files
+.winapp
+Package.appxmanifest
+winapp.yaml
+Assets/
+
+# Native Addons
+build/
+StoreBridge/build/
+*.node
+*.vcxproj
+*.sln
+*.filters
+*.user

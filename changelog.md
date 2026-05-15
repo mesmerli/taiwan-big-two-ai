@@ -2,6 +2,23 @@
 
 All notable changes to the **Taiwan Big Two AI** project will be documented in this file.
 
+### [1.4.2] - 2026-05-16
+
+### Added
+- **Microsoft Store Trial Integration**: 
+    - Full support for Time-limited Trials using the official `@microsoft/winappcli` toolchain.
+    - Implemented a native C++ addon (`StoreBridge`) to securely interface with `Windows.Services.Store`.
+    - Added automated redirection to the Microsoft Store upon trial expiration.
+    - Implemented `add-electron-debug-identity` support for seamless local development with store identity.
+- **Enhanced Rules UI**:
+    - Added dynamic version number and author display to the Game Rules modal.
+    - Information is automatically synced from `package.json`.
+- **Packaging Documentation**:
+    - Created `installmsix.md` with complete architecture and build instructions for the Store version.
+
+### Fixed
+- **Jump List Reliability**: Optimized Taskbar Jump List (Right-click menu) logic to work reliably under sparse package identity.
+
 ### [1.4.0] - 2026-05-15
 
 ### Added

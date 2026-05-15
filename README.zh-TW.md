@@ -61,9 +61,10 @@
 
 ### 建置與測試流水線
 - **整合式測試**：執行 `npm test` 即可運行完整的測試套件 (Logic & UI)。
-- **Microsoft Store 上架支援**：完整符合商店規範的 MSIX/AppX 封裝。
+- **Microsoft Store 上架支援**：支援 **「限時試用版 (Time-limited Trial)」** 完整授權機制。
+- **原生商店橋樑**：採用 C++ 原生插件 (`StoreBridge`) 確保與商店授權 API 的安全連接。
 - **自動化建置**：版本編號與安裝檔名會在打包時自動遞增與更新。
-- **圖示工廠**：內建腳本可從單一 Logo 自動產生 6 種特定尺寸圖示。
+- **圖示工廠**：使用 `winapp manifest update-assets` 自動化生成所有 Windows 資源。
 
 ---
 

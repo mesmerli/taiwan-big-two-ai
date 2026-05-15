@@ -61,9 +61,10 @@ For a more efficient and professional experience, use the following shortcuts:
 
 ### Build & Test Pipeline
 - **Unified Testing**: Run `npm test` for full suite (Logic & UI).
-- **Microsoft Store Readiness**: Full MSIX/AppX compliance (A.B.C.0 versioning).
+- **Microsoft Store Readiness**: Full MSIX/AppX compliance with **Time-limited Trial** support.
+- **Native Store Bridge**: Powered by a C++ native addon (`StoreBridge`) for secure licensing.
 - **Auto-Build**: Build version and artifact filenames increment automatically.
-- **Icon Factory**: PowerShell script generates all 6 Windows Store icon sizes from one logo.
+- **Icon Factory**: Automated resource generation using `winapp manifest update-assets`.
 
 ---
 

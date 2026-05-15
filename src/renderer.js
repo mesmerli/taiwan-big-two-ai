@@ -54,6 +54,13 @@ function updateLanguage() {
         }
     });
 
+    // Update Rules Footer (Version & Author)
+    const pkg = require('./package.json');
+    const rulesVersion = document.getElementById('rules-version');
+    const rulesAuthor = document.getElementById('rules-author');
+    if (rulesVersion) rulesVersion.textContent = `v${pkg.buildVersion || pkg.version}`;
+    if (rulesAuthor) rulesAuthor.textContent = `${I18N[currentLang].author || 'Author'}: ${pkg.author || 'mesmerli'}`;
+
     // Dynamic Character Name Sync
     const names = currentLang === 'zh' ? PLAYER_NAMES_ZH : PLAYER_NAMES_EN;
     PLAYER_NAMES = [...names]; // Start with defaults
