@@ -67,6 +67,24 @@ For a more efficient and professional experience, use the following shortcuts:
 
 ---
 
+## 🛡️ Quality Assurance & Stability
+
+The project includes a robust testing suite (25+ tests) to ensure rules and performance remain top-tier:
+- **Automated Logic Tests**: 12 logic tests covering every card combination (Dragon, Special Straights, etc.).
+- **UI & System Tests**: 18-step automated sequence verifying audio, BGM transitions, and keyboard responsiveness.
+- **Asset Verification**: Automated checks for missing avatars, icons, or audio files at runtime.
+- **Resilience Engine**:
+  - **AI Fallback**: LLM characters automatically switch to local logic if the API is offline.
+  - **Audio Safety**: Missing voice files automatically fallback to synthesized tones.
+- **Scoring Accuracy**: Verified complex Taiwanese scoring formulas including 10-card and '2' multipliers.
+
+Run tests anytime with:
+```bash
+npm test
+```
+
+---
+
 ## ⚙️ Using LLM with LM Studio
 
 The "Deep Learning" AI characters (Diana & Ares) require an OpenAI-compatible API. [LM Studio](https://lmstudio.ai/) is the recommended tool for local execution.

@@ -2,9 +2,15 @@
 
 All notable changes to the **Taiwan Big Two AI** project will be documented in this file.
 
-## [1.4.0] - 2026-05-15
+### [1.4.0] - 2026-05-15
 
 ### Added
+- **Comprehensive Testing Suite**:
+    - **Sequential Numbering**: All test outputs are now numbered (#1, #2, etc.) for easier debugging.
+    - **Asset Verification**: Automated checks for presence of all image avatars, logo, and 15 character voice/BGM files.
+    - **System Resilience**: Verified the game remains stable even when assets are missing (automatic fallback to synthetic tones).
+    - **AI Fallback Test**: Verified LLM characters automatically switch to Local NPC logic on API connection failure.
+    - **Scoring Validation**: In-depth tests for 10+ cards, "2" penalty, and winner multipliers.
 - **Advanced Keyboard Controls**: 
   - **Cyclic Selection**: Use Arrow Left/Right to cycle through all legal move combinations.
   - **Quick Play**: Use Arrow Up to play selected cards (auto-shouts "La" if applicable).
@@ -18,6 +24,7 @@ All notable changes to the **Taiwan Big Two AI** project will be documented in t
 - **Improved Combination Generation**: Fixed bugs in Full House and Four of a Kind generation where duplicate cards were being used.
 - **Optimized Move Search**: AI now prioritizes picking the strongest suit for straights and pairs to ensure optimal play.
 - **Scoring Engine Stability**: Re-added missing calculation methods required for post-game score penalties.
+- **BGM State Management**: Fixed BGM transitions for Shout-La and Victory events.
 
 ## [1.3.0] - 2026-05-15
 

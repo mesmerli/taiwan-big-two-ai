@@ -29,10 +29,10 @@ let passedCount = 0;
 let totalCount = 0;
 
 function runTest(name, fn) {
-    console.log(`${colors.yellow}Running: ${name}${colors.reset}`);
+    totalCount++;
+    console.log(`${colors.yellow}Test #${totalCount}: ${name}${colors.reset}`);
     const result = fn();
     if (result) passedCount++;
-    totalCount++;
 }
 
 // --- Test Cases ---
@@ -97,6 +97,29 @@ runTest("Hand Comparison (Full House vs Full House - Rank Priority)", () => {
     // K, K, K, 6, 6
     const higherFH = [10, 23, 36, 3, 16];
     return assert(GameLogic.compareHands(higherFH, lowerFH) > 0, "K-high Full House should beat Q-high Full House regardless of card IDs");
+});
+
+runTest("Hand Identification (Dragon)", () => {
+    // 13 cards with distinct ranks (Rank 0 to 12)
+    const dragonCards = [0, 14, 28, 42, 4, 18, 32, 46, 8, 22, 36, 50, 12]; 
+    const info = GameLogic.getHandInfo(dragonCards);
+    return assert(info && info.type === 'DRAGON', "Should detect DRAGON");
+});
+
+runTest("Special Straight Comparison (2-3-4-5-6 is largest)", () => {
+    // 2-3-4-5-6
+    const s23456 = [12, 13, 27, 41, 3]; 
+    // 3-4-5-6-7
+    const normalS = [0, 14, 28, 42, 4]; 
+    return assert(GameLogic.compareHands(s23456, normalS) > 0, "2-3-4-5-6 should beat normal Straight");
+});
+
+runTest("Special Straight Comparison (A-2-3-4-5 is smallest)", () => {
+    // A-2-3-4-5
+    const sA2345 = [11, 25, 0, 14, 28]; 
+    // 3-4-5-6-7
+    const normalS = [0, 14, 28, 42, 4]; 
+    return assert(GameLogic.compareHands(sA2345, normalS) < 0, "A-2-3-4-5 should lose to normal Straight");
 });
 
 
