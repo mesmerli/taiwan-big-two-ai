@@ -16,16 +16,22 @@ class SoundEngine {
         }
     }
 
-    playBGM() {
-        if (!this.bgm) {
-            this.bgm = new Audio('src/assets/mp3/Cards_On_The_Line.mp3');
-            this.bgm.loop = true;
-            this.bgm.volume = 0.4;
-            this.bgm.muted = (this.soundMode !== 0);
+    playBGM(filename = 'Cards_On_The_Line') {
+        const newPath = `src/assets/mp3/${filename}.mp3`;
+        
+        if (this.bgm) {
+            // If already playing the same track, do nothing
+            if (this.bgm.src.includes(filename)) return;
+            this.bgm.pause();
         }
 
+        this.bgm = new Audio(newPath);
+        this.bgm.loop = true;
+        this.bgm.volume = 0.4;
+        this.bgm.muted = (this.soundMode !== 0);
+
         this.bgm.play().catch(err => {
-            console.log("BGM autoplay prevented, waiting for interaction...");
+            console.log("BGM autoplay prevented or failed, waiting for interaction...");
             const startBGM = () => {
                 if (this.bgm) this.bgm.play();
                 window.removeEventListener('mousedown', startBGM);
@@ -34,6 +40,10 @@ class SoundEngine {
             window.addEventListener('mousedown', startBGM);
             window.addEventListener('keydown', startBGM);
         });
+    }
+
+    switchBGM(filename) {
+        this.playBGM(filename);
     }
 
     playTone(freq, type, duration, volume = 0.1) {
@@ -82,6 +92,9 @@ class SoundEngine {
     }
 
     playWin() {
+        // Change BGM to Sovereign_Ascent when someone wins
+        this.switchBGM('Sovereign_Ascent');
+
         const notes = [523.25, 659.25, 783.99, 1046.50]; // C-E-G-C
         notes.forEach((freq, i) => {
             setTimeout(() => this.playTone(freq, 'sine', 0.4, 0.1), i * 150);
@@ -90,6 +103,9 @@ class SoundEngine {
 
     playLa(persona = 'you') {
         if (this.soundMode === 2) return;
+
+        // Change BGM to Iron_in_the_Gale when someone shouts La
+        this.switchBGM('Iron_in_the_Gale');
 
         // Always play SFX (Tone)
         this.playTone(600, 'sawtooth', 0.1, 0.15);

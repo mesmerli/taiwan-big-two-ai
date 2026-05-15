@@ -5,8 +5,15 @@ All notable changes to the **Taiwan Big Two AI** project will be documented in t
 ## [1.3.0] - 2026-05-15
 
 ### Added
+- **Dynamic BGM Transitions**: Background music now dynamically shifts based on game state—switching to "Iron_in_the_Gale" when a player is on their last hand ("La") and to "Sovereign_Ascent" upon victory.
 - **Character Voice Integration**: Implemented character-specific "Pass" and "La" voice lines (`pass_人名.mp3`, `la_人名.mp3`).
 - **Audio Mode Separation**: Refactored the audio engine to separate synthesized SFX (tones) from persona voices. Tones now play even in "SFX Only" mode to ensure gameplay feedback.
+
+### Changed
+- **Taiwanese Rule Alignment**: Removed standalone "Triple" (three-of-a-kind) as a valid hand type to strictly follow traditional Taiwanese rules (where triples are only allowed in Full Houses).
+
+### Fixed
+- **Shout La Button Logic**: Refined the "Shout La" visibility trigger to correctly ignore standalone triples and properly reset the BGM to the default track when a new game starts.
 
 ## [1.2.0] - 2026-05-15
 

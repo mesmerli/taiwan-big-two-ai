@@ -18,6 +18,7 @@ The project supports isolated AI personalities, each with its own memory and str
 ### 3. Strict Taiwanese Ruleset
 The engine is strictly aligned with traditional **Taiwanese Big Two** rules:
 - **No Flush**: Five cards of the same suit are NOT a valid hand (unlike the Hong Kong version).
+- **No Standalone Triples**: Three-of-a-kind cannot be played alone; they are only valid in Full House or Four of a Kind combinations.
 - **Hand Ranks**: Straight Flush > Four of a Kind > Full House > Straight.
 - **Suit Strength**: Spade ♠ > Heart ♥ > Diamond ♦ > Club ♣.
 - **Dragon**: 13-card sequence (3-2) wins immediately.
@@ -29,6 +30,7 @@ The engine is strictly aligned with traditional **Taiwanese Big Two** rules:
   - The build version (e.g., `1.3.0.0`) automatically increments.
   - **Artifact Naming**: Generated files automatically include the 4-part version number in the filename.
   - **Icon Factory**: Includes a PowerShell script (`scripts/generate-icons.ps1`) to automatically generate all 6 required Windows Store icon sizes from a single base logo.
+- **Dynamic BGM Transitions**: Background music automatically shifts based on game state (e.g., entering "La" state or winning).
 - **Escape & Click-Outside Closure**: All modals and the About window support global `ESC` key and "click-outside" dismissal for a seamless experience.
 
 ## Installation & Build

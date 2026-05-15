@@ -141,6 +141,9 @@ function initGame() {
     gameState.playedCards = [];
     gameState.gameLog = [];
 
+    // Reset BGM to default
+    AudioPlayer.playBGM();
+
     // Randomize AI Personas for each game
     if (window.AI && typeof window.AI.randomizeAllPersonas === 'function') {
         window.AI.randomizeAllPersonas();

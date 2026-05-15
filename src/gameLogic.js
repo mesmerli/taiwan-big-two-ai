@@ -71,6 +71,8 @@ class GameLogic {
             }
             return null;
         }
+        // Standalone TRIPLE is not allowed in Taiwanese rules
+        /*
         if (len === 3) {
             if (this.getRank(sorted[0]) === this.getRank(sorted[1]) && 
                 this.getRank(sorted[1]) === this.getRank(sorted[2])) {
@@ -78,6 +80,7 @@ class GameLogic {
             }
             return null;
         }
+        */
         if (len === 5) {
             return this.getFiveCardHandInfo(sorted);
         }
@@ -167,7 +170,7 @@ class GameLogic {
         }
 
         // Same type, compare values
-        if (info1.type === 'SINGLE' || info1.type === 'PAIR' || info1.type === 'TRIPLE' || info1.type === 'STRAIGHT' || info1.type === 'FLUSH' || info1.type === 'STRAIGHT_FLUSH') {
+        if (info1.type === 'SINGLE' || info1.type === 'PAIR' || info1.type === 'STRAIGHT' || info1.type === 'FLUSH' || info1.type === 'STRAIGHT_FLUSH') {
             if (info1.special === '23456' && info2.special !== '23456') return 1;
             if (info1.special !== '23456' && info2.special === '23456') return -1;
             if (info1.special === 'A2345' && info2.special !== 'A2345') return -1;
@@ -364,6 +367,7 @@ class GameLogic {
             }
             return false;
         }
+        /*
         if (len === 3) {
             const sorted = this.sortCards(hand);
             for (let i = 0; i < sorted.length; i++) {
@@ -376,6 +380,7 @@ class GameLogic {
             }
             return false;
         }
+        */
         if (len === 5) {
             const hands = this.findFiveCardHands(hand);
             return hands.some(h => this.compareHands(h, lastPlay) > 0);
