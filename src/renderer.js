@@ -36,6 +36,16 @@ let PLAYER_NAMES = PLAYER_NAMES_ZH;
 
 let currentLang = 'zh';
 
+// Keyboard interaction state
+let cycleIndex = -1;
+let downKeyCount = 0;
+let lastDownKeyTime = 0;
+
+function resetCycleState() {
+    cycleIndex = -1;
+    downKeyCount = 0;
+}
+
 function updateLanguage() {
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
@@ -615,6 +625,7 @@ function nextTurn() {
     }
 
     gameState.turn = (gameState.turn + 1) % 4;
+    resetCycleState();
     renderAll();
     updateStatus();
 
@@ -825,7 +836,7 @@ function shoutLa() {
     // If validation passes, set flags and play
     gameState.shouted[0] = true;
     gameState.canFinish[0] = true;
-    
+
     const char0 = window.AI ? window.AI.getCharacter(0) : null;
     AudioPlayer.playLa(char0 ? char0.name : 'you');
     triggerShoutEffect(0, "拉");
@@ -1230,10 +1241,10 @@ function setupAvatarClickListeners() {
 
 function updateMuteUI() {
     if (!muteToggle) return;
-    
+
     let icon = '🔊';
     let tooltip = t('soundModeAll');
-    
+
     if (soundMode === 1) {
         icon = '🔉';
         tooltip = t('soundModeSFX');
@@ -1241,7 +1252,7 @@ function updateMuteUI() {
         icon = '🔇';
         tooltip = t('soundModeNone');
     }
-    
+
     muteToggle.textContent = icon;
     muteToggle.title = tooltip;
     AudioPlayer.setSoundMode(soundMode);
@@ -1257,6 +1268,104 @@ if (muteToggle) {
     updateMuteUI();
     AudioPlayer.playBGM();
 }
+
+
+
+
+window.addEventListener('keydown', (e) => {
+    // 1. Close alert modal if visible, but don't return if it's ArrowDown
+    if (!alertModal.classList.contains('hidden')) {
+        alertModal.classList.add('hidden');
+        if (e.key !== 'ArrowDown') return;
+    }
+
+    // 2. Triple Down shortcut (must work when gameEnded is true)
+    if (e.key === 'ArrowDown' && gameState.gameEnded) {
+        e.preventDefault();
+        const now = Date.now();
+        if (now - lastDownKeyTime > 1000) {
+            downKeyCount = 1;
+        } else {
+            downKeyCount++;
+        }
+        lastDownKeyTime = now;
+
+        if (downKeyCount >= 3) {
+            resetCycleState();
+            initGame();
+        }
+        return;
+    }
+
+    // 3. Regular game state checks
+    if (gameState.gameEnded) return;
+    if (document.querySelector('.modal:not(.hidden)')) return;
+
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        e.preventDefault();
+        // Only allow cyclic selection if it's the human's turn
+        const isHumanTurn = (gameState.turn === 0 && (!window.AI || !window.AI.getCharacter(0)));
+        if (!isHumanTurn) return;
+
+        const hand = gameState.players[0];
+        const lastPlay = (gameState.lastPlayerIndex === 0) ? null : gameState.lastPlay;
+        
+        // Generate all legal moves using GameLogic
+        const legalMoves = GameLogic.getLegalMoves(hand, lastPlay, gameState.lastPlayerIndex, 0, gameState.shouted);
+
+        if (!legalMoves || legalMoves.length === 0) return;
+
+        if (e.key === 'ArrowRight') {
+            cycleIndex = (cycleIndex + 1) % legalMoves.length;
+        } else {
+            cycleIndex = (cycleIndex - 1 + legalMoves.length) % legalMoves.length;
+        }
+
+        const move = legalMoves[cycleIndex];
+        gameState.selectedCards.clear();
+        move.cards.forEach(c => gameState.selectedCards.add(c));
+        
+        renderHumanHand();
+        updatePlayButtonVisibility();
+        updateShoutButton();
+    } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        const isHumanTurn = (gameState.turn === 0 && (!window.AI || !window.AI.getCharacter(0)));
+        if (!isHumanTurn) return;
+        
+        const selected = Array.from(gameState.selectedCards);
+        if (selected.length > 0) {
+            const hand = gameState.players[0];
+            const remainingCount = hand.length - selected.length;
+
+            // If it's a shout situation, use shoutLa() logic
+            if (remainingCount === 1) {
+                shoutLa();
+            } else {
+                playCards();
+            }
+        }
+    } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (gameState.selectedCards.size > 0) {
+            gameState.selectedCards.clear();
+            resetCycleState();
+            renderHumanHand();
+            updatePlayButtonVisibility();
+            updateShoutButton();
+        }
+    } else if (e.key === ' ' || e.key === 'Spacebar') {
+        e.preventDefault();
+        const isHumanTurn = (gameState.turn === 0 && (!window.AI || !window.AI.getCharacter(0)));
+        if (!isHumanTurn) return;
+
+        // Cannot pass if leading
+        const lastPlay = (gameState.lastPlayerIndex === 0) ? null : gameState.lastPlay;
+        if (!lastPlay || lastPlay.length === 0) return;
+
+        passTurn();
+    }
+});
 
 
 

@@ -1,108 +1,86 @@
-# Taiwan Big Two AI
+# Taiwan Big Two AI (台灣大老二 AI 版)
 
-This project presents a modernized Big Two card game built with Electron. It combines a sophisticated heuristic AI with an advanced multi-persona research engine powered by Large Language Models (LLM), designed for autonomous strategic gameplay analysis.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Version](https://img.shields.io/badge/Version-1.4.0-blue.svg)](./changelog.md)
+[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Electron-brightgreen.svg)](https://www.electronjs.org/)
 
-## Core Features
+A modernized **Taiwanese Big Two** card game built with Electron. This project integrates sophisticated heuristic algorithms with an advanced multi-persona research engine powered by **Large Language Models (LLM)**, designed for autonomous strategic gameplay analysis and evolutionary learning.
+
+---
+
+## 🚀 Core Features
 
 ### 1. Multi-Persona Research Architecture
-The project supports isolated AI personalities, each with its own memory and strategic bias:
+The project supports isolated AI personalities, each with its own memory, strategic bias, and distinct character:
 - **Diana (Adaptive Learning)**: Focuses on balanced gameplay and tactical evolution.
 - **Ares (The God of War)**: A high-aggression persona that prioritizes power dominance and pressure.
-- **BaseLLMAI Engine**: A unified class that handles card counting, board state evaluation, and post-game reflection (Post-Game Reflection).
+- **BaseLLMAI Engine**: A unified class handling card counting, board state evaluation, and **Post-Game Reflection**.
 
-### 2. Autonomous "Self-Play" Testing
+### 2. Autonomous "Self-Play" & Evolution
 - **AFK Mode**: The game can run in a continuous loop, allowing AI agents to play against each other 24/7.
-- **Memory Evolution**: Agents analyze their losses to generate structured "Learning Notes" (Rule Extraction), which are stored in persistent JSON memory.
-- **Keyword Matching**: A refined keyword similarity engine ensures that strategic rules are accumulated without redundancy or fragmentation.
+- **Memory Evolution**: Agents analyze losses to generate structured **"Learning Notes"** (Rule Extraction) stored in persistent JSON memory.
+- **Keyword Matching**: A refined keyword similarity engine ensures strategic rules accumulate without redundancy.
 
 ### 3. Strict Taiwanese Ruleset
 The engine is strictly aligned with traditional **Taiwanese Big Two** rules:
-- **No Flush**: Five cards of the same suit are NOT a valid hand (unlike the Hong Kong version).
-- **No Standalone Triples**: Three-of-a-kind cannot be played alone; they are only valid in Full House or Four of a Kind combinations.
+- **No Flush**: Five cards of the same suit are NOT a valid hand (unlike the HK version).
+- **No Standalone Triples**: Three-of-a-kind cannot be played alone; they are only valid in Full House or Four of a Kind.
 - **Hand Ranks**: Straight Flush > Four of a Kind > Full House > Straight.
 - **Suit Strength**: Spade ♠ > Heart ♥ > Diamond ♦ > Club ♣.
 - **Dragon**: 13-card sequence (3-2) wins immediately.
 
-### 4. Developer & Research Tools
-- **Unified Testing**: Run `npm test` for full suite (Logic & UI).
-- **Microsoft Store Readiness (MSIX)**: Full compliance with store requirements (Version format A.B.C.0).
-- **Auto-Build Pipeline**: 
-  - The build version (e.g., `1.3.0.0`) automatically increments.
-  - **Artifact Naming**: Generated files automatically include the 4-part version number in the filename.
-  - **Icon Factory**: Includes a PowerShell script (`scripts/generate-icons.ps1`) to automatically generate all 6 required Windows Store icon sizes from a single base logo.
-- **Dynamic BGM Transitions**: Background music automatically shifts based on game state (e.g., entering "La" state or winning).
-- **Escape & Click-Outside Closure**: All modals and the About window support global `ESC` key and "click-outside" dismissal for a seamless experience.
+---
 
-## Installation & Build
+## 🎮 Controls & Interaction
 
-### Prerequisites
-- [Node.js](https://nodejs.org/) (v16 or higher recommended)
-- [Git](https://git-scm.com/)
-
-### Setup
-1. Clone the repository:
-   ```powershell
-   git clone https://github.com/mesmerli/taiwan-big-two-ai.git
-   ```
-2. Install dependencies:
-   ```powershell
-   npm install
-   ```
-
-### Running Tests
-1. **Logic Test**: `npm test`
-2. **UI Test**: `npm run test:ui`
-
-### Running Locally
-To start the application in development mode:
-```powershell
-npm start
-```
-
-### Building for Distribution
-1. **Standard EXE**: `npm run dist`
-2. **Microsoft Store (MSIX)**: `npm run dist:msix`
-*Note: These commands will automatically increment the build number and update the artifact filename.*
-
-## UI Operation Guide
-
-### Gameplay
-- **New Game**: Click the **New Game** button in the top-right corner to restart.
+### 🖱️ Mouse Interface
+- **New Game**: Click the **New Game** button in the top-right corner.
 - **Selecting Cards**: Click on cards in your hand to select/deselect them.
-- **Play / Pass**: Use the primary buttons to make your move. 
-- **Mandatory Shout LA!**: 
-  - If your move would leave you with exactly **one card**, the standard "Play" button will be hidden, and you must click the **"Shout LA!"** button to proceed.
-  - If you have already shouted "La", you are restricted to playing your remaining cards as a single hand or passing.
+- **Play / Pass**: Use the primary buttons on the human player area.
+- **Mandatory Shout LA!**: If a move leaves you with exactly **one card**, you must use the **"Shout LA!"** button.
 
-### Character & AI Management
-- **Switching Characters**: Click on any player's **Avatar** to cycle through the available personalities (Alex, Bella, Chris, Diana, Ares). 
-- **AI Settings**: Click the **Gear Icon (⚙️)** next to an LLM character to:
-  - Configure the **API URL** and **Model ID** (auto-detected).
-  - **Inline Feedback**: Shows **(Connection Failed)** in vivid red if the API is unreachable.
-  - **Export/Import Memory**: Save or load their learned strategic rules as JSON files.
-
-### System Controls
-- **Language**: Click the **Globe icon (🌐)** in the top-right to switch the entire UI.
-- **Rules & Info**: Click the **italic "i" icon** to access game rules or the About window.
-- **Closing Windows**: Use the **"X" button** in the top-right corner of any window, or press `ESC`.
-
-## Using LLM with LM Studio
-
-The "Deep Learning" AI characters (Diana & Ares) require an OpenAI-compatible API to function. [LM Studio](https://lmstudio.ai/) is the recommended tool for running models locally.
-
-### Setup Instructions
-1. **Download LM Studio**: Visit [lmstudio.ai](https://lmstudio.ai/).
-2. **Download a Model**: Search for `google/gemma-4-e2b`.
-3. **Start Local Server**: Go to the **Local Server** tab and click **Start Server**.
-4. **Connect to Game**: Open **AI Settings (⚙️)**, paste the URL, and it's ready.
-
-## Changelog
-For a detailed history, please see [changelog.md](./changelog.md).
+### ⌨️ Keyboard Mastery (Pro Mode)
+For a more efficient and professional experience, use the following shortcuts:
+- **Arrow Left / Right**: Cycle through all **legal move combinations** currently in your hand.
+- **Arrow Up**: Play selected cards (automatically triggers "Shout LA!" if needed).
+- **Arrow Down**: 
+  - **In-Game**: Deselect all currently selected cards.
+  - **Post-Game**: Rapidly press **three times** to immediately start a new match.
+- **Spacebar**: Pass your turn (valid only when you are not the leader).
+- **Any Key**: Close the "Winner" alert modal after a match.
+- **ESC**: Close any open modal (Rules, Settings, About).
 
 ---
 
-## License
-This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
+## 🛠️ Developer & Research Tools
+
+### Character & AI Management
+- **Avatar Swap**: Click any player's **Avatar** to cycle through personalities.
+- **AI Settings (⚙️)**: Configure API URL and Model ID with real-time **Connection Monitoring**.
+- **Memory Management**: Export or Import learned strategic rules as JSON files.
+
+### Build & Test Pipeline
+- **Unified Testing**: Run `npm test` for full suite (Logic & UI).
+- **Microsoft Store Readiness**: Full MSIX/AppX compliance (A.B.C.0 versioning).
+- **Auto-Build**: Build version and artifact filenames increment automatically.
+- **Icon Factory**: PowerShell script generates all 6 Windows Store icon sizes from one logo.
+
+---
+
+## ⚙️ Using LLM with LM Studio
+
+The "Deep Learning" AI characters (Diana & Ares) require an OpenAI-compatible API. [LM Studio](https://lmstudio.ai/) is the recommended tool for local execution.
+
+1. **Download LM Studio**: Visit [lmstudio.ai](https://lmstudio.ai/).
+2. **Download a Model**: Search for `google/gemma-4-e2b`.
+3. **Start Local Server**: Go to the **Local Server** tab and click **Start Server**.
+4. **Connect to Game**: Open **AI Settings (⚙️)**, paste the URL, and it will auto-detect the model.
+
+---
+
+## 📜 Changelog & License
+- For a detailed history, see [changelog.md](./changelog.md).
+- This project is licensed under the **MIT License**.
 
 ---
 *Created with ❤️ by mesmerli for AI Strategic Research*

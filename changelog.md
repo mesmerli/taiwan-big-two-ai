@@ -2,6 +2,23 @@
 
 All notable changes to the **Taiwan Big Two AI** project will be documented in this file.
 
+## [1.4.0] - 2026-05-15
+
+### Added
+- **Advanced Keyboard Controls**: 
+  - **Cyclic Selection**: Use Arrow Left/Right to cycle through all legal move combinations.
+  - **Quick Play**: Use Arrow Up to play selected cards (auto-shouts "La" if applicable).
+  - **Reset/Deselect**: Use Arrow Down to clear selection.
+  - **Spacebar Pass**: Press Space to quickly pass your turn.
+- **Triple-Down Restart**: Rapidly press the Down arrow key three times after a game ends to instantly start a new match.
+- **Modal Accessibility**: Any key press now closes the "Winner" alert modal for faster navigation.
+
+### Fixed
+- **AI Logic Restoration**: Fixed a critical syntax error in `GameLogic` that caused AI players to pass indefinitely.
+- **Improved Combination Generation**: Fixed bugs in Full House and Four of a Kind generation where duplicate cards were being used.
+- **Optimized Move Search**: AI now prioritizes picking the strongest suit for straights and pairs to ensure optimal play.
+- **Scoring Engine Stability**: Re-added missing calculation methods required for post-game score penalties.
+
 ## [1.3.0] - 2026-05-15
 
 ### Added

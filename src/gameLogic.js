@@ -33,12 +33,12 @@ class GameLogic {
         const r2 = this.getRank(card2);
         if (r1 > r2) return 1;
         if (r1 < r2) return -1;
-        
+
         const s1 = this.getSuit(card1);
         const s2 = this.getSuit(card2);
         if (s1 > s2) return 1;
         if (s1 < s2) return -1;
-        
+
         return 0;
     }
 
@@ -92,11 +92,11 @@ class GameLogic {
         const suits = sorted.map(c => this.getSuit(c));
 
         const isFlush = suits.every(s => s === suits[0]);
-        
+
         // Straight check
         let isStraight = true;
         for (let i = 0; i < 4; i++) {
-            if (ranks[i+1] !== ranks[i] + 1) {
+            if (ranks[i + 1] !== ranks[i] + 1) {
                 isStraight = false;
                 break;
             }
@@ -114,7 +114,7 @@ class GameLogic {
         // So 0-1-2-3-12 is 3-4-5-6-2 (Wait, the user said 2-3-4-5-6)
         // If 2 is rank 12, then 2-3-4-5-6 is ranks [12, 0, 1, 2, 3]
         // A-2-3-4-5 is ranks [11, 12, 0, 1, 2]
-        
+
         const rankSet = new Set(ranks);
         const is23456 = [0, 1, 2, 3, 12].every(r => rankSet.has(r));
         const isA2345 = [0, 1, 2, 11, 12].every(r => rankSet.has(r));
@@ -128,7 +128,7 @@ class GameLogic {
         }
 
         if (isStraight && isFlush) return { type: 'STRAIGHT_FLUSH', value: sorted[4], strength: 5 };
-        
+
         // Four of a kind
         if (ranks[0] === ranks[3]) return { type: 'FOUR_OF_A_KIND', value: sorted[0], strength: 4 };
         if (ranks[1] === ranks[4]) return { type: 'FOUR_OF_A_KIND', value: sorted[1], strength: 4 };
@@ -151,7 +151,7 @@ class GameLogic {
         const info2 = this.getHandInfo(hand2);
 
         if (!info1 || !info2) return 0;
-        
+
         // Dragon is the largest
         if (info1.type === 'DRAGON' || info2.type === 'DRAGON') {
             if (info1.type === 'DRAGON' && info2.type === 'DRAGON') {
@@ -175,10 +175,10 @@ class GameLogic {
             if (info1.special !== '23456' && info2.special === '23456') return -1;
             if (info1.special === 'A2345' && info2.special !== 'A2345') return -1;
             if (info1.special !== 'A2345' && info2.special === 'A2345') return 1;
-            
+
             return this.compareCards(info1.value, info2.value);
         }
-        
+
         // Four of a kind or Full House: compare the rank of the quad/triple
         if (info1.type === 'FOUR_OF_A_KIND' || info1.type === 'FULL_HOUSE') {
             return this.compareCards(info1.value, info2.value);
@@ -196,8 +196,16 @@ class GameLogic {
         const sorted = this.sortCards(cards);
         for (let i = 0; i < sorted.length - 1; i++) {
             if (this.getRank(sorted[i]) === this.getRank(sorted[i+1])) {
-                pairs.push([sorted[i], sorted[i+1]]);
-                i++; // skip
+                // Find all cards of this rank to pick the strongest pair
+                let j = i + 1;
+                while (j < sorted.length && this.getRank(sorted[j]) === this.getRank(sorted[i])) {
+                    j++;
+                }
+                // Best pair for this rank is the two highest suit cards
+                if (j - i >= 2) {
+                    pairs.push([sorted[j-2], sorted[j-1]]);
+                }
+                i = j - 1;
             }
         }
         return pairs;
@@ -217,11 +225,6 @@ class GameLogic {
     }
 
     static findFiveCardHands(cards) {
-        // Standard Big Two Strength Order (No Flush):
-        // 1. Straight Flush
-        // 2. Four of a Kind
-        // 3. Full House
-        // 4. Straight
         const hands = [];
         const sf = this.findStraightFlushes(cards);
         if (sf.length > 0) hands.push(...sf);
@@ -232,9 +235,6 @@ class GameLogic {
         const fh = this.findFullHouses(cards);
         if (fh.length > 0) hands.push(...fh);
 
-        // const fl = this.findFlushes(cards); // Flush disabled
-        // if (fl.length > 0) hands.push(...fl);
-        
         const s = this.findStraights(cards);
         if (s.length > 0) hands.push(...s);
 
@@ -264,31 +264,30 @@ class GameLogic {
         const sorted = [...new Set(cards.map(c => this.getRank(c)))].sort((a,b) => a-b);
         if (sorted.length < 5) return [];
 
-        // Simple sliding window on unique ranks
         for (let i = 0; i <= sorted.length - 5; i++) {
             if (sorted[i+4] - sorted[i] === 4) {
-                // Find cards matching these ranks
                 const combination = [];
                 for (let j = 0; j < 5; j++) {
-                    combination.push(cards.find(c => this.getRank(c) === sorted[i+j]));
+                    const rank = sorted[i+j];
+                    const rankCards = cards.filter(c => this.getRank(c) === rank);
+                    const bestCard = rankCards.sort((a,b) => this.compareCards(a,b)).pop();
+                    combination.push(bestCard);
                 }
                 straights.push(combination);
             }
         }
-        // Check for 2-3-4-5-6 (Rank 12, 0, 1, 2, 3) and A-2-3-4-5 (Rank 11, 12, 0, 1, 2)
-        // (Handled by getHandInfo usually, but for AI search we need to be explicit)
         return straights;
     }
 
     static findFullHouses(cards) {
         const fhs = [];
         const triples = this.findTriples(cards);
-        const pairs = this.findPairs(cards);
         for (let t of triples) {
+            // Only find pairs from cards NOT already in the triple
+            const remaining = cards.filter(c => !t.includes(c));
+            const pairs = this.findPairs(remaining);
             for (let p of pairs) {
-                if (this.getRank(t[0]) !== this.getRank(p[0])) {
-                    fhs.push([...t, ...p]);
-                }
+                fhs.push([...t, ...p]);
             }
         }
         return fhs;
@@ -300,9 +299,12 @@ class GameLogic {
         for (let i = 0; i < sorted.length - 3; i++) {
             if (this.getRank(sorted[i]) === this.getRank(sorted[i+3])) {
                 const quad = sorted.slice(i, i+4);
-                // add any other card
-                const kicker = cards.find(c => this.getRank(c) !== this.getRank(quad[0]));
-                if (kicker !== undefined) fks.push([...quad, kicker]);
+                // Pick a kicker from the remaining cards
+                const remaining = cards.filter(c => !quad.includes(c));
+                if (remaining.length > 0) {
+                    const sortedRemaining = this.sortCards(remaining);
+                    fks.push([...quad, sortedRemaining[0]]); // Smallest kicker
+                }
                 i += 3;
             }
         }
@@ -326,6 +328,84 @@ class GameLogic {
         return info !== null;
     }
 
+    /**
+     * Get all legal moves for a given hand and table state
+     * @returns {Array<{cards: number[], type: string}>}
+     */
+    static getLegalMoves(hand, lastPlay, lastPlayerIndex, playerIndex, shouted) {
+        const moves = [];
+        const isLead = !lastPlay || lastPlay.length === 0;
+        const sortedHand = this.sortCards(hand);
+
+        // --- SHOUT RESTRICTION ---
+        const isShouted = shouted && shouted[playerIndex];
+        const isLastHand = this.isLastHand(hand);
+        const shouldRestrictToFullHand = isShouted && isLastHand && hand.length > 1;
+
+        if (shouldRestrictToFullHand) {
+            if (isLead) {
+                moves.push({ cards: sortedHand, type: 'FINAL' });
+            } else if (this.compareHands(sortedHand, lastPlay) > 0) {
+                moves.push({ cards: sortedHand, type: 'FINAL' });
+            }
+            return moves;
+        }
+
+        if (isLead) {
+            const isFirstRound = lastPlayerIndex === -1 || lastPlayerIndex === undefined;
+            const hasThreeOfClubs = hand.includes(0);
+            
+            // In the first round, only the player with the 3 of Clubs can lead
+            if (isFirstRound && !hasThreeOfClubs) {
+                return [];
+            }
+
+            // Singles
+            sortedHand.forEach(c => {
+                if (isFirstRound && c !== 0) return; // Must be 3 of Clubs if first round
+                moves.push({ cards: [c], type: 'SINGLE' });
+            });
+            // Pairs
+            this.findPairs(sortedHand).forEach(p => {
+                if (isFirstRound && !p.includes(0)) return;
+                moves.push({ cards: p, type: 'PAIR' });
+            });
+            // 5-Card Hands
+            this.findFiveCardHands(sortedHand).forEach(h => {
+                if (isFirstRound && !h.includes(0)) return;
+                const info = this.getHandInfo(h);
+                if (info) {
+                    moves.push({ cards: h, type: info.type });
+                }
+            });
+        } else {
+            const targetLen = lastPlay.length;
+            if (targetLen === 1) {
+                sortedHand.forEach(c => {
+                    if (this.compareCards(c, lastPlay[0]) > 0) {
+                        moves.push({ cards: [c], type: 'SINGLE' });
+                    }
+                });
+            } else if (targetLen === 2) {
+                this.findPairs(sortedHand).forEach(p => {
+                    if (this.compareHands(p, lastPlay) > 0) {
+                        moves.push({ cards: p, type: 'PAIR' });
+                    }
+                });
+            } else if (targetLen === 5) {
+                this.findFiveCardHands(sortedHand).forEach(h => {
+                    if (this.compareHands(h, lastPlay) > 0) {
+                        const info = this.getHandInfo(h);
+                        if (info) {
+                            moves.push({ cards: h, type: info.type });
+                        }
+                    }
+                });
+            }
+        }
+        return moves;
+    }
+
     static countFourOfAKinds(cards) {
         if (cards.length < 4) return 0;
         const counts = {};
@@ -338,14 +418,10 @@ class GameLogic {
 
     static countStraightFlushes(cards) {
         if (cards.length < 5) return 0;
-        const hands = this.findFiveCardHands(cards);
-        return hands.filter(h => {
-            const info = this.getHandInfo(h);
-            return info.type === 'STRAIGHT_FLUSH';
-        }).length;
-        // Note: findFiveCardHands might find overlapping ones, but the rule says "if can form", usually meaning distinct sets.
-        // However, Big Two rules on counting these often vary. I'll stick to distinct sets for now if possible, 
-        // or just count how many 5-card SFs can be formed.
+        const sfs = this.findStraightFlushes(cards);
+        // To avoid counting overlapping straights in the same suit, 
+        // we take the unique sets (though findStraightFlushes usually returns distinct rank sets per suit)
+        return sfs.length;
     }
 
     static hasValidMoves(hand, lastPlay) {
@@ -358,29 +434,9 @@ class GameLogic {
             return hand.some(c => this.compareCards(c, lastPlay[0]) > 0);
         }
         if (len === 2) {
-            const sorted = this.sortCards(hand);
-            for (let i = 0; i < sorted.length; i++) {
-                for (let j = i + 1; j < sorted.length; j++) {
-                    const p = [sorted[i], sorted[j]];
-                    if (this.getHandInfo(p) && this.compareHands(p, lastPlay) > 0) return true;
-                }
-            }
-            return false;
+            const pairs = this.findPairs(hand);
+            return pairs.some(p => this.compareHands(p, lastPlay) > 0);
         }
-        /*
-        if (len === 3) {
-            const sorted = this.sortCards(hand);
-            for (let i = 0; i < sorted.length; i++) {
-                for (let j = i + 1; j < sorted.length; j++) {
-                    for (let k = j + 1; k < sorted.length; k++) {
-                        const t = [sorted[i], sorted[j], sorted[k]];
-                        if (this.getHandInfo(t) && this.compareHands(t, lastPlay) > 0) return true;
-                    }
-                }
-            }
-            return false;
-        }
-        */
         if (len === 5) {
             const hands = this.findFiveCardHands(hand);
             return hands.some(h => this.compareHands(h, lastPlay) > 0);
