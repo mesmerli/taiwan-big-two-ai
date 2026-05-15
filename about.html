@@ -21,9 +21,14 @@
             -webkit-app-region: drag;
         }
         .logo {
-            font-size: 64px;
             margin-bottom: 20px;
             filter: drop-shadow(0 0 20px rgba(155, 89, 182, 0.5));
+        }
+        .logo img {
+            width: 120px;
+            height: 120px;
+            object-fit: contain;
+            display: block;
         }
         h1 {
             font-size: 24px;
@@ -63,7 +68,9 @@
 </head>
 <body>
     <span class="close-btn" onclick="window.close()">&times;</span>
-    <div class="logo">🎴</div>
+    <div class="logo">
+        <img src="src/assets/logo.png" alt="Taiwan Big Two AI Logo">
+    </div>
 
     <h1 id="about-title">Taiwan Big Two AI</h1>
     <div class="version" id="version">v1.2.0.0</div>

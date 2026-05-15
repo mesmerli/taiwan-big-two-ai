@@ -48,7 +48,12 @@ const I18N = {
         reset: "Reset to Default",
         cancel: "Cancel",
         pastLearnings: "Past Learnings (Memory)",
-        apiError: "Connection Failed"
+        apiError: "Connection Failed",
+        mute: "Mute",
+        unmute: "Unmute",
+        soundModeAll: "Sound: All ON",
+        soundModeSFX: "Sound: SFX Only (No Music/Voice)",
+        soundModeNone: "Sound: All OFF"
     },
     zh: {
         title: "Taiwan Big Two AI",
@@ -99,7 +104,12 @@ const I18N = {
         reset: "重設回預設值",
         cancel: "取消",
         pastLearnings: "歷史戰略記憶 (Memory)",
-        apiError: "連線失敗"
+        apiError: "連線失敗",
+        mute: "靜音",
+        unmute: "取消靜音",
+        soundModeAll: "音效：全開",
+        soundModeSFX: "音效：僅特效 (關閉音樂與語音)",
+        soundModeNone: "音效：全關"
     }
 
 };

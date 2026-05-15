@@ -143,7 +143,7 @@ Instruction: ${lastPlay && lastPlay.length > 0 ? 'You must beat the table play o
 class AlexAI extends AICharacter {
     constructor(gameLogic) {
         super(gameLogic, "Alex");
-        this.avatar = "🦊";
+        this.avatar = "src/assets/avatars/avatar_alex.png";
     }
 
     async chooseLead(sorted, context) {
@@ -172,7 +172,7 @@ class AlexAI extends AICharacter {
 class BellaAI extends AICharacter {
     constructor(gameLogic) {
         super(gameLogic, "Bella");
-        this.avatar = "🐰";
+        this.avatar = "src/assets/avatars/avatar_bella.png";
     }
 
     async chooseLead(sorted, context) {
@@ -193,7 +193,7 @@ class BellaAI extends AICharacter {
 class ChrisAI extends AICharacter {
     constructor(gameLogic) {
         super(gameLogic, "Chris");
-        this.avatar = "🦁";
+        this.avatar = "src/assets/avatars/avatar_chris.png";
     }
 
     async chooseLead(sorted, context) {
@@ -980,7 +980,7 @@ ${logStr}
  */
 class DianaAI extends BaseLLMAI {
     constructor(gameLogic) {
-        super(gameLogic, "Diana", "✨");
+        super(gameLogic, "Diana", "src/assets/avatars/avatar_diana.png");
     }
 }
 
@@ -989,7 +989,7 @@ class DianaAI extends BaseLLMAI {
  */
 class AresAI extends BaseLLMAI {
     constructor(gameLogic) {
-        super(gameLogic, "Ares", "⚔️");
+        super(gameLogic, "Ares", "src/assets/avatars/avatar_ares.png");
     }
 }
 
@@ -1047,7 +1047,7 @@ class BigTwoAI {
                 if (candidateBlueprint === null) {
                     this.characters[playerIndex] = null;
                     console.log(`%c[AI Manager] Player ${playerIndex + 1} is now Human control`, 'color: #3498db; font-weight: bold;');
-                    return { name: "You", avatar: "🐼", type: "Human", isLLM: false };
+                    return { name: "You", avatar: "src/assets/avatars/avatar_you.png", type: "Human", isLLM: false };
                 } else {
                     const newCharacter = new candidateBlueprint(this.gameLogic);
                     this.characters[playerIndex] = newCharacter;
@@ -1057,7 +1057,7 @@ class BigTwoAI {
             }
         }
 
-        return this.characters[playerIndex] || { name: "You", avatar: "🐼", type: "Human", isLLM: false };
+        return this.characters[playerIndex] || { name: "You", avatar: "src/assets/avatars/avatar_you.png", type: "Human", isLLM: false };
     }
 
     async findPlay(playerIndex, context) {

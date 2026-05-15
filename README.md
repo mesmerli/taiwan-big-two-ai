@@ -26,7 +26,7 @@ The engine is strictly aligned with traditional **Taiwanese Big Two** rules:
 - **Unified Testing**: Run `npm test` for full suite (Logic & UI).
 - **Microsoft Store Readiness (MSIX)**: Full compliance with store requirements (Version format A.B.C.0).
 - **Auto-Build Pipeline**: 
-  - The build version (e.g., `1.2.0.1`) automatically increments.
+  - The build version (e.g., `1.3.0.0`) automatically increments.
   - **Artifact Naming**: Generated files automatically include the 4-part version number in the filename.
   - **Icon Factory**: Includes a PowerShell script (`scripts/generate-icons.ps1`) to automatically generate all 6 required Windows Store icon sizes from a single base logo.
 - **Escape & Click-Outside Closure**: All modals and the About window support global `ESC` key and "click-outside" dismissal for a seamless experience.

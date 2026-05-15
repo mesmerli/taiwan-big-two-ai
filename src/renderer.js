@@ -22,6 +22,8 @@ const confirmYes = document.getElementById('confirm-yes');
 const confirmNo = document.getElementById('confirm-no');
 const closeBtn = document.querySelector('.close-btn');
 const langToggle = document.getElementById('lang-toggle');
+const muteToggle = document.getElementById('mute-toggle');
+let soundMode = parseInt(localStorage.getItem('soundMode')) || 0; // 0: All, 1: SFX Only, 2: None
 
 const SUIT_SYMBOLS = ['♣', '♦', '♥', '♠'];
 const RANK_LABELS = ['3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A', '2'];
@@ -66,7 +68,11 @@ function updateLanguage() {
 
                 const avatarEl = playerEl.querySelector('.avatar');
                 if (avatarEl) {
-                    avatarEl.textContent = data.avatar;
+                    if (data.avatar && data.avatar.includes('src/assets/avatars/')) {
+                        avatarEl.innerHTML = `<img src="${data.avatar}" alt="${data.name}">`;
+                    } else {
+                        avatarEl.textContent = data.avatar;
+                    }
                     if (data.isLLM) avatarEl.classList.add('llm-glow');
                     else avatarEl.classList.remove('llm-glow');
                 }
@@ -82,7 +88,7 @@ function updateLanguage() {
                 PLAYER_NAMES[i] = currentLang === 'zh' ? '你' : 'You';
                 const avatarEl = playerEl.querySelector('.avatar');
                 if (avatarEl) {
-                    avatarEl.textContent = '🐼';
+                    avatarEl.innerHTML = `<img src="src/assets/avatars/avatar_you.png" alt="You">`;
                     avatarEl.classList.remove('llm-glow');
                 }
                 const gearIcon = playerEl.querySelector('.settings-icon');
@@ -94,6 +100,7 @@ function updateLanguage() {
 
     document.title = t('title');
     ipcRenderer.send('update-lang', currentLang);
+    updateMuteUI();
     renderAll();
 }
 
@@ -530,7 +537,8 @@ function passTurn() {
         return;
     }
 
-    AudioPlayer.playPass();
+    const char0 = window.AI ? window.AI.getCharacter(0) : null;
+    AudioPlayer.playPass(char0 ? char0.name : 'you');
     gameState.playerLastActions[0] = "PASS";
     gameState.gameLog.push({ turn: gameState.gameLog.length, player: 0, action: "PASS" });
     showPassIndicator(0);
@@ -561,7 +569,7 @@ function executePlay(playerIndex, cards) {
         if (char && !gameState.shouted[i] && GameLogic.isLastHand(gameState.players[i])) {
             gameState.shouted[i] = true;
             gameState.canFinish[i] = true;
-            AudioPlayer.playLa();
+            AudioPlayer.playLa(char.name);
             triggerShoutEffect(i, "拉");
         }
     }
@@ -681,6 +689,8 @@ async function aiTurn() {
             executePlay(gameState.turn, play);
         } else {
             // Pass
+            const char = window.AI ? window.AI.getCharacter(gameState.turn) : null;
+            AudioPlayer.playPass(char ? char.name : 'npc');
             gameState.playerLastActions[gameState.turn] = "PASS";
             gameState.gameLog.push({ turn: gameState.gameLog.length, player: gameState.turn, action: "PASS" });
             showPassIndicator(gameState.turn);
@@ -756,7 +766,7 @@ function handleDragonWin(playerIndex) {
     gameState.scores[playerIndex] += totalGained;
     renderAll();
     AudioPlayer.playWin();
-    setTimeout(() => showAlert(`${PLAYER_NAMES[playerIndex]} has a DRAGON and wins immediately!`), 100);
+    setTimeout(() => showAlert(t('dragonWin', { name: PLAYER_NAMES[playerIndex] })), 100);
 
     // Auto-Restart logic if Slot 0 is AI-controlled
     const p0Char = window.AI ? window.AI.getCharacter(0) : null;
@@ -812,7 +822,9 @@ function shoutLa() {
     // If validation passes, set flags and play
     gameState.shouted[0] = true;
     gameState.canFinish[0] = true;
-    AudioPlayer.playLa();
+    
+    const char0 = window.AI ? window.AI.getCharacter(0) : null;
+    AudioPlayer.playLa(char0 ? char0.name : 'you');
     triggerShoutEffect(0, "拉");
 
     playCards(true);
@@ -1212,6 +1224,37 @@ function setupAvatarClickListeners() {
     };
 
 }
+
+function updateMuteUI() {
+    if (!muteToggle) return;
+    
+    let icon = '🔊';
+    let tooltip = t('soundModeAll');
+    
+    if (soundMode === 1) {
+        icon = '🔉';
+        tooltip = t('soundModeSFX');
+    } else if (soundMode === 2) {
+        icon = '🔇';
+        tooltip = t('soundModeNone');
+    }
+    
+    muteToggle.textContent = icon;
+    muteToggle.title = tooltip;
+    AudioPlayer.setSoundMode(soundMode);
+}
+
+if (muteToggle) {
+    muteToggle.onclick = () => {
+        soundMode = (soundMode + 1) % 3;
+        localStorage.setItem('soundMode', soundMode);
+        updateMuteUI();
+    };
+    // Initial sync
+    updateMuteUI();
+    AudioPlayer.playBGM();
+}
+
 
 
 

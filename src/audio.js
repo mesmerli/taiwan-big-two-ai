@@ -4,9 +4,40 @@
 class SoundEngine {
     constructor() {
         this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        this.soundMode = 0; // 0: All, 1: SFX Only, 2: None
+        this.bgm = null;
+    }
+
+    setSoundMode(mode) {
+        this.soundMode = parseInt(mode);
+        if (this.bgm) {
+            // BGM is only audible in Mode 0
+            this.bgm.muted = (this.soundMode !== 0);
+        }
+    }
+
+    playBGM() {
+        if (!this.bgm) {
+            this.bgm = new Audio('src/assets/mp3/Cards_On_The_Line.mp3');
+            this.bgm.loop = true;
+            this.bgm.volume = 0.4;
+            this.bgm.muted = (this.soundMode !== 0);
+        }
+
+        this.bgm.play().catch(err => {
+            console.log("BGM autoplay prevented, waiting for interaction...");
+            const startBGM = () => {
+                if (this.bgm) this.bgm.play();
+                window.removeEventListener('mousedown', startBGM);
+                window.removeEventListener('keydown', startBGM);
+            };
+            window.addEventListener('mousedown', startBGM);
+            window.addEventListener('keydown', startBGM);
+        });
     }
 
     playTone(freq, type, duration, volume = 0.1) {
+        if (this.soundMode === 2) return;
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
 
@@ -32,8 +63,22 @@ class SoundEngine {
         setTimeout(() => this.playTone(600, 'triangle', 0.1, 0.05), 50);
     }
 
-    playPass() {
+    playPass(persona = 'you') {
+        if (this.soundMode === 2) return;
+
+        // Always play SFX (Tone)
         this.playTone(200, 'sine', 0.2, 0.1);
+
+        // Play Voice only in Mode 0 (All)
+        if (this.soundMode !== 0) return;
+
+        const personaKey = persona.toLowerCase().split(' ')[0];
+        const audioPath = `src/assets/mp3/pass_${personaKey}.mp3`;
+
+        const audio = new Audio(audioPath);
+        audio.play().catch(err => {
+            console.warn(`Failed to play character-specific Pass (${audioPath}):`, err);
+        });
     }
 
     playWin() {
@@ -43,10 +88,23 @@ class SoundEngine {
         });
     }
 
-    playLa() {
-        // A sharp "shout" sound
+    playLa(persona = 'you') {
+        if (this.soundMode === 2) return;
+
+        // Always play SFX (Tone)
         this.playTone(600, 'sawtooth', 0.1, 0.15);
         setTimeout(() => this.playTone(400, 'sawtooth', 0.2, 0.1), 50);
+
+        // Play Voice only in Mode 0 (All)
+        if (this.soundMode !== 0) return;
+        
+        const personaKey = persona.toLowerCase().split(' ')[0];
+        const audioPath = `src/assets/mp3/la_${personaKey}.mp3`;
+        
+        const audio = new Audio(audioPath);
+        audio.play().catch(err => {
+            console.warn(`Failed to play character-specific La (${audioPath}):`, err);
+        });
     }
 }
 
@@ -54,3 +112,4 @@ const AudioPlayer = new SoundEngine();
 if (typeof module !== 'undefined') {
     module.exports = AudioPlayer;
 }
+
