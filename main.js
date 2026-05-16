@@ -112,10 +112,11 @@ function updateJumpList() {
 
   const t = (key) => I18N[currentLang][key] || key;
 
-  // 不再手動指定 program 路徑，讓 Electron 自動選取目前的執行序
+  // 明確指定 program 路徑，避免 Electron 內部轉換錯誤 (TypeError)
   const success = app.setUserTasks([
     {
-      arguments: '--about', // 簡化參數
+      program: process.execPath,
+      arguments: '--about',
       title: t('menuAbout'),
       description: 'Taiwan Big Two AI'
     }
