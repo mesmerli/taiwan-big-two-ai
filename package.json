@@ -1,6 +1,6 @@
 {
   "name": "taiwan-big-two-ai",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "description": "Modern Big Two game with LLM-powered AI integration",
   "license": "MIT",
   "main": "main.js",
@@ -17,8 +17,8 @@
   },
   "build": {
     "appId": "mesmerli.TaiwanBigTwoAI",
-    "buildVersion": "1.4.2.0",
-    "buildNumber": "2",
+    "buildVersion": "1.4.3.0",
+    "buildNumber": "3",
     "productName": "Taiwan Big Two AI",
     "directories": {
       "output": "dist"
@@ -30,7 +30,7 @@
         "appx"
       ],
       "icon": "src/assets/logo.png",
-      "artifactName": "Taiwan Big Two AI_1.4.2.0.${ext}"
+      "artifactName": "Taiwan Big Two AI_1.4.3.0.${ext}"
     },
     "appx": {
       "identityName": "mesmerli.TaiwanBigTwoAI",

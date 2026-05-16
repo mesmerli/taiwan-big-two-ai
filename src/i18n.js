@@ -54,7 +54,16 @@ const I18N = {
         soundModeAll: "Sound: All ON",
         soundModeSFX: "Sound: SFX Only (No Music/Voice)",
         soundModeNone: "Sound: All OFF",
-        author: "Author"
+        author: "Author",
+        legendCycle: "Select",
+        legendPlay: "Play",
+        legendClear: "Clear",
+        legendPass: "Pass",
+        legendRestart: "Restart",
+        tabRules: "Rules",
+        tabKeyboard: "Keyboard",
+        trialDaysLeft: "Trial Version: {days} days left",
+        trialClickToBuy: "Click to buy full version"
     },
     'zh': {
         title: "Taiwan Big Two AI",
@@ -111,7 +120,16 @@ const I18N = {
         soundModeAll: "音效：全開",
         soundModeSFX: "音效：僅特效 (關閉音樂與語音)",
         soundModeNone: "音效：全關",
-        author: "作者"
+        author: "作者",
+        legendCycle: "選擇",
+        legendPlay: "出牌",
+        legendClear: "取消",
+        legendPass: "過牌",
+        legendRestart: "重新開始",
+        tabRules: "遊戲規則",
+        tabKeyboard: "按鍵操作",
+        trialDaysLeft: "試用版本：剩餘 {days} 天",
+        trialClickToBuy: "點擊購買完整版"
     }
 
 };

@@ -1,7 +1,7 @@
 # Taiwan Big Two AI (台灣大老二 AI 版)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/Version-1.4.0-blue.svg)](./changelog.md)
+[![Version](https://img.shields.io/badge/Version-1.4.3-blue.svg)](./changelog.md)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Electron-brightgreen.svg)](https://www.electronjs.org/)
 
 本專案打造了一個現代化的大老二遊戲，基於 Electron 桌面應用框架。它結合了高效的啟發式算法與進階的多人格大型語言模型 (LLM) 研究引擎，專為自動化戰略對弈與進化學習分析而設計。
@@ -38,6 +38,7 @@
 - **選取手牌**：直接點擊手中的牌即可選取或取消選取。
 - **出牌 / 過牌**：使用玩家區域的主按鈕。
 - **強制「喊拉！」規則**：當您的出牌動作會導致手牌只剩 **1 張**時，您必須點擊**「喊拉！」**按鈕才能繼續。
+- **圖形化導覽**：點擊 **"i"** 圖示可開啟頁籤式視窗，查看完整的「遊戲規則」與「按鍵操作說明」。
 
 ### ⌨️ 鍵盤高手模式 (Pro Mode)
 為了提供更高效且專業的對弈體驗，本專案支援以下快捷鍵：
@@ -62,6 +63,7 @@
 ### 建置與測試流水線
 - **整合式測試**：執行 `npm test` 即可運行完整的測試套件 (Logic & UI)。
 - **Microsoft Store 上架支援**：支援 **「限時試用版 (Time-limited Trial)」** 完整授權機制。
+- **試用版互動**：主畫面左上角即時顯示剩餘試用天數，並支援點擊標籤直接跳轉商店購買。
 - **原生商店橋樑**：採用 C++ 原生插件 (`StoreBridge`) 確保與商店授權 API 的安全連接。
 - **自動化建置**：版本編號與安裝檔名會在打包時自動遞增與更新。
 - **圖示工廠**：使用 `winapp manifest update-assets` 自動化生成所有 Windows 資源。

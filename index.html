@@ -39,34 +39,50 @@
             </div>
         </div>
 
-        <!-- Rules Modal -->
         <div id="rules-modal" class="modal hidden">
-            <div class="modal-content">
+            <div class="modal-content info-modal-content">
                 <span class="close-btn">&times;</span>
                 <h2 data-i18n="rulesTitle">Game Rules (大老二規則)</h2>
-                <div class="rules-sections">
-                    <section>
-                        <h3 data-i18n="handsTitle">Hands (牌型)</h3>
-                        <ul>
-                            <li><strong data-i18n="rank">Rank:</strong> 2 > A > K > Q > J > 10 > 9 > 8 > 7 > 6 > 5 > 4 >
-                                3</li>
-                            <li><strong data-i18n="suit">Suit:</strong> Spade ♠ > Heart ♥ > Diamond ♦ > Club ♣</li>
-                            <li data-i18n="dragon">Dragon: 13-card sequence. Wins immediately! (2x)</li>
-                            <li data-i18n="fiveCard">Five-card: Str. Flush > 4-of-a-Kind > Full House > Straight</li>
-                        </ul>
-                    </section>
-                    <section>
-                        <h3 data-i18n="scoringTitle">Scoring (計分)</h3>
-                        <ul>
-                            <li data-i18n="baseScore">Base: 1 point per card left.</li>
-                            <li data-i18n="winnerX2">Winner x2: Ends with "2", Pair, or 5-card hand.</li>
-                            <li data-i18n="winnerX4">Winner x4: Ends with 4-of-a-Kind or Str. Flush.</li>
-                            <li data-i18n="loser10">Loser x2: Left with 10+ cards.</li>
-                            <li data-i18n="loserTwo">Loser x2: Per "2" card in hand.</li>
-                            <li data-i18n="loserSpecial">Loser x2: Per 4-of-a-Kind or Str. Flush in hand.</li>
-                        </ul>
-                    </section>
+                <div class="modal-tabs">
+                    <button class="tab-btn active" data-tab="rules" data-i18n="tabRules">Rules</button>
+                    <button class="tab-btn" data-tab="keyboard" data-i18n="tabKeyboard">Keyboard</button>
                 </div>
+
+                <div id="tab-rules" class="tab-content active">
+                    <div class="rules-sections">
+                        <section>
+                            <h3 data-i18n="handsTitle">Hands (牌型)</h3>
+                            <ul>
+                                <li><strong data-i18n="rank">Rank:</strong> 2 > A > K > Q > J > 10 > 9 > 8 > 7 > 6 > 5 > 4 > 3</li>
+                                <li><strong data-i18n="suit">Suit:</strong> Spade ♠ > Heart ♥ > Diamond ♦ > Club ♣</li>
+                                <li data-i18n="dragon">Dragon: 13-card sequence. Wins immediately! (2x)</li>
+                                <li data-i18n="fiveCard">Five-card: Str. Flush > 4-of-a-Kind > Full House > Straight</li>
+                            </ul>
+                        </section>
+                        <section>
+                            <h3 data-i18n="scoringTitle">Scoring (計分)</h3>
+                            <ul>
+                                <li data-i18n="baseScore">Base: 1 point per card left.</li>
+                                <li data-i18n="winnerX2">Winner x2: Ends with "2", Pair, or 5-card hand.</li>
+                                <li data-i18n="winnerX4">Winner x4: Ends with 4-of-a-Kind or Str. Flush.</li>
+                                <li data-i18n="loser10">Loser x2: Left with 10+ cards.</li>
+                                <li data-i18n="loserTwo">Loser x2: Per "2" card in hand.</li>
+                                <li data-i18n="loserSpecial">Loser x2: Per 4-of-a-Kind or Str. Flush in hand.</li>
+                            </ul>
+                        </section>
+                    </div>
+                </div>
+
+                <div id="tab-keyboard" class="tab-content">
+                    <div class="keyboard-sections">
+                        <div class="legend-item"><span class="key">←</span><span class="key">→</span> <span data-i18n="legendCycle">Select</span></div>
+                        <div class="legend-item"><span class="key">↑</span> <span data-i18n="legendPlay">Play / Shout LA!</span></div>
+                        <div class="legend-item"><span class="key">↓</span> <span data-i18n="legendClear">Clear Selection</span></div>
+                        <div class="legend-item"><span class="key space-key"></span> <span data-i18n="legendPass">Pass Turn</span></div>
+                        <div class="legend-item"><span class="key">↓</span><span class="key">↓</span><span class="key">↓</span> <span data-i18n="legendRestart">Restart Game (When Ended)</span></div>
+                    </div>
+                </div>
+
                 <div class="rules-footer">
                     <span id="rules-version"></span>
                     <span id="rules-author"></span>
@@ -163,12 +179,16 @@
                 <!-- Cards will be dynamically inserted here -->
             </div>
             <div id="controls">
-                <button id="btn-play" class="premium-btn" data-i18n="play">Play</button>
-                <button id="btn-pass" class="premium-btn secondary" data-i18n="pass">Pass</button>
-                <button id="btn-shout" class="premium-btn highlight hidden" data-i18n="shout">Shout LA!</button>
+                <button id="btn-play" class="premium-btn"><span class="kbd-hint">↑</span> <span data-i18n="play">Play</span></button>
+                <button id="btn-pass" class="premium-btn secondary"><span class="kbd-hint space-key small"></span> <span data-i18n="pass">Pass</span></button>
+                <button id="btn-shout" class="premium-btn highlight hidden"><span class="kbd-hint">↑</span> <span data-i18n="shout">Shout LA!</span></button>
             </div>
         </div>
+
     </div>
+
+    <!-- Trial Status (Moved outside to ensure it's on top) -->
+    <div id="trial-status" class="hidden"></div>
 
     <script src="src/audio.js"></script>
     <script src="src/gameLogic.js"></script>

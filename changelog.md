@@ -2,6 +2,20 @@
 
 All notable changes to the **Taiwan Big Two AI** project will be documented in this file.
 
+### [1.4.3] - 2026-05-16
+
+### Added
+- **Tabbed Information UI**:
+    - Reorganized the Game Rules modal into a tabbed interface with "Rules" and "Keyboard" sections.
+    - Integrated high-fidelity keyboard operation guides directly into the UI for better accessibility.
+- **Premium Trial Experience**:
+    - Added a persistent amber status label at the top-left corner showing remaining trial days.
+    - Implemented interactive trial status: users can now click the trial label to jump directly to the Microsoft Store purchase page.
+- **Visual Polish**:
+    - Replaced "Space" text hints with a visual `ㄩ` shaped spacebar icon.
+    - Enhanced contrast and visibility for keyboard icons on action buttons (Up/Down/Space).
+    - Swapped keyboard icon positions to the left of button text for better scanning.
+
 ### [1.4.2] - 2026-05-16
 
 ### Added

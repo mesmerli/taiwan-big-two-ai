@@ -35,7 +35,8 @@ function createWindow() {
   win.loadFile('index.html');
   
   // Microsoft Store Trial Support Integration
-  win.once('ready-to-show', () => {
+  // Use did-finish-load to ensure the renderer's ipcRenderer listeners are ready
+  win.webContents.once('did-finish-load', () => {
     if (process.platform === 'win32') {
       checkStoreLicense();
     }
@@ -93,6 +94,18 @@ if (!gotTheLock) {
     ipcMain.on('show-about', showAboutDialog);
   });
 }
+
+ipcMain.on('open-store', async () => {
+  const storeUrl = `ms-windows-store://pdp/?ProductId=${STORE_PRODUCT_ID}`;
+  const webUrl = `https://apps.microsoft.com/store/detail/${STORE_PRODUCT_ID}`;
+  
+  try {
+    await shell.openExternal(storeUrl);
+  } catch (err) {
+    console.error('[Store] Protocol failed, opening web version:', err);
+    shell.openExternal(webUrl);
+  }
+});
 
 function updateJumpList() {
   if (process.platform !== 'win32') return;
@@ -177,10 +190,14 @@ async function checkStoreLicense() {
 async function processLicense(license) {
   // --- 測試模擬區 (正式上架前請將此段刪除) ---
   /*
-  console.log('[Store] 正在模擬過期狀態...');
-  license.isActive = true;           // 模擬已取得授權
-  license.isTrial = true;            // 模擬為試用版
-  license.expirationDate = '2020-01-01T00:00:00Z'; // 模擬一個已過去的日期
+  const mockFutureDate = new Date();
+  mockFutureDate.setDate(mockFutureDate.getDate() + 7);
+  license = {
+    isActive: true,
+    isTrial: true,
+    expirationDate: mockFutureDate.toISOString()
+  };
+  console.log('[Store] 正在模擬試用狀態 (7天後過期)...');
   */
   // ---------------------------------------
 
@@ -200,6 +217,7 @@ async function processLicense(license) {
     } else {
       const daysLeft = Math.ceil((expirationDate - now) / (1000 * 60 * 60 * 24));
       console.log(`[Store] 試用剩餘天數: ${daysLeft} 天`);
+      if (win) win.webContents.send('license-status', { isTrial: true, daysLeft: daysLeft });
     }
   } else {
     console.log('[Store] 檢測到完整版，感謝購買！');

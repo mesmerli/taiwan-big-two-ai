@@ -23,6 +23,8 @@ const confirmNo = document.getElementById('confirm-no');
 const closeBtn = document.querySelector('.close-btn');
 const langToggle = document.getElementById('lang-toggle');
 const muteToggle = document.getElementById('mute-toggle');
+const trialStatus = document.getElementById('trial-status');
+let trialDaysRemaining = null;
 let soundMode = parseInt(localStorage.getItem('soundMode')) || 0; // 0: All, 1: SFX Only, 2: None
 
 const SUIT_SYMBOLS = ['♣', '♦', '♥', '♠'];
@@ -118,8 +120,32 @@ function updateLanguage() {
     document.title = t('title');
     ipcRenderer.send('update-lang', currentLang);
     updateMuteUI();
+    updateTrialStatusUI();
     renderAll();
 }
+
+function updateTrialStatusUI() {
+    if (!trialStatus || trialDaysRemaining === null) return;
+    trialStatus.textContent = t('trialDaysLeft', { days: trialDaysRemaining });
+    trialStatus.title = t('trialClickToBuy');
+    trialStatus.classList.remove('hidden');
+}
+
+if (trialStatus) {
+    trialStatus.addEventListener('click', () => {
+        ipcRenderer.send('open-store');
+    });
+}
+
+ipcRenderer.on('license-status', (event, status) => {
+    if (status.isTrial) {
+        trialDaysRemaining = status.daysLeft;
+        updateTrialStatusUI();
+    } else if (status.isFullVersion) {
+        trialDaysRemaining = null;
+        if (trialStatus) trialStatus.classList.add('hidden');
+    }
+});
 
 function t(key, params = {}) {
     let str = I18N[currentLang][key] || key;
@@ -226,6 +252,22 @@ function renderAll() {
     updateStatus();
     updatePlayButtonVisibility();
 }
+
+// Tab Switching Logic
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.onclick = () => {
+        const tabId = btn.getAttribute('data-tab');
+        const modal = btn.closest('.modal-content');
+        
+        // Update buttons
+        modal.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        
+        // Update content
+        modal.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        modal.querySelector(`#tab-${tabId}`).classList.add('active');
+    };
+});
 
 function renderHumanHand() {
     humanCardsContainer.innerHTML = '';

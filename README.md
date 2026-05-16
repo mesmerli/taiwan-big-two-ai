@@ -1,7 +1,7 @@
 # Taiwan Big Two AI (台灣大老二 AI 版)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/Version-1.4.0-blue.svg)](./changelog.md)
+[![Version](https://img.shields.io/badge/Version-1.4.3-blue.svg)](./changelog.md)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Electron-brightgreen.svg)](https://www.electronjs.org/)
 
 A modernized **Taiwanese Big Two** card game built with Electron. This project integrates sophisticated heuristic algorithms with an advanced multi-persona research engine powered by **Large Language Models (LLM)**, designed for autonomous strategic gameplay analysis and evolutionary learning.
@@ -38,6 +38,7 @@ The engine is strictly aligned with traditional **Taiwanese Big Two** rules:
 - **Selecting Cards**: Click on cards in your hand to select/deselect them.
 - **Play / Pass**: Use the primary buttons on the human player area.
 - **Mandatory Shout LA!**: If a move leaves you with exactly **one card**, you must use the **"Shout LA!"** button.
+- **Visual Guide**: Click the **"i"** icon to access a tabbed guide containing both game rules and keyboard shortcuts.
 
 ### ⌨️ Keyboard Mastery (Pro Mode)
 For a more efficient and professional experience, use the following shortcuts:
@@ -62,6 +63,7 @@ For a more efficient and professional experience, use the following shortcuts:
 ### Build & Test Pipeline
 - **Unified Testing**: Run `npm test` for full suite (Logic & UI).
 - **Microsoft Store Readiness**: Full MSIX/AppX compliance with **Time-limited Trial** support.
+- **Trial Interaction**: Displays remaining trial days in the top-left; supports one-click jump to the Store for purchase.
 - **Native Store Bridge**: Powered by a C++ native addon (`StoreBridge`) for secure licensing.
 - **Auto-Build**: Build version and artifact filenames increment automatically.
 - **Icon Factory**: Automated resource generation using `winapp manifest update-assets`.
