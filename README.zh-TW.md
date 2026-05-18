@@ -1,6 +1,6 @@
 # Taiwan Big Two AI (台灣大老二 AI 版)
 
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![Version](https://img.shields.io/badge/Version-1.5.0-blue.svg)](./changelog.md)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Electron%20%7C%20Android-brightgreen.svg)](https://capacitorjs.com/)
 
@@ -113,7 +113,7 @@ npm test
 
 ## 📜 更新日誌與授權
 - 詳細變更紀錄請參閱 [changelog.md](./changelog.md)。
-- 本專案採用 **GNU GPL-3.0 授權條款**。
+- 本專案採用 **GNU AGPL-3.0 授權條款**。
 
 ---
 

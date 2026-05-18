@@ -2,7 +2,7 @@
   "name": "taiwan-big-two-ai",
   "version": "1.5.0",
   "description": "Modern Big Two game with LLM-powered AI integration",
-  "license": "GPL-3.0",
+  "license": "AGPL-3.0-only",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
