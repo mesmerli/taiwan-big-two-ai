@@ -2,7 +2,7 @@
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![Version](https://img.shields.io/badge/Version-1.5.0-blue.svg)](./changelog.md)
-[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Electron%20%7C%20Android-brightgreen.svg)](https://capacitorjs.com/)
+[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Electron%20%7C%20Android%20%7C%20Browser-brightgreen.svg)](https://capacitorjs.com/)
 
 本專案打造了一個現代化的大老二遊戲，基於 Electron 桌面應用框架。它結合了高效的啟發式算法與進階的多人格大型語言模型 (LLM) 研究引擎，專為自動化戰略對弈與進化學習分析而設計。
 
