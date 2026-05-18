@@ -6,6 +6,18 @@
 
 本專案打造了一個現代化的大老二遊戲，基於 Electron 桌面應用框架。它結合了高效的啟發式算法與進階的多人格大型語言模型 (LLM) 研究引擎，專為自動化戰略對弈與進化學習分析而設計。
 
+### 📸 遊戲畫面
+
+<p align="center">
+  <img src="./screenshots/playground-zh.png" width="48%" />
+  <img src="./screenshots/aisetting_zh.png" width="48%" />
+</p>
+<p align="center">
+  <img src="./screenshots/gamerule-zh.png" width="32%" />
+  <img src="./screenshots/keyboard-zh.png" width="32%" />
+  <img src="./screenshots/about-zh.png" width="32%" />
+</p>
+
 ---
 
 ## 🚀 核心特色
