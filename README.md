@@ -6,6 +6,8 @@
 
 A modernized **Taiwanese Big Two** card game built with Electron. This project integrates sophisticated heuristic algorithms with an advanced multi-persona research engine powered by **Large Language Models (LLM)**, designed for autonomous strategic gameplay analysis and evolutionary learning.
 
+### 🌐 [Play Online Directly](https://mesmerli.github.io/taiwan-big-two-ai/)
+
 ### 📸 Screenshots
 
 <p align="center">
