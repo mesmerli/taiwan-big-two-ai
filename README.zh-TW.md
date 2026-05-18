@@ -1,6 +1,6 @@
 # Taiwan Big Two AI (台灣大老二 AI 版)
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Version](https://img.shields.io/badge/Version-1.4.3-blue.svg)](./changelog.md)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Electron-brightgreen.svg)](https://www.electronjs.org/)
 
@@ -101,7 +101,7 @@ npm test
 
 ## 📜 更新日誌與授權
 - 詳細變更紀錄請參閱 [changelog.md](./changelog.md)。
-- 本專案採用 **MIT 授權條款**。
+- 本專案採用 **GNU GPL-3.0 授權條款**。
 
 ---
 *由 mesmerli 為 AI 戰略研究精心打造 ❤️*

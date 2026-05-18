@@ -1,6 +1,6 @@
 # Taiwan Big Two AI (台灣大老二 AI 版)
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Version](https://img.shields.io/badge/Version-1.4.3-blue.svg)](./changelog.md)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Electron-brightgreen.svg)](https://www.electronjs.org/)
 
@@ -101,7 +101,7 @@ The "Deep Learning" AI characters (Diana & Ares) require an OpenAI-compatible AP
 
 ## 📜 Changelog & License
 - For a detailed history, see [changelog.md](./changelog.md).
-- This project is licensed under the **MIT License**.
+- This project is licensed under the **GNU GPL-3.0 License**.
 
 ---
 *Created with ❤️ by mesmerli for AI Strategic Research*
