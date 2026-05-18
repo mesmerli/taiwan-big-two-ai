@@ -41,6 +41,11 @@ The engine is strictly aligned with traditional **Taiwanese Big Two** rules:
 - **Suit Strength**: Spade ♠ > Heart ♥ > Diamond ♦ > Club ♣.
 - **Dragon**: 13-card sequence (3-2) wins immediately.
 
+### 4. Adaptive Responsive UI (Mobile Layout)
+- **Automatic Layout Toggle**: Dynamically checks window size and automatically switches between the premium widescreen desktop grid layout and the vertical stack mobile layout when width drops below `900px`.
+- **Cross-Platform Consistency**: Synchronized assets and styles across Electron (desktop) and Capacitor (Android) wrappers to guarantee a fluid responsive gaming experience on all screen sizes and orientations.
+- **Premium Brand Integration**: Rules and settings modal headers are updated with a high-fidelity stylized logo, complete with a purple-themed ambient glow filter.
+
 ---
 
 ## 🎮 Controls & Interaction

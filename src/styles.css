@@ -145,6 +145,16 @@ button,
     color: var(--primary-color);
     padding-bottom: 5px;
     margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.rules-logo {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+    filter: drop-shadow(0 0 8px rgba(155, 89, 182, 0.5));
 }
 
 .rules-sections {

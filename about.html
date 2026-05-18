@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -20,16 +21,19 @@
             text-align: center;
             -webkit-app-region: drag;
         }
+
         .logo {
             margin-bottom: 20px;
             filter: drop-shadow(0 0 20px rgba(155, 89, 182, 0.5));
         }
+
         .logo img {
             width: 120px;
             height: 120px;
             object-fit: contain;
             display: block;
         }
+
         h1 {
             font-size: 24px;
             color: #9b59b6;
@@ -37,18 +41,21 @@
             text-transform: uppercase;
             letter-spacing: 2px;
         }
+
         .version {
             font-family: monospace;
             color: #64748b;
             font-size: 14px;
             margin-bottom: 25px;
         }
+
         .detail {
             font-size: 14px;
             line-height: 1.6;
             color: #cbd5e1;
             max-width: 300px;
         }
+
         .close-btn {
             position: absolute;
             top: 10px;
@@ -60,12 +67,13 @@
             -webkit-app-region: no-drag;
             z-index: 100;
         }
+
         .close-btn:hover {
             color: white;
         }
-
     </style>
 </head>
+
 <body>
     <span class="close-btn" onclick="window.close()">&times;</span>
     <div class="logo">
@@ -102,9 +110,9 @@
         document.getElementById('about-title').textContent = t('title');
         document.getElementById('version').textContent = 'v' + (pkg.buildVersion || pkg.version);
 
-        document.getElementById('about-detail').innerHTML = t('aboutDetail', { 
-            version: pkg.buildVersion || pkg.version, 
-            author: pkg.author || 'mesmerli' 
+        document.getElementById('about-detail').innerHTML = t('aboutDetail', {
+            version: pkg.buildVersion || pkg.version,
+            author: pkg.author || 'mesmerli'
         }).replace(/\n/g, '<br>');
 
 
@@ -115,4 +123,5 @@
         });
     </script>
 </body>
+
 </html>

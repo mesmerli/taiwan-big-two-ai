@@ -2,6 +2,17 @@
 
 All notable changes to the **Taiwan Big Two AI** project will be documented in this file.
 
+### [1.5.1] - 2026-05-19
+
+### Added
+- **Dynamic Desktop Window Resizing (Responsive Layout)**:
+  - Added a window `resize` event listener that automatically toggles the `.mobile-layout` class on `<body>` and `<html>` elements when the viewport width is resized below `900px`.
+  - Enables smooth automatic layout switching when running on desktop or sizing down a browser window.
+- **Refined Premium Information Window**:
+  - Changed the Rules Modal / Info Window Chinese header to **"台灣大老二 AI"** in Traditional Chinese mode for standard brand recognition.
+  - Placed the project **Logo** next to the Rules Modal header, nested inside the `<h2>` tag to stay intact during localization updates.
+  - Styled the new Rules Modal Logo with a professional flexbox centered layout and a purple-themed ambient drop-shadow effect in both root and web Capacitor assets.
+
 ### [1.5.0] - 2026-05-18
 
 ### Added

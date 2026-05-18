@@ -66,8 +66,8 @@ const I18N = {
         trialClickToBuy: "Click to buy full version"
     },
     'zh': {
-        title: "Taiwan Big Two AI",
-        rulesTitle: "遊戲規則 (台灣大老二)",
+        title: "台灣大老二 AI",
+        rulesTitle: "台灣大老二 AI",
         handsTitle: "牌型",
         scoringTitle: "計分",
         rank: "點數",
@@ -104,9 +104,9 @@ const I18N = {
         yes: "是",
         no: "否",
         ok: "確定",
-        aboutTitle: "關於 Taiwan Big Two AI",
+        aboutTitle: "關於台灣大老二 AI",
         aboutDetail: "作者: {author}\n\n這是一款結合了 LLM AI 技術的現代化台灣大老二遊戲。",
-        menuAbout: "關於 Taiwan Big Two AI",
+        menuAbout: "關於台灣大老二 AI",
         aiSettingsTitle: "AI 設定",
         modelId: "模型 ID (留白以自動偵測)",
         extraPrompt: "額外提示詞",

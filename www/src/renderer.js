@@ -8,11 +8,20 @@ if (typeof require !== 'undefined') {
     }
 }
 
-// Dynamically add mobile-layout class to body under Android (Capacitor) environment
-if (typeof AppEnv !== 'undefined' && AppEnv.isAndroid) {
-    document.body.classList.add('mobile-layout');
-    console.log('[Renderer] Added .mobile-layout class to body.');
+// Dynamically handle mobile-layout based on environment and window width
+function updateResponsiveLayout() {
+    const isAndroid = (typeof AppEnv !== 'undefined' && AppEnv.isAndroid);
+    const isNarrow = window.innerWidth < 900; // Trigger mobile layout below 900px
+    if (isAndroid || isNarrow) {
+        document.body.classList.add('mobile-layout');
+        document.documentElement.classList.add('mobile-layout');
+    } else {
+        document.body.classList.remove('mobile-layout');
+        document.documentElement.classList.remove('mobile-layout');
+    }
 }
+updateResponsiveLayout();
+window.addEventListener('resize', updateResponsiveLayout);
 
 /**
  * Renderer Process Logic
