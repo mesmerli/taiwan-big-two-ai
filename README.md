@@ -6,6 +6,18 @@
 
 A modernized **Taiwanese Big Two** card game built with Electron. This project integrates sophisticated heuristic algorithms with an advanced multi-persona research engine powered by **Large Language Models (LLM)**, designed for autonomous strategic gameplay analysis and evolutionary learning.
 
+### 📸 Screenshots
+
+<p align="center">
+  <img src="./screenshots/playground-en.png" width="48%" />
+  <img src="./screenshots/aisetting-en.png" width="48%" />
+</p>
+<p align="center">
+  <img src="./screenshots/gamerule-en.png" width="32%" />
+  <img src="./screenshots/keyboard-en.png" width="32%" />
+  <img src="./screenshots/about-en.png" width="32%" />
+</p>
+
 ---
 
 ## 🚀 Core Features
