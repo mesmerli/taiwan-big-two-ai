@@ -1,8 +1,8 @@
 # Taiwan Big Two AI (台灣大老二 AI 版)
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-[![Version](https://img.shields.io/badge/Version-1.4.3-blue.svg)](./changelog.md)
-[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Electron-brightgreen.svg)](https://www.electronjs.org/)
+[![Version](https://img.shields.io/badge/Version-1.5.0-blue.svg)](./changelog.md)
+[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Electron%20%7C%20Android-brightgreen.svg)](https://capacitorjs.com/)
 
 本專案打造了一個現代化的大老二遊戲，基於 Electron 桌面應用框架。它結合了高效的啟發式算法與進階的多人格大型語言模型 (LLM) 研究引擎，專為自動化戰略對弈與進化學習分析而設計。
 
@@ -116,4 +116,30 @@ npm test
 - 本專案採用 **GNU GPL-3.0 授權條款**。
 
 ---
-*由 mesmerli 為 AI 戰略研究精心打造 ❤️*
+
+## 📱 Android 行動裝置版建置 (Capacitor)
+
+本專案使用 [Capacitor](https://capacitorjs.com/) 框架，將現代化的大老二網頁前端打包成原生 Android 應用程式。
+
+### 1. 同步與構建網頁資源
+```bash
+# 同步網頁代碼至 Android 原生專案
+npx cap sync android
+```
+
+### 2. 在終端機一鍵產生 Android 安裝檔 (.apk)
+如果您想直接在命令列編譯安裝檔，可以使用專案內置的 Gradle 工具（會自動借用 Android Studio 的內置 Java 執行環境）：
+```powershell
+$env:JAVA_HOME = "C:\Program Files\Android\Android Studio\jbr"
+cd android
+./gradlew assembleDebug
+```
+* 編譯完成後，安裝檔將產生於：`android/app/build/outputs/apk/debug/app-debug.apk`。
+
+### 3. 使用 Android Studio 進行開發與調試
+1. 打開 Android Studio。
+2. 選擇 **Open an Existing Project**，並選取 `android` 目錄。
+3. 待 Gradle 同步完成後，直接點擊頂部的 **綠色三角形 Play 鍵 (Run)**，即可在模擬器或實體手機上部署運行！
+
+---
+*由 mesmerli 為 AI 戰略研究與行動體驗精心打造 ❤️*

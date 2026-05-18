@@ -2,6 +2,28 @@
 
 All notable changes to the **Taiwan Big Two AI** project will be documented in this file.
 
+### [1.5.0] - 2026-05-18
+
+### Added
+- **Mobile Stack Layout & Capacitor Adaptations**:
+  - Redesigned the gameplay view into an ergonomic vertical flex layout on mobile.
+  - Set clock-wise player ordering: Player 1 (You) ➔ Alex (Player 2) ➔ Bella (Player 3) ➔ Diana (Player 4).
+  - Micro-scaled cards (52px wide hand, 42px wide played slots) to perfectly fit 320px–480px displays.
+  - Added 0-ms startup head script layout injection to completely prevent desktop-to-mobile visual flicker.
+- **Ergonomic Usability & Touch Optimizations**:
+  - Expanded close button (`.close-btn` / "×") hit target to `48px` to ensure highly reliable thumb taps.
+  - Added instant `touchstart` bindings to all close buttons to bypass mobile's 300ms delay.
+  - Wrapped control icon hover transitions in `@media (hover: hover)` queries to prevent sticky blue backgrounds on touchscreens.
+  - Implemented tactile `:active` shrink scaling (`scale(0.95)`) for quick click feedback.
+- **Audio & Compatibility Fixes**:
+  - Added multi-touch gesture hooks (`touchstart` and `click`) to unlock HTML5 background music and play tones in mobile WebViews.
+  - Added auto-resume triggers to instantly wake up suspended web AudioContext on first tap.
+  - Mapped hardware keyboard Spacebar code (`'Space'` & `32`) to ensure reliable "Pass Turn" actions in emulators and physical decks.
+- **Native Android Configuration & GPU Acceleration**:
+  - Integrated Capacitor Android wrapper and synchronized resource files to `www/` and native assets.
+  - Explicitly re-enabled hardware graphic acceleration (`android:hardwareAccelerated="true"`) in AndroidManifest.xml for butter-smooth CSS card translations.
+  - Synchronized build parameters to `versionCode 6` and `versionName "1.5.0"` in Gradle build properties.
+
 ### [1.4.3] - 2026-05-16
 
 ### Added

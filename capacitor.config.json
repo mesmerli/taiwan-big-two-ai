@@ -1,0 +1,19 @@
+{
+  "appId": "com.twbig2.app",
+  "appName": "twbig2",
+  "webDir": "www",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https",
+    "allowNavigation": []
+  },
+  "android": {
+    "allowMixedContent": false,
+    "captureInput": true
+  },
+  "plugins": {
+    "Preferences": {
+      "presentationStyle": "fullscreen"
+    }
+  }
+}

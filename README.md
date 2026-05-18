@@ -1,8 +1,8 @@
 # Taiwan Big Two AI (台灣大老二 AI 版)
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-[![Version](https://img.shields.io/badge/Version-1.4.3-blue.svg)](./changelog.md)
-[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Electron-brightgreen.svg)](https://www.electronjs.org/)
+[![Version](https://img.shields.io/badge/Version-1.5.0-blue.svg)](./changelog.md)
+[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Electron%20%7C%20Android-brightgreen.svg)](https://capacitorjs.com/)
 
 A modernized **Taiwanese Big Two** card game built with Electron. This project integrates sophisticated heuristic algorithms with an advanced multi-persona research engine powered by **Large Language Models (LLM)**, designed for autonomous strategic gameplay analysis and evolutionary learning.
 
@@ -116,4 +116,30 @@ The "Deep Learning" AI characters (Diana & Ares) require an OpenAI-compatible AP
 - This project is licensed under the **GNU GPL-3.0 License**.
 
 ---
-*Created with ❤️ by mesmerli for AI Strategic Research*
+
+## 📱 Android Mobile Build (Capacitor)
+
+This project uses the [Capacitor](https://capacitorjs.com/) framework to package the modern web frontend as a native Android application.
+
+### 1. Sync & Build Web Assets
+```bash
+# Sync web code to the native Android project
+npx cap sync android
+```
+
+### 2. Compile Android Installation File (.apk) in Terminal
+If you want to compile the installation file directly in the command line, you can use the built-in Gradle tool (it will automatically borrow the built-in Java environment from Android Studio):
+```powershell
+$env:JAVA_HOME = "C:\Program Files\Android\Android Studio\jbr"
+cd android
+./gradlew assembleDebug
+```
+* Once compiled, the APK file will be generated at: `android/app/build/outputs/apk/debug/app-debug.apk`.
+
+### 3. Using Android Studio for Development & Debugging
+1. Open Android Studio.
+2. Select **Open an Existing Project**, and choose the `android` folder.
+3. Once Gradle sync completes, click the **green triangle Play button (Run)** at the top to deploy and run it on an emulator or physical phone!
+
+---
+*Created with ❤️ by mesmerli for AI Strategic Research & Mobile Experience*
