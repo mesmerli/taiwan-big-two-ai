@@ -29,6 +29,14 @@
     ```bash
     npm run dist
     ```
+    打包成 **GitHub 側載版 (Sideloaded)** (會包含 GitHub Sponsors 贊助連結與側載授權提示)：
+    ```bash
+    npm run dist:github
+    ```
+    打包成 **Microsoft Store 商店版** (會隱藏贊助連結，並整合微軟商店試用版天數及授權檢查)：
+    ```bash
+    npm run dist:store
+    ```
     打包成 **Microsoft Store** 專用的 MSIX 格式：
     ```bash
     npm run dist:msix
