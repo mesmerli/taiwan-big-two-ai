@@ -1220,7 +1220,7 @@ function setupAvatarClickListeners() {
     };
 
     const exportLearningsBtn = document.getElementById('ai-export-learnings');
-    exportLearningsBtn.onclick = () => {
+    exportLearningsBtn.onclick = async () => {
         if (currentEditingIndex !== -1 && window.AI) {
             const char = window.AI.getCharacter(currentEditingIndex);
             if (char && char.isLLM) {
@@ -1231,42 +1231,38 @@ function setupAvatarClickListeners() {
                     stats: char.stats
                 };
 
-                const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `${char.name}_Memory_${new Date().toLocaleDateString().replace(/\//g, '-')}.json`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
+                const defaultFilename = `${char.name}_Memory_${new Date().toLocaleDateString().replace(/\//g, '-')}.json`;
+                
+                try {
+                    const result = await window.SystemService.writeFile(defaultFilename, exportData);
+                    if (result.success) {
+                        AudioPlayer.playCardSelect();
+                        console.log("[Export] Saved to: ", result.path || 'Web Download');
+                    }
+                } catch (err) {
+                    showAlert(currentLang === 'zh' ? '匯出失敗' : 'Export failed');
+                    console.error(err);
+                }
             }
         }
     };
 
     const importLearningsBtn = document.getElementById('ai-import-learnings');
-    const importFileInput = document.getElementById('ai-import-file');
-
-    importLearningsBtn.onclick = () => {
-        importFileInput.click();
-    };
-
-    importFileInput.onchange = (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            try {
-                const data = JSON.parse(event.target.result);
-                if (currentEditingIndex !== -1 && window.AI) {
-                    const char = window.AI.getCharacter(currentEditingIndex);
-                    if (char && char.isLLM) {
-                        // Validate basic structure
+    importLearningsBtn.onclick = async () => {
+        if (currentEditingIndex !== -1 && window.AI) {
+            const char = window.AI.getCharacter(currentEditingIndex);
+            if (char && char.isLLM) {
+                try {
+                    const result = await window.SystemService.readFile({ accept: '.json' });
+                    if (result.success && result.data) {
+                        const data = result.data;
+                        
                         if (Array.isArray(data.learnings)) {
                             char.learnings = data.learnings;
                             if (data.stats) char.stats = data.stats;
+                            
                             if (typeof char.saveMemory === 'function') char.saveMemory();
+                            
                             updateLearningsUI(char);
                             showAlert(currentLang === 'zh' ? '記憶匯入成功！' : 'Memory imported successfully!');
                             AudioPlayer.playCardSelect();
@@ -1274,14 +1270,12 @@ function setupAvatarClickListeners() {
                             throw new Error("Invalid format");
                         }
                     }
+                } catch (err) {
+                    showAlert(currentLang === 'zh' ? '匯入失敗：格式不正確' : 'Import failed: Invalid format');
+                    console.error(err);
                 }
-            } catch (err) {
-                showAlert(currentLang === 'zh' ? '匯入失敗：格式不正確' : 'Import failed: Invalid format');
-                console.error(err);
             }
-            importFileInput.value = ''; // Reset input
-        };
-        reader.readAsText(file);
+        }
     };
 
     async function fetchAvailableModels(apiUrl) {

@@ -1,8 +1,8 @@
 # Taiwan Big Two AI (台灣大老二 AI 版)
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
-[![Version](https://img.shields.io/badge/Version-1.5.0-blue.svg)](./changelog.md)
-[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Electron%20%7C%20Android%20%7C%20Browser-brightgreen.svg)](https://capacitorjs.com/)
+[![Version](https://img.shields.io/badge/Version-1.5.8-blue.svg)](./changelog.md)
+[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Electron%20%7C%20Tauri%20%7C%20Android%20%7C%20Browser-brightgreen.svg)](https://capacitorjs.com/)
 
 A modernized **Taiwanese Big Two** card game built with Electron. This project integrates sophisticated heuristic algorithms with an advanced multi-persona research engine powered by **Large Language Models (LLM)**, designed for autonomous strategic gameplay analysis and evolutionary learning.
 
@@ -10,8 +10,8 @@ A modernized **Taiwanese Big Two** card game built with Electron. This project i
 
 ### 💡 How to get this game:
 * **Support the Developer**: Purchase the official version on the **Microsoft Store** for automatic updates and easy installation.
-* **Android Version**: Browse the **[Android Release Folder](./release/Android/)** to download and install the latest **`twbig2ai-1.5.0.apk`** installation package.
-* **Open Source**: This game is licensed under **AGPLv3**. You are welcome to clone this repository and build it yourself for free.
+* **Android Version**: Browse the **[Android Release Folder](./release/Android/)** to download and install the latest **`twbig2ai-1.5.8.apk`** installation package.
+* **Open Source**: This game is licensed under **AGPLv3**. You are welcome to clone this repository and build it yourself for free. Check out our [Build & Run Guide](./Documents/BuildnRun.md) and [Architecture Overview](./Documents/architecture.md) for more details.
 * **Sponsor**: If you find my AI logic helpful for your own projects, please consider a donation via **GitHub Sponsors**.
 
 ### 📸 Screenshots

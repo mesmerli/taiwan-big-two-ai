@@ -9,19 +9,26 @@
                        ((window.process && window.process.versions && !!window.process.versions.electron) || 
                         (navigator && navigator.userAgent && navigator.userAgent.includes('Electron')));
 
+    const isTauri = typeof window !== 'undefined' && 
+                    (window.__TAURI_METADATA__ !== undefined || 
+                     window.__TAURI__ !== undefined || 
+                     window.__TAURI_INTERNALS__ !== undefined);
+
     const isAndroid = typeof window !== 'undefined' && 
                       window.Capacitor && 
                       ((window.Capacitor.getPlatform && window.Capacitor.getPlatform() === 'android') || 
                        window.Capacitor.platform === 'android');
 
-    const isBrowser = !isElectron && !isAndroid;
+    const isBrowser = !isElectron && !isTauri && !isAndroid;
 
     const AppEnv = {
         isElectron,
+        isTauri,
         isAndroid,
         isBrowser,
         getPlatformName() {
             if (isElectron) return 'Electron';
+            if (isTauri) return 'Tauri';
             if (isAndroid) return 'Android (Capacitor)';
             return 'Browser';
         }
