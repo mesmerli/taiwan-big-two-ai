@@ -124,7 +124,8 @@
         const urlParams = new URLSearchParams(window.location.search);
         const lang = urlParams.get('lang') || 'zh';
         const t = (key, params = {}) => {
-            let str = window.I18N[lang][key] || window.I18N['en'][key] || key;
+            const translations = typeof I18N !== 'undefined' ? I18N : (window.I18N || {});
+            let str = (translations[lang] && translations[lang][key]) || (translations['en'] && translations['en'][key]) || key;
             for (const [k, v] of Object.entries(params)) {
                 str = str.replace(`{${k}}`, v);
             }
