@@ -42,6 +42,11 @@
     npm run dist:msix
     ```
     > 💡 **輸出位置**：所有 Electron 建置產生的檔案（包含免安裝目錄、安裝檔與 MSIX）都會集中存放在專案根目錄的 `dist/` 資料夾下。
+    >
+    > 💡 **商店版與側載版之免安裝目錄測試 (win-unpacked)**：
+    > 打包後的獨立執行檔在運行時，會讀取建置時寫入 `package.json` 的 `"buildTarget"` 欄位以區分版本。若要在打包後測試不同版本的免安裝目錄：
+    > - **測試商店版**：請執行 `npx cross-env BUILD_TARGET=STORE npm run pack`，再開啟 `dist/win-unpacked/Taiwan Big Two AI.exe`。
+    > - **測試側載版**：請執行 `npx cross-env BUILD_TARGET=GITHUB npm run pack`，再開啟 `dist/win-unpacked/Taiwan Big Two AI.exe`。
 
 ---
 
