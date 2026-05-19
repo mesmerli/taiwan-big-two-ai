@@ -80,9 +80,14 @@ function updateLanguage() {
     });
 
     // Populate License & Sponsor tab dynamically to support clickable links safely
+    const buildTarget = ipcRenderer ? ipcRenderer.sendSync('get-build-target') : 'GITHUB';
     const licenseSponsorTextElement = document.getElementById('license-sponsor-text-element');
     if (licenseSponsorTextElement) {
-        licenseSponsorTextElement.innerHTML = I18N[currentLang].rulesSourceSponsor || I18N['en'].rulesSourceSponsor;
+        if (buildTarget === 'STORE') {
+            licenseSponsorTextElement.innerHTML = I18N[currentLang].rulesSourceStore || I18N['en'].rulesSourceStore;
+        } else {
+            licenseSponsorTextElement.innerHTML = I18N[currentLang].rulesSourceSponsor || I18N['en'].rulesSourceSponsor;
+        }
         
         // Setup link click event handlers (supports Electron, Capacitor, and general web browsers)
         const rulesGhLink = document.getElementById('rules-github-link');
@@ -111,6 +116,31 @@ function updateLanguage() {
                 e.preventDefault();
                 openLink('https://github.com/sponsors/mesmerli');
             };
+        }
+    }
+
+    const licenseStoreStatus = document.getElementById('license-store-status');
+    if (licenseStoreStatus) {
+        if (buildTarget === 'STORE') {
+            const licenseStatus = ipcRenderer ? ipcRenderer.sendSync('get-license-status-sync') : null;
+            if (!licenseStatus) {
+                licenseStoreStatus.textContent = t('storeCheckingLicense');
+                licenseStoreStatus.style.color = '#94a3b8';
+            } else if (licenseStatus.isTrial) {
+                const now = new Date();
+                const expirationDate = new Date(licenseStatus.expirationDate);
+                const daysLeft = Math.ceil((expirationDate - now) / (1000 * 60 * 60 * 24));
+                licenseStoreStatus.textContent = t('trialDaysLeft', { days: daysLeft });
+                licenseStoreStatus.style.color = '#f39c12';
+            } else {
+                licenseStoreStatus.textContent = t('storeFullVersion');
+                licenseStoreStatus.style.color = '#10b981';
+            }
+        } else if (ipcRenderer) {
+            licenseStoreStatus.textContent = t('githubVersionWarning');
+            licenseStoreStatus.style.color = '#ef4444';
+        } else {
+            licenseStoreStatus.textContent = '';
         }
     }
 

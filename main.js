@@ -92,6 +92,35 @@ if (!gotTheLock) {
     });
 
     ipcMain.on('show-about', showAboutDialog);
+
+    // Build target and license status IPC handlers for renderer processes
+    ipcMain.on('get-build-target', (event) => {
+      event.returnValue = process.env.BUILD_TARGET || 'GITHUB';
+    });
+
+    ipcMain.on('get-app-info', (event) => {
+      const pkg = require('./package.json');
+      event.returnValue = {
+        version: pkg.buildVersion || pkg.version,
+        author: pkg.author || 'mesmerli'
+      };
+    });
+
+    ipcMain.on('get-license-status-sync', (event) => {
+      event.returnValue = appLicense;
+    });
+
+    ipcMain.on('close-about-window', (event) => {
+      const webContents = event.sender;
+      const w = BrowserWindow.fromWebContents(webContents);
+      if (w) {
+        w.close();
+      }
+    });
+
+    ipcMain.on('open-external-url', (event, url) => {
+      shell.openExternal(url);
+    });
   });
 }
 
@@ -137,8 +166,9 @@ function showAboutDialog() {
     parent: win,
 
     webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false,
+      nodeIntegration: false,
+      contextIsolation: true,
+      preload: path.join(__dirname, 'aboutPreload.js')
     },
     backgroundColor: '#0f172a'
   });
@@ -162,6 +192,7 @@ app.on('window-all-closed', () => {
 // --- Microsoft Store Licensing Logic ---
 let storeBridge = null;
 const STORE_PRODUCT_ID = "9PM1S8GKBLK9"; // Official Microsoft Store Product ID
+let appLicense = null;
 
 async function checkStoreLicense() {
   if (process.platform !== 'win32' || !win) return;
@@ -201,6 +232,8 @@ async function processLicense(license) {
   console.log('[Store] 正在模擬試用狀態 (7天後過期)...');
   */
   // ---------------------------------------
+
+  appLicense = license; // Store globally
 
   if (!license || !license.isActive) {
     console.warn('[Store] 無法取得有效授權。');

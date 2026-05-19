@@ -65,6 +65,11 @@ const I18N = {
         tabKeyboard: "Keyboard",
         tabLicense: "License & Sponsor",
         rulesSourceSponsor: "The core logic of this game is open-source under the AGPLv3 license. You can obtain the source code on <a href=\"#\" class=\"rules-link\" id=\"rules-github-link\">GitHub</a>. If you like this work, please consider supporting the developer via the <a href=\"#\" class=\"rules-link\" id=\"rules-sponsor-link\">Sponsorship Link</a>.",
+        aboutSourceStore: "The core logic of this game is open-source under the AGPLv3 license. You can obtain the source code on <a href=\"#\" class=\"about-link\" id=\"github-link\">GitHub</a>.",
+        rulesSourceStore: "The core logic of this game is open-source under the AGPLv3 license. You can obtain the source code on <a href=\"#\" class=\"rules-link\" id=\"rules-github-link\">GitHub</a>.",
+        githubVersionWarning: "This version cannot verify store licensing.",
+        storeFullVersion: "Full Version (Activated)",
+        storeCheckingLicense: "Checking Microsoft Store license...",
         trialDaysLeft: "Trial Version: {days} days left",
         trialClickToBuy: "Click to buy full version"
     },
@@ -134,6 +139,11 @@ const I18N = {
         tabKeyboard: "按鍵操作",
         tabLicense: "版權與贊助",
         rulesSourceSponsor: "本遊戲之核心邏輯依據 AGPLv3 協議開源，您可以在 <a href=\"#\" class=\"rules-link\" id=\"rules-github-link\">GitHub</a> 取得原始碼。如果您喜歡本作品，歡迎透過 <a href=\"#\" class=\"rules-link\" id=\"rules-sponsor-link\">贊助連結</a> 支持開發。",
+        aboutSourceStore: "本遊戲之核心邏輯依據 AGPLv3 協議開源，您可以在 <a href=\"#\" class=\"about-link\" id=\"github-link\">GitHub</a> 取得原始碼。",
+        rulesSourceStore: "本遊戲之核心邏輯依據 AGPLv3 協議開源，您可以在 <a href=\"#\" class=\"rules-link\" id=\"rules-github-link\">GitHub</a> 取得原始碼。",
+        githubVersionWarning: "此版本無法驗證商店授權。",
+        storeFullVersion: "完整版 (已啟用)",
+        storeCheckingLicense: "正在驗證 Windows 商店授權...",
         trialDaysLeft: "試用版本：剩餘 {days} 天",
         trialClickToBuy: "點擊購買完整版"
     }
