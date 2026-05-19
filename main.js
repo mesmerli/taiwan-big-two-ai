@@ -95,7 +95,8 @@ if (!gotTheLock) {
 
     // Build target and license status IPC handlers for renderer processes
     ipcMain.on('get-build-target', (event) => {
-      event.returnValue = process.env.BUILD_TARGET || 'GITHUB';
+      const pkg = require('./package.json');
+      event.returnValue = process.env.BUILD_TARGET || pkg.buildTarget || 'GITHUB';
     });
 
     ipcMain.on('get-app-info', (event) => {

@@ -18,6 +18,7 @@ const fullVersion = `${baseVersion}.0`; // "1.1.1107.0"
 packageJson.version = baseVersion;
 packageJson.build.buildVersion = fullVersion;
 packageJson.build.buildNumber = nextBuild.toString();
+packageJson.buildTarget = process.env.BUILD_TARGET || 'GITHUB';
 
 // Manually update artifactName to avoid env variable issues
 if (packageJson.build && packageJson.build.win) {
