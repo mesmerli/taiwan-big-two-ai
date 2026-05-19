@@ -10,7 +10,7 @@
     "dist": "npm run increment-build && electron-builder",
     "dist:store": "cross-env BUILD_TARGET=STORE npm run dist",
     "dist:github": "cross-env BUILD_TARGET=GITHUB npm run dist",
-    "dist:msix": "npm run increment-build && electron-builder --win appx",
+    "dist:msix": "cross-env BUILD_TARGET=STORE npm run increment-build && electron-builder --win appx",
     "package": "npm run increment-build && electron-packager . \"Taiwan Big Two AI\" --platform=win32 --arch=x64 --out=dist --overwrite",
     "increment-build": "node scripts/increment-build.js",
     "test": "node tests/logic.test.js && node tests/ui.test.js",
