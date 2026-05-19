@@ -1,6 +1,6 @@
 {
   "name": "taiwan-big-two-ai",
-  "version": "1.5.8",
+  "version": "1.5.11",
   "description": "Modern Big Two game with LLM-powered AI integration",
   "license": "AGPL-3.0-only",
   "main": "main.js",
@@ -16,9 +16,9 @@
     "build-StoreBridge": "node-gyp clean configure build --directory=StoreBridge"
   },
   "build": {
-    "appId": "mesmerli.TaiwanBigTwoAI",
-    "buildVersion": "1.5.8.0",
-    "buildNumber": "8",
+    "appId": "mesmerli.TaiwanBig2AI",
+    "buildVersion": "1.5.11.0",
+    "buildNumber": "11",
     "productName": "Taiwan Big Two AI",
     "directories": {
       "output": "dist"
@@ -30,13 +30,13 @@
         "appx"
       ],
       "icon": "src/assets/logo.png",
-      "artifactName": "Taiwan Big Two AI_1.5.8.0.${ext}"
+      "artifactName": "Taiwan Big Two AI_1.5.11.0.${ext}"
     },
     "appx": {
-      "identityName": "mesmerli.TaiwanBigTwoAI",
+      "identityName": "mesmerli.TaiwanBig2AI",
       "publisher": "CN=B50F36C9-7E5E-4652-A715-0185D35ADE64",
       "publisherDisplayName": "mesmerli",
-      "applicationId": "mesmerli.TaiwanBigTwoAI",
+      "applicationId": "mesmerli.TaiwanBig2AI",
       "languages": [
         "en-US",
         "zh-TW"
@@ -44,7 +44,22 @@
     },
     "files": [
       "**/*",
-      "!dist/*"
+      "!dist/*",
+      "!src-tauri/*",
+      "!android/*",
+      "!www/*",
+      "!release/*",
+      "!palmOS/*",
+      "!screenshots/*",
+      "!Documents/*",
+      "!tests/*",
+      "!scripts/*",
+      "!.winapp/*",
+      "!StoreBridge/build/Release/*.pdb",
+      "!StoreBridge/build/Release/*.lib",
+      "!StoreBridge/build/Release/*.exp",
+      "!StoreBridge/build/StoreBridge.*",
+      "!StoreBridge/build/obj/*"
     ]
   },
   "keywords": [

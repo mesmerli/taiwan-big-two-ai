@@ -4,7 +4,7 @@ const I18N = require('./src/i18n.js');
 
 // Set AppUserModelId for Windows Taskbar/JumpList consistency
 if (process.platform === 'win32') {
-  app.setAppUserModelId('mesmerli.TaiwanBigTwoAI.debug');
+  app.setAppUserModelId('mesmerli.TaiwanBig2AI.debug');
 }
 
 let currentLang = 'zh'; // Default
@@ -15,7 +15,7 @@ let win = null;
 app.name = 'Taiwan Big Two AI';
 
 // Set App User Model ID for Windows Jump Lists to work reliably
-const appId = 'com.mesmerli.taiwanbigtwoai';
+const appId = 'com.mesmerli.taiwanbig2ai';
 app.setAppUserModelId(appId);
 
 function createWindow() {
@@ -161,7 +161,7 @@ app.on('window-all-closed', () => {
 
 // --- Microsoft Store Licensing Logic ---
 let storeBridge = null;
-const STORE_PRODUCT_ID = "9N2NBJLSCSN9"; // Official Microsoft Store Product ID
+const STORE_PRODUCT_ID = "9PM1S8GKBLK9"; // Official Microsoft Store Product ID
 
 async function checkStoreLicense() {
   if (process.platform !== 'win32' || !win) return;

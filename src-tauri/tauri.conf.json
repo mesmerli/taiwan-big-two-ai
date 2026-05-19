@@ -2,7 +2,7 @@
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "taiwan-big-two-ai",
   "version": "1.5.8",
-  "identifier": "com.mesmerli.taiwanbigtwoai",
+  "identifier": "com.mesmerli.taiwanbig2ai",
   "build": {
     "frontendDist": "../www"
   },
