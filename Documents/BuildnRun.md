@@ -73,6 +73,26 @@ Capacitor 用來將網頁遊戲畫面打包為原生的 Android 應用程式。
     ```bash
     npx cap sync
     ```
+*   **產生並更新應用程式圖示 (Logo) 與啟動畫面 (Splash)**：
+    若要更新圖示或啟動畫面，請確保 `Assets/` 目錄中已有 `icon.png`（與 `icon-only.png`）做為來源圖檔，然後執行：
+    ```bash
+    npx @capacitor/assets generate --android --iconBackgroundColor "#1e293b" --iconBackgroundColorDark "#0f172a"
+    ```
+*   **在命令列編譯安裝檔 (.apk)**：
+    若想直接透過命令列編譯 APK，可使用專案內置的 Gradle Wrapper 工具（會自動借用 Android Studio 內置的 Java 運行環境）：
+    *   **編譯偵錯版 (Debug APK)**：
+        ```powershell
+        $env:JAVA_HOME = "C:\Program Files\Android\Android Studio\jbr"
+        cd android
+        ./gradlew assembleDebug
+        ```
+    *   **編譯發佈版 (Release APK)**：
+        ```powershell
+        $env:JAVA_HOME = "C:\Program Files\Android\Android Studio\jbr"
+        cd android
+        ./gradlew assembleRelease
+        ```
+        > 💡 **輸出位置**：編譯出的 APK 會存放在 `android/app/build/outputs/apk/debug/app-debug.apk` 或 `android/app/build/outputs/apk/release/app-release-unsigned.apk`。
 *   **執行並部署到 Android 設備 / 模擬器**：
     ```bash
     npx cap run android
@@ -82,7 +102,6 @@ Capacitor 用來將網頁遊戲畫面打包為原生的 Android 應用程式。
     ```bash
     npx cap open android
     ```
-    > 💡 **輸出位置**：當您在 Android Studio 中進行 Build (建置 APK 或 AAB) 後，產生的檔案通常會輸出至 `android/app/build/outputs/` 目錄底下。
 
 ---
 
