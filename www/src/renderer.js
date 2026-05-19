@@ -79,6 +79,41 @@ function updateLanguage() {
         }
     });
 
+    // Populate License & Sponsor tab dynamically to support clickable links safely
+    const licenseSponsorTextElement = document.getElementById('license-sponsor-text-element');
+    if (licenseSponsorTextElement) {
+        licenseSponsorTextElement.innerHTML = I18N[currentLang].rulesSourceSponsor || I18N['en'].rulesSourceSponsor;
+        
+        // Setup link click event handlers (supports Electron, Capacitor, and general web browsers)
+        const rulesGhLink = document.getElementById('rules-github-link');
+        const rulesSpLink = document.getElementById('rules-sponsor-link');
+        const openLink = (url) => {
+            if (typeof require !== 'undefined' && ipcRenderer) {
+                try {
+                    const { shell } = require('electron');
+                    shell.openExternal(url);
+                } catch (e) {
+                    window.open(url, '_blank');
+                }
+            } else {
+                window.open(url, '_blank');
+            }
+        };
+
+        if (rulesGhLink) {
+            rulesGhLink.onclick = (e) => {
+                e.preventDefault();
+                openLink('https://github.com/mesmerli/taiwan-big-two-ai');
+            };
+        }
+        if (rulesSpLink) {
+            rulesSpLink.onclick = (e) => {
+                e.preventDefault();
+                openLink('https://github.com/sponsors/mesmerli');
+            };
+        }
+    }
+
     // Update Rules Footer (Version & Author)
     let pkg = { version: "1.5.0", author: "mesmerli", buildVersion: "1.5.0.0" };
     if (typeof require !== 'undefined') {

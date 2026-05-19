@@ -63,6 +63,8 @@ const I18N = {
         legendRestart: "Restart",
         tabRules: "Rules",
         tabKeyboard: "Keyboard",
+        tabLicense: "License & Sponsor",
+        rulesSourceSponsor: "The core logic of this game is open-source under the AGPLv3 license. You can obtain the source code on <a href=\"#\" class=\"rules-link\" id=\"rules-github-link\">GitHub</a>. If you like this work, please consider supporting the developer via the <a href=\"#\" class=\"rules-link\" id=\"rules-sponsor-link\">Sponsorship Link</a>.",
         trialDaysLeft: "Trial Version: {days} days left",
         trialClickToBuy: "Click to buy full version"
     },
@@ -130,6 +132,8 @@ const I18N = {
         legendRestart: "重新開始",
         tabRules: "遊戲規則",
         tabKeyboard: "按鍵操作",
+        tabLicense: "版權與贊助",
+        rulesSourceSponsor: "本遊戲之核心邏輯依據 AGPLv3 協議開源，您可以在 <a href=\"#\" class=\"rules-link\" id=\"rules-github-link\">GitHub</a> 取得原始碼。如果您喜歡本作品，歡迎透過 <a href=\"#\" class=\"rules-link\" id=\"rules-sponsor-link\">贊助連結</a> 支持開發。",
         trialDaysLeft: "試用版本：剩餘 {days} 天",
         trialClickToBuy: "點擊購買完整版"
     }
