@@ -136,21 +136,36 @@ function updateLanguage() {
             if (!licenseStatus) {
                 licenseStoreStatus.textContent = t('storeCheckingLicense');
                 licenseStoreStatus.style.color = '#94a3b8';
+                licenseStoreStatus.style.cursor = 'default';
+                licenseStoreStatus.style.textDecoration = 'none';
+                licenseStoreStatus.title = '';
             } else if (licenseStatus.isTrial) {
                 const now = new Date();
                 const expirationDate = new Date(licenseStatus.expirationDate);
                 const daysLeft = Math.ceil((expirationDate - now) / (1000 * 60 * 60 * 24));
                 licenseStoreStatus.textContent = t('trialDaysLeft', { days: daysLeft });
                 licenseStoreStatus.style.color = '#f39c12';
+                licenseStoreStatus.style.cursor = 'pointer';
+                licenseStoreStatus.style.textDecoration = 'underline';
+                licenseStoreStatus.title = t('trialClickToBuy');
             } else {
                 licenseStoreStatus.textContent = t('storeFullVersion');
                 licenseStoreStatus.style.color = '#10b981';
+                licenseStoreStatus.style.cursor = 'default';
+                licenseStoreStatus.style.textDecoration = 'none';
+                licenseStoreStatus.title = '';
             }
         } else if (ipcRenderer) {
             licenseStoreStatus.textContent = t('githubVersionWarning');
             licenseStoreStatus.style.color = '#ef4444';
+            licenseStoreStatus.style.cursor = 'default';
+            licenseStoreStatus.style.textDecoration = 'none';
+            licenseStoreStatus.title = '';
         } else {
             licenseStoreStatus.textContent = '';
+            licenseStoreStatus.style.cursor = 'default';
+            licenseStoreStatus.style.textDecoration = 'none';
+            licenseStoreStatus.title = '';
         }
     }
 
@@ -244,15 +259,27 @@ if (trialStatus) {
     });
 }
 
+const licenseStoreStatus = document.getElementById('license-store-status');
+if (licenseStoreStatus) {
+    licenseStoreStatus.addEventListener('click', () => {
+        const buildTarget = ipcRenderer ? ipcRenderer.sendSync('get-build-target') : 'GITHUB';
+        if (buildTarget === 'STORE') {
+            const licenseStatus = ipcRenderer ? ipcRenderer.sendSync('get-license-status-sync') : null;
+            if (licenseStatus && licenseStatus.isTrial) {
+                if (ipcRenderer) ipcRenderer.send('open-store');
+            }
+        }
+    });
+}
+
 if (ipcRenderer) {
     ipcRenderer.on('license-status', (event, status) => {
         if (status.isTrial) {
             trialDaysRemaining = status.daysLeft;
-            updateTrialStatusUI();
         } else if (status.isFullVersion) {
             trialDaysRemaining = null;
-            if (trialStatus) trialStatus.classList.add('hidden');
         }
+        updateLanguage();
     });
 }
 
