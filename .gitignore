@@ -8,7 +8,7 @@ yarn-error.log*
 
 # Build Output
 dist/
-release/
+# release/
 out/
 
 # IDE / Editor
