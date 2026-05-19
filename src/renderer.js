@@ -81,6 +81,16 @@ function updateLanguage() {
 
     // Populate License & Sponsor tab dynamically to support clickable links safely
     const buildTarget = ipcRenderer ? ipcRenderer.sendSync('get-build-target') : 'GITHUB';
+    
+    const tabLicenseBtn = document.querySelector('[data-i18n="tabLicense"]');
+    if (tabLicenseBtn) {
+        if (buildTarget === 'STORE') {
+            tabLicenseBtn.textContent = I18N[currentLang].tabLicenseStore || I18N['en'].tabLicenseStore;
+        } else {
+            tabLicenseBtn.textContent = I18N[currentLang].tabLicense || I18N['en'].tabLicense;
+        }
+    }
+
     const licenseSponsorTextElement = document.getElementById('license-sponsor-text-element');
     if (licenseSponsorTextElement) {
         if (buildTarget === 'STORE') {
