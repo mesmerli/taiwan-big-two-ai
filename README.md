@@ -11,7 +11,7 @@ A modernized **Taiwanese Big Two** card game built with Electron. This project i
 ### 💡 How to get this game:
 * **Support the Developer**: Purchase the official version on the **Microsoft Store** for automatic updates and easy installation.
 * **Open Source**: This game is licensed under **AGPLv3**. You are welcome to clone this repository and build it yourself for free.
-* **Sponsor**: If you find my Electron AI logic helpful for your own projects, please consider a donation via **GitHub Sponsors**.
+* **Sponsor**: If you find my AI logic helpful for your own projects, please consider a donation via **GitHub Sponsors**.
 
 ### 📸 Screenshots
 
