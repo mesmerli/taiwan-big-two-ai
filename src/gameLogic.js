@@ -196,14 +196,15 @@ class GameLogic {
         const sorted = this.sortCards(cards);
         for (let i = 0; i < sorted.length - 1; i++) {
             if (this.getRank(sorted[i]) === this.getRank(sorted[i+1])) {
-                // Find all cards of this rank to pick the strongest pair
                 let j = i + 1;
                 while (j < sorted.length && this.getRank(sorted[j]) === this.getRank(sorted[i])) {
                     j++;
                 }
-                // Best pair for this rank is the two highest suit cards
-                if (j - i >= 2) {
-                    pairs.push([sorted[j-2], sorted[j-1]]);
+                // Generate all combinations of 2 cards from this rank group
+                for (let x = i; x < j - 1; x++) {
+                    for (let y = x + 1; y < j; y++) {
+                        pairs.push([sorted[x], sorted[y]]);
+                    }
                 }
                 i = j - 1;
             }

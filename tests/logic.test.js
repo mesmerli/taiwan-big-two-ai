@@ -122,6 +122,21 @@ runTest("Special Straight Comparison (A-2-3-4-5 is smallest)", () => {
     return assert(GameLogic.compareHands(sA2345, normalS) < 0, "A-2-3-4-5 should lose to normal Straight");
 });
 
+runTest("Multiple Pairs Generation (Three Js should yield three pairs)", () => {
+    // 3 Js: Club J (8), Diamond J (21), Spade J (47)
+    // plus some non-pairs: 3 of Clubs (0)
+    const hand = [8, 21, 47, 0];
+    const pairs = GameLogic.findPairs(hand);
+    
+    // We expect 3 pairs: [8, 21], [8, 47], [21, 47]
+    const p1 = pairs.some(p => p[0] === 8 && p[1] === 21);
+    const p2 = pairs.some(p => p[0] === 8 && p[1] === 47);
+    const p3 = pairs.some(p => p[0] === 21 && p[1] === 47);
+    
+    return assert(pairs.length === 3, "Should return exactly 3 pairs") &&
+           assert(p1 && p2 && p3, "Should contain all combinations: [Club J, Diamond J], [Club J, Spade J], [Diamond J, Spade J]");
+});
+
 
 console.log(`\n${colors.cyan}Summary: ${passedCount}/${totalCount} tests passed.${colors.reset}`);
 

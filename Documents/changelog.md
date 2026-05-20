@@ -2,6 +2,15 @@
 
 All notable changes to the **Taiwan Big Two AI** project will be documented in this file.
 
+### [1.5.17] - 2026-05-20
+
+### Changed
+- **Pair Combination Logic**: Updated `findPairs` logic to generate all valid pair combinations of the same rank (e.g., three J's now yield all three possible pair combinations instead of just the single strongest pair).
+
+### Fixed
+- **Keyboard Card Selection**: Enabled selecting and cycling through alternative pair combinations of the same rank using Arrow keys, preventing the selection from being locked to only the strongest pair.
+- **AI Card Preservation**: Improved AI decision-making by allowing it to select the weakest valid pair to beat the table play, preserving higher-suit cards (like the Spade) for subsequent single card plays.
+
 ### [1.5.16] - 2026-05-19
 
 ### Added

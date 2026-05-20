@@ -7,7 +7,7 @@
 (function (global) {
     
     /**
-     * 輔促工具：安全獲取 Electron 的 ipcRenderer
+     * 輔助工具：安全獲取 Electron 的 ipcRenderer
      */
     function getElectronIpc() {
         if (typeof require !== 'undefined') {
