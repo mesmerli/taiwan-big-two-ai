@@ -1372,7 +1372,15 @@ function setupAvatarClickListeners() {
         }
     };
 
+    let _modelFetchController = null;
     async function fetchAvailableModels(apiUrl, apiKey = '') {
+        // Cancel any in-flight request to prevent concurrent datalist population
+        if (_modelFetchController) {
+            _modelFetchController.abort();
+        }
+        _modelFetchController = new AbortController();
+        const controller = _modelFetchController;
+
         const modelList = document.getElementById('ai-model-list');
         if (!modelList) return;
         modelList.innerHTML = '';
@@ -1404,7 +1412,7 @@ function setupAvatarClickListeners() {
             if (apiKey) {
                 headers['Authorization'] = `Bearer ${apiKey}`;
             }
-            const response = await fetch(modelsUrl, { headers });
+            const response = await fetch(modelsUrl, { headers, signal: controller.signal });
             if (response.ok) {
                 const data = await response.json();
                 if (statusEl) {
