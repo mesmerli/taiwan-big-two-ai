@@ -267,15 +267,18 @@ class BaseLLMAI extends AICharacter {
                 const parsed = JSON.parse(saved);
                 this.apiUrl = parsed.apiUrl || 'http://127.0.0.1:1234/v1/chat/completions';
                 this.modelId = parsed.modelId || '';
+                this.apiKey = parsed.apiKey || '';
                 this.extraPrompt = parsed.extraPrompt || "";
             } else {
                 this.apiUrl = 'http://127.0.0.1:1234/v1/chat/completions';
                 this.modelId = '';
+                this.apiKey = '';
                 this.extraPrompt = "";
             }
         } catch (e) {
             this.apiUrl = 'http://127.0.0.1:1234/v1/chat/completions';
             this.modelId = '';
+            this.apiKey = '';
             this.extraPrompt = "";
         }
 
@@ -317,10 +320,12 @@ class BaseLLMAI extends AICharacter {
     setSettings(settings) {
         this.apiUrl = settings.apiUrl || this.apiUrl;
         this.modelId = settings.modelId || this.modelId;
+        this.apiKey = settings.apiKey !== undefined ? settings.apiKey : this.apiKey;
         this.extraPrompt = settings.extraPrompt || "";
         AppStorage.setItem(this.settingsKey, JSON.stringify({
             apiUrl: this.apiUrl,
             modelId: this.modelId,
+            apiKey: this.apiKey,
             extraPrompt: this.extraPrompt
         }));
     }
@@ -329,6 +334,7 @@ class BaseLLMAI extends AICharacter {
         return {
             apiUrl: this.apiUrl,
             modelId: this.modelId,
+            apiKey: this.apiKey || '',
             extraPrompt: this.extraPrompt,
             learnings: this.learnings.map(l => l.tip) // Map objects back to strings for UI
         };
@@ -438,7 +444,11 @@ ${this.extraPrompt ? `Additional Custom Instructions:\n${this.extraPrompt}` : ''
             try {
                 const urlObj = new URL(this.apiUrl);
                 const modelsUrl = `${urlObj.protocol}//${urlObj.host}/v1/models`;
-                const modelRes = await fetch(modelsUrl);
+                const detectHeaders = {};
+                if (this.apiKey) {
+                    detectHeaders['Authorization'] = `Bearer ${this.apiKey}`;
+                }
+                const modelRes = await fetch(modelsUrl, { headers: detectHeaders });
                 if (modelRes.ok) {
                     const modelData = await modelRes.json();
                     if (modelData && modelData.data && modelData.data.length > 0) {
@@ -456,9 +466,14 @@ ${this.extraPrompt ? `Additional Custom Instructions:\n${this.extraPrompt}` : ''
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 90000);
 
+            const reqHeaders = { 'Content-Type': 'application/json' };
+            if (this.apiKey) {
+                reqHeaders['Authorization'] = `Bearer ${this.apiKey}`;
+            }
+
             const response = await fetch(this.apiUrl, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: reqHeaders,
                 body: JSON.stringify({
                     model: activeModel,
                     messages: [
@@ -792,6 +807,7 @@ ${this.extraPrompt ? `Additional Custom Instructions:\n${this.extraPrompt}` : ''
     setSettings(settings) {
         if (settings.apiUrl !== undefined) this.apiUrl = settings.apiUrl;
         if (settings.modelId !== undefined) this.modelId = settings.modelId;
+        if (settings.apiKey !== undefined) this.apiKey = settings.apiKey;
         if (settings.extraPrompt !== undefined) this.extraPrompt = settings.extraPrompt;
 
         // Save to persistent storage using character-specific key
@@ -799,6 +815,7 @@ ${this.extraPrompt ? `Additional Custom Instructions:\n${this.extraPrompt}` : ''
             AppStorage.setItem(this.settingsKey, JSON.stringify({
                 apiUrl: this.apiUrl,
                 modelId: this.modelId,
+                apiKey: this.apiKey,
                 extraPrompt: this.extraPrompt
             }));
         } catch (e) {
@@ -810,6 +827,7 @@ ${this.extraPrompt ? `Additional Custom Instructions:\n${this.extraPrompt}` : ''
         return {
             apiUrl: this.apiUrl,
             modelId: this.modelId,
+            apiKey: this.apiKey || '',
             extraPrompt: this.extraPrompt
         };
     }
@@ -869,7 +887,11 @@ ${logStr}
             try {
                 const urlObj = new URL(this.apiUrl);
                 const modelsUrl = `${urlObj.protocol}//${urlObj.host}/v1/models`;
-                const modelRes = await fetch(modelsUrl);
+                const detectHeaders = {};
+                if (this.apiKey) {
+                    detectHeaders['Authorization'] = `Bearer ${this.apiKey}`;
+                }
+                const modelRes = await fetch(modelsUrl, { headers: detectHeaders });
                 if (modelRes.ok) {
                     const modelData = await modelRes.json();
                     if (modelData && modelData.data && modelData.data.length > 0) {
@@ -887,9 +909,14 @@ ${logStr}
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 60000);
 
+            const reqHeaders = { 'Content-Type': 'application/json' };
+            if (this.apiKey) {
+                reqHeaders['Authorization'] = `Bearer ${this.apiKey}`;
+            }
+
             const response = await fetch(this.apiUrl, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: reqHeaders,
                 body: JSON.stringify({
                     model: activeModel,
                     messages: [

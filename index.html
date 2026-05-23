@@ -143,6 +143,10 @@
                             <input type="text" id="review-llm-model" list="review-llm-model-list" placeholder="e.g., google/gemma-2-2b-it (Leave blank to auto-detect)" data-i18n-placeholder="reviewLlmModelPlaceholder">
                             <datalist id="review-llm-model-list"></datalist>
                         </div>
+                        <div class="form-group" style="margin-top: 15px;">
+                            <label for="review-llm-api-key" data-i18n="reviewLlmApiKeyLabel">Review LLM API Key</label>
+                            <input type="password" id="review-llm-api-key" placeholder="sk-... (Optional)" data-i18n-placeholder="reviewLlmApiKeyPlaceholder">
+                        </div>
                         <div style="font-size: 11px; color: #94a3b8; line-height: 1.4; margin-top: 15px;">
                             <span data-i18n="reviewLlmUrlTip">💡 Enter the API endpoint URL for the post-game LLM review (e.g., LM Studio, Ollama, etc.). Defaults to http://127.0.0.1:1234/v1/chat/completions.</span>
                         </div>
@@ -173,6 +177,10 @@
                     <input type="text" id="ai-model-id" list="ai-model-list"
                         placeholder="e.g., google/gemma-4-e2b (Leave blank for auto-detect)">
                     <datalist id="ai-model-list"></datalist>
+                </div>
+                <div class="form-group">
+                    <label for="ai-api-key" data-i18n="apiKey">API Key</label>
+                    <input type="password" id="ai-api-key" placeholder="sk-... (Optional)" data-i18n-placeholder="apiKeyPlaceholder">
                 </div>
                 <div class="form-group">
                     <label for="ai-extra-prompt" data-i18n="extraPrompt">Extra Prompt</label>

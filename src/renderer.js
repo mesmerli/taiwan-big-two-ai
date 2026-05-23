@@ -1281,11 +1281,15 @@ function setupAvatarClickListeners() {
                     const settings = char.getSettings();
                     apiUrlInput.value = settings.apiUrl || '';
                     modelIdInput.value = settings.modelId || '';
+                    const apiKeyInput = document.getElementById('ai-api-key');
+                    if (apiKeyInput) {
+                        apiKeyInput.value = settings.apiKey || '';
+                    }
                     extraPromptInput.value = settings.extraPrompt || '';
                     settingsModal.classList.remove('hidden');
 
                     // Fetch models immediately when opening
-                    fetchAvailableModels(apiUrlInput.value);
+                    fetchAvailableModels(apiUrlInput.value, settings.apiKey || '');
 
                     // Display learnings
                     updateLearningsUI(char);
@@ -1368,7 +1372,7 @@ function setupAvatarClickListeners() {
         }
     };
 
-    async function fetchAvailableModels(apiUrl) {
+    async function fetchAvailableModels(apiUrl, apiKey = '') {
         const modelList = document.getElementById('ai-model-list');
         if (!modelList) return;
         modelList.innerHTML = '';
@@ -1389,7 +1393,11 @@ function setupAvatarClickListeners() {
             const modelsUrl = `${urlObj.protocol}//${urlObj.host}/v1/models`;
 
             console.log(`[UI] Fetching models from: ${modelsUrl}`);
-            const response = await fetch(modelsUrl);
+            const headers = {};
+            if (apiKey) {
+                headers['Authorization'] = `Bearer ${apiKey}`;
+            }
+            const response = await fetch(modelsUrl, { headers });
             if (response.ok) {
                 const data = await response.json();
                 if (statusEl) {
@@ -1418,9 +1426,11 @@ function setupAvatarClickListeners() {
 
     const autoSave = () => {
         if (currentEditingIndex !== -1 && window.AI) {
+            const apiKeyInput = document.getElementById('ai-api-key');
             window.AI.setAICharacterSettings(currentEditingIndex, {
                 apiUrl: apiUrlInput.value,
                 modelId: modelIdInput.value,
+                apiKey: apiKeyInput ? apiKeyInput.value.trim() : '',
                 extraPrompt: extraPromptInput.value
             });
         }
@@ -1428,11 +1438,23 @@ function setupAvatarClickListeners() {
 
     // Refresh model list and auto-save when API URL is changed (with debounce)
     let debounceTimeout = null;
+    
+    const apiKeyInput = document.getElementById('ai-api-key');
+    if (apiKeyInput) {
+        apiKeyInput.oninput = () => {
+            autoSave();
+            if (debounceTimeout) clearTimeout(debounceTimeout);
+            debounceTimeout = setTimeout(() => {
+                fetchAvailableModels(apiUrlInput.value, apiKeyInput.value.trim());
+            }, 800);
+        };
+    }
+
     apiUrlInput.oninput = () => {
         autoSave();
         if (debounceTimeout) clearTimeout(debounceTimeout);
         debounceTimeout = setTimeout(() => {
-            fetchAvailableModels(apiUrlInput.value);
+            fetchAvailableModels(apiUrlInput.value, apiKeyInput ? apiKeyInput.value.trim() : '');
         }, 800);
     };
 
@@ -1452,8 +1474,10 @@ function setupAvatarClickListeners() {
                         char.loadSettings(); // Reload default values (Hardcoded defaults in class)
                         apiUrlInput.value = char.apiUrl;
                         modelIdInput.value = char.modelId;
+                        const apiKeyInput = document.getElementById('ai-api-key');
+                        if (apiKeyInput) apiKeyInput.value = char.apiKey || '';
                         extraPromptInput.value = char.extraPrompt;
-                        fetchAvailableModels(apiUrlInput.value);
+                        fetchAvailableModels(apiUrlInput.value, char.apiKey || '');
                     }
                 }
             }

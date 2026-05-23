@@ -8,6 +8,9 @@ class AISummarySystem {
         this.apiUrl = typeof AppStorage !== 'undefined' && AppStorage.getItem('reviewLlmUrl')
             ? AppStorage.getItem('reviewLlmUrl')
             : 'http://127.0.0.1:1234/v1/chat/completions';
+        this.apiKey = typeof AppStorage !== 'undefined' && AppStorage.getItem('reviewLlmApiKey')
+            ? AppStorage.getItem('reviewLlmApiKey')
+            : '';
         this.currentAbortController = null;
         this.typingInterval = null;
         this.loadingInterval = null;
@@ -120,6 +123,19 @@ class AISummarySystem {
             };
         }
 
+        // Bind LLM API Key Setting
+        const reviewLlmApiKeyInput = document.getElementById('review-llm-api-key');
+        if (reviewLlmApiKeyInput) {
+            reviewLlmApiKeyInput.value = this.apiKey;
+            reviewLlmApiKeyInput.oninput = () => {
+                const val = reviewLlmApiKeyInput.value.trim();
+                this.apiKey = val;
+                if (typeof AppStorage !== 'undefined') {
+                    AppStorage.setItem('reviewLlmApiKey', val);
+                }
+            };
+        }
+
         // Bind LLM Model Setting
         const reviewLlmModelInput = document.getElementById('review-llm-model');
         if (reviewLlmModelInput) {
@@ -163,9 +179,15 @@ class AISummarySystem {
             const controller = new AbortController();
             const id = setTimeout(() => controller.abort(), 3000); // 3 seconds timeout
             
+            const headers = {};
+            if (this.apiKey) {
+                headers['Authorization'] = `Bearer ${this.apiKey}`;
+            }
+
             const response = await fetch(modelsUrl, {
                 method: 'GET',
                 mode: 'cors',
+                headers: headers,
                 signal: controller.signal
             });
             clearTimeout(id);
@@ -512,9 +534,15 @@ class AISummarySystem {
             const controller = new AbortController();
             const id = setTimeout(() => controller.abort(), 2000); // 2 seconds timeout for check
             
+            const headers = {};
+            if (this.apiKey) {
+                headers['Authorization'] = `Bearer ${this.apiKey}`;
+            }
+
             const response = await fetch(modelsUrl, {
                 method: 'GET',
                 mode: 'cors',
+                headers: headers,
                 signal: controller.signal
             });
             clearTimeout(id);
@@ -744,8 +772,14 @@ ${JSON.stringify(stats, null, 2)}
         if (!activeModel) {
             try {
                 const urlObj = new URL(this.apiUrl);
-                const modelsUrl = `${urlObj.protocol}//${urlObj.host}/v1/models`;
-                const modelRes = await fetch(modelsUrl, { signal });
+                const detectHeaders = {};
+                if (this.apiKey) {
+                    detectHeaders['Authorization'] = `Bearer ${this.apiKey}`;
+                }
+                const modelRes = await fetch(modelsUrl, {
+                    headers: detectHeaders,
+                    signal
+                });
                 if (modelRes.ok) {
                     const modelData = await modelRes.json();
                     if (modelData && modelData.data && modelData.data.length > 0) {
@@ -784,9 +818,13 @@ ${JSON.stringify(stats, null, 2)}
 
         console.log('[AI Summary] requestAISummary activeModel:', activeModel);
         console.log('[AI Summary] requestAISummary sending POST to:', this.apiUrl);
+        const reqHeaders = { 'Content-Type': 'application/json' };
+        if (this.apiKey) {
+            reqHeaders['Authorization'] = `Bearer ${this.apiKey}`;
+        }
         const response = await fetch(this.apiUrl, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: reqHeaders,
             body: JSON.stringify({
                 model: activeModel,
                 messages: [
