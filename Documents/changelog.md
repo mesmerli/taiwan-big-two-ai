@@ -2,6 +2,18 @@
 
 All notable changes to the **Taiwan Big Two AI** project will be documented in this file.
 
+### [1.5.19] - 2026-05-24
+
+### Added
+- **Secure Cloud LLM Authentication**: Integrated secure API Key configuration input fields (with hidden password masks) into both AI Player settings and Post-Game Review settings. Injected dynamic `Authorization: Bearer <ApiKey>` header to outgoing REST API calls, enabling seamless authentication with cloud-based provider endpoints while keeping local servers compatible.
+- **Auto-Detection Placeholders**: Improved Model ID settings by dynamically querying the connection URL for available models and displaying the first detected model ID as a placeholder suggestion if the selection is left blank.
+
+### Changed
+- **Traditional Select Dropdowns**: Refactored Model ID and Review Model fields from custom HTML5 text inputs + datalists to native `<select>` dropdowns. This resolves visual overlaps with browser auto-fill history and filters.
+- **Custom Model Compatibility**: Configured standard select menus to automatically append and highlight the user's previously saved custom model ID if it is absent from the API-returned models list.
+- **Race Condition Prevention**: Integrated `AbortController` cancellation to abort and discard in-flight model list queries whenever a new API URL is inputted, preventing concurrent requests from appending duplicate options.
+- **Styling Unification**: Tailored drop-down styles to fit the dark slate game theme.
+
 ### [1.5.18] - 2026-05-24
 
 ### Added
