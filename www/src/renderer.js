@@ -1377,10 +1377,17 @@ function setupAvatarClickListeners() {
         if (!modelList) return;
         modelList.innerHTML = '';
 
-        if (!apiUrl) return;
-
         const statusEl = document.getElementById('ai-api-connection-status');
         const isEn = currentLang === 'en';
+        const modelIdInput = document.getElementById('ai-model-id');
+
+        if (modelIdInput) {
+            modelIdInput.placeholder = isEn
+                ? 'e.g., google/gemma-4-e2b (Leave blank for auto-detect)'
+                : '例如 google/gemma-4-e2b（留白以自動偵測）';
+        }
+
+        if (!apiUrl) return;
 
         if (statusEl) {
             statusEl.textContent = isEn ? '● Testing...' : '● 正在測試連線...';
@@ -1404,13 +1411,20 @@ function setupAvatarClickListeners() {
                     statusEl.textContent = isEn ? '● Connected' : '● 連線成功';
                     statusEl.style.color = '#10b981'; // emerald
                 }
+                let firstModel = '';
                 if (data && data.data) {
-                    data.data.forEach(model => {
+                    data.data.forEach((model, idx) => {
+                        if (idx === 0) firstModel = model.id;
                         const option = document.createElement('option');
                         option.value = model.id;
                         modelList.appendChild(option);
                     });
                     console.log(`[UI] Loaded ${data.data.length} models into dropdown.`);
+                }
+                if (modelIdInput && !modelIdInput.value.trim() && firstModel) {
+                    modelIdInput.placeholder = isEn
+                        ? `Auto-detected: ${firstModel}`
+                        : `自動選擇：${firstModel}`;
                 }
             } else {
                 throw new Error('Response not OK');
