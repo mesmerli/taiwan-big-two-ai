@@ -177,15 +177,24 @@ class AISummarySystem {
                     statusEl.style.color = '#10b981'; // emerald
                 }
 
+                let firstModel = '';
                 if (modelList) {
                     modelList.innerHTML = '';
                     if (data && data.data) {
-                        data.data.forEach(model => {
+                        data.data.forEach((model, idx) => {
+                            if (idx === 0) firstModel = model.id;
                             const option = document.createElement('option');
                             option.value = model.id;
                             modelList.appendChild(option);
                         });
                     }
+                }
+
+                const reviewLlmModelInput = document.getElementById('review-llm-model');
+                if (reviewLlmModelInput && !reviewLlmModelInput.value.trim() && firstModel) {
+                    reviewLlmModelInput.placeholder = isEn
+                        ? `Auto-detected: ${firstModel}`
+                        : `自動選擇：${firstModel}`;
                 }
             } else {
                 throw new Error('Response not OK');
@@ -427,6 +436,15 @@ class AISummarySystem {
         this.renderStats(gameState, winnerIndex);
         
         const isEn = window.currentLang === 'en';
+        let activeModel = typeof AppStorage !== 'undefined' ? (AppStorage.getItem('reviewLlmModel') || '').trim() : '';
+        const displayName = activeModel || 'AI';
+
+        const titleEl = document.getElementById('ai-review-title');
+        if (titleEl) {
+            titleEl.textContent = isEn
+                ? `${displayName} Match Review`
+                : `${displayName} 牌局復盤`;
+        }
 
         // Reset summary box and show status
         this.summaryContainer.innerHTML = isEn
@@ -630,6 +648,28 @@ ${JSON.stringify(stats, null, 2)}
         }
         if (!activeModel) {
             activeModel = 'local-model';
+        }
+
+        // Update UI headers with the dynamically auto-detected model name
+        const loadingMessageEl = document.getElementById('ai-loading-message');
+        if (loadingMessageEl) {
+            loadingMessageEl.textContent = isEn
+                ? `${activeModel} is analyzing the match...`
+                : `${activeModel} 正在分析牌局中...`;
+        }
+
+        const titleEl = document.getElementById('ai-review-title');
+        if (titleEl) {
+            titleEl.textContent = isEn
+                ? `${activeModel} Match Review`
+                : `${activeModel} 牌局復盤`;
+        }
+
+        const reviewLlmModelInput = document.getElementById('review-llm-model');
+        if (reviewLlmModelInput && !reviewLlmModelInput.value.trim()) {
+            reviewLlmModelInput.placeholder = isEn
+                ? `Auto-detected: ${activeModel}`
+                : `自動選擇：${activeModel}`;
         }
 
         console.log('[AI Summary] requestAISummary activeModel:', activeModel);
