@@ -203,10 +203,14 @@ class AISummarySystem {
                 if (modelList) {
                     modelList.innerHTML = '';
                     if (data && data.data) {
-                        data.data.forEach((model, idx) => {
-                            if (idx === 0) firstModel = model.id;
+                        const seen = new Set();
+                        data.data.forEach((model) => {
+                            const mId = model.id;
+                            if (!mId || seen.has(mId)) return;
+                            seen.add(mId);
+                            if (!firstModel) firstModel = mId;
                             const option = document.createElement('option');
-                            option.value = model.id;
+                            option.value = mId;
                             modelList.appendChild(option);
                         });
                     }
