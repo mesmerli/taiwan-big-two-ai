@@ -296,63 +296,149 @@ class AISummarySystem {
             displayUrl = this.apiUrl;
         }
 
+        const provider = this.getProviderName();
+
         if (bodyEl) {
-            if (isEn) {
-                bodyEl.innerHTML = `
-                    <p>Unable to connect to local running LLM Service (<code class="bg-slate-950 px-1 py-0.5 rounded font-mono text-amber-400">${displayUrl}</code>). Please follow these steps to enable CORS:</p>
-                    
-                    <div class="space-y-3 bg-slate-950/50 border border-slate-800 rounded-xl p-4">
-                        <div class="flex gap-3">
-                            <span class="flex-shrink-0 w-5 h-5 rounded-full bg-violet-900/50 border border-violet-700/60 flex items-center justify-center font-bold text-violet-300 text-xs">1</span>
-                            <p>Launch your <strong class="text-slate-100">LM Studio</strong> or local LLM provider software.</p>
+            if (provider === 'Ollama') {
+                if (isEn) {
+                    bodyEl.innerHTML = `
+                        <p>Unable to connect to local Ollama Service (<code class="bg-slate-950 px-1 py-0.5 rounded font-mono text-amber-400">${displayUrl}</code>). Please enable CORS by following these steps:</p>
+                        
+                        <div class="space-y-3 bg-slate-950/50 border border-slate-800 rounded-xl p-4">
+                            <div class="flex gap-3">
+                                <span class="flex-shrink-0 w-5 h-5 rounded-full bg-violet-900/50 border border-violet-700/60 flex items-center justify-center font-bold text-violet-300 text-xs">1</span>
+                                <p>Set the environment variable <code class="bg-slate-950 px-1 py-0.5 rounded font-mono text-pink-500 font-bold">OLLAMA_ORIGINS=*</code> on your system.</p>
+                            </div>
+                            <div class="flex gap-3">
+                                <span class="flex-shrink-0 w-5 h-5 rounded-full bg-violet-900/50 border border-violet-700/60 flex items-center justify-center font-bold text-violet-300 text-xs">2</span>
+                                <p>On Windows, run <code class="bg-slate-950 px-1 py-0.5 rounded font-mono text-slate-100">setx OLLAMA_ORIGINS "*"</code> in Command Prompt.</p>
+                            </div>
+                            <div class="flex gap-3">
+                                <span class="flex-shrink-0 w-5 h-5 rounded-full bg-violet-900/50 border border-violet-700/60 flex items-center justify-center font-bold text-violet-300 text-xs">3</span>
+                                <p>Close and restart the Ollama application completely from the taskbar.</p>
+                            </div>
                         </div>
-                        <div class="flex gap-3">
-                            <span class="flex-shrink-0 w-5 h-5 rounded-full bg-violet-900/50 border border-violet-700/60 flex items-center justify-center font-bold text-violet-300 text-xs">2</span>
-                            <p>Switch to the <strong class="text-slate-100">Local Server</strong> tab on the sidebar.</p>
-                        </div>
-                        <div class="flex gap-3">
-                            <span class="flex-shrink-0 w-5 h-5 rounded-full bg-violet-900/50 border border-violet-700/60 flex items-center justify-center font-bold text-violet-300 text-xs">3</span>
-                            <p>Find the <strong class="text-slate-100">CORS</strong> setting under Server Policies.</p>
-                        </div>
-                        <div class="flex gap-3">
-                            <span class="flex-shrink-0 w-5 h-5 rounded-full bg-violet-900/50 border border-violet-700/60 flex items-center justify-center font-bold text-violet-300 text-xs">4</span>
-                            <p>Toggle the <strong class="text-slate-100">CORS</strong> setting to <strong class="text-pink-500 font-bold">ON</strong>.</p>
-                        </div>
-                    </div>
 
-                    <div class="text-amber-500/80 bg-amber-950/20 border border-amber-900/30 rounded-lg p-2.5 flex gap-2 text-xs">
-                        <span>💡</span>
-                        <span>Enabling CORS allows the game to query the local model safely from the browser/app.</span>
-                    </div>
-                `;
+                        <div class="text-amber-500/80 bg-amber-950/20 border border-amber-900/30 rounded-lg p-2.5 flex gap-2 text-xs">
+                            <span>💡</span>
+                            <span>Setting OLLAMA_ORIGINS enables the game web app to request tactical reviews from Ollama.</span>
+                        </div>
+                    `;
+                } else {
+                    bodyEl.innerHTML = `
+                        <p>無法連線至本地運行的 Ollama 服務 (<code class="bg-slate-950 px-1 py-0.5 rounded font-mono text-amber-400">${displayUrl}</code>)。請依循以下步驟啟用 CORS 設定：</p>
+                        
+                        <div class="space-y-3 bg-slate-950/50 border border-slate-800 rounded-xl p-4">
+                            <div class="flex gap-3">
+                                <span class="flex-shrink-0 w-5 h-5 rounded-full bg-violet-900/50 border border-violet-700/60 flex items-center justify-center font-bold text-violet-300 text-xs">1</span>
+                                <p>在您的系統環境變數中，新增/設定 <code class="bg-slate-950 px-1 py-0.5 rounded font-mono text-pink-500 font-bold">OLLAMA_ORIGINS=*</code>。</p>
+                            </div>
+                            <div class="flex gap-3">
+                                <span class="flex-shrink-0 w-5 h-5 rounded-full bg-violet-900/50 border border-violet-700/60 flex items-center justify-center font-bold text-violet-300 text-xs">2</span>
+                                <p>在 Windows 系統，可於 CMD 執行命令 <code class="bg-slate-950 px-1 py-0.5 rounded font-mono text-slate-100">setx OLLAMA_ORIGINS "*"</code>。</p>
+                            </div>
+                            <div class="flex gap-3">
+                                <span class="flex-shrink-0 w-5 h-5 rounded-full bg-violet-900/50 border border-violet-700/60 flex items-center justify-center font-bold text-violet-300 text-xs">3</span>
+                                <p>完全退出 Ollama（自系統工作列右下角圖示按右鍵 Quit），然後重新啟動 Ollama。</p>
+                            </div>
+                        </div>
+
+                        <div class="text-amber-500/80 bg-amber-950/20 border border-amber-900/30 rounded-lg p-2.5 flex gap-2 text-xs">
+                            <span>💡</span>
+                            <span>設定環境變數即可允許遊戲網頁安全地向本地 Ollama 服務發送復盤請求。</span>
+                        </div>
+                    `;
+                }
+            } else if (provider === 'LM Studio') {
+                if (isEn) {
+                    bodyEl.innerHTML = `
+                        <p>Unable to connect to local running LM Studio (<code class="bg-slate-950 px-1 py-0.5 rounded font-mono text-amber-400">${displayUrl}</code>). Please follow these steps to enable CORS:</p>
+                        
+                        <div class="space-y-3 bg-slate-950/50 border border-slate-800 rounded-xl p-4">
+                            <div class="flex gap-3">
+                                <span class="flex-shrink-0 w-5 h-5 rounded-full bg-violet-900/50 border border-violet-700/60 flex items-center justify-center font-bold text-violet-300 text-xs">1</span>
+                                <p>Launch your <strong class="text-slate-100">LM Studio</strong> software.</p>
+                            </div>
+                            <div class="flex gap-3">
+                                <span class="flex-shrink-0 w-5 h-5 rounded-full bg-violet-900/50 border border-violet-700/60 flex items-center justify-center font-bold text-violet-300 text-xs">2</span>
+                                <p>Switch to the <strong class="text-slate-100">Local Server</strong> tab on the sidebar.</p>
+                            </div>
+                            <div class="flex gap-3">
+                                <span class="flex-shrink-0 w-5 h-5 rounded-full bg-violet-900/50 border border-violet-700/60 flex items-center justify-center font-bold text-violet-300 text-xs">3</span>
+                                <p>Find the <strong class="text-slate-100">CORS</strong> setting under Server Policies.</p>
+                            </div>
+                            <div class="flex gap-3">
+                                <span class="flex-shrink-0 w-5 h-5 rounded-full bg-violet-900/50 border border-violet-700/60 flex items-center justify-center font-bold text-violet-300 text-xs">4</span>
+                                <p>Toggle the <strong class="text-slate-100">CORS</strong> setting to <strong class="text-pink-500 font-bold">ON</strong>.</p>
+                            </div>
+                        </div>
+
+                        <div class="text-amber-500/80 bg-amber-950/20 border border-amber-900/30 rounded-lg p-2.5 flex gap-2 text-xs">
+                            <span>💡</span>
+                            <span>Enabling CORS allows the game to query the local model safely from the browser/app.</span>
+                        </div>
+                    `;
+                } else {
+                    bodyEl.innerHTML = `
+                        <p>無法連線至本地運行的 LM Studio (<code class="bg-slate-950 px-1 py-0.5 rounded font-mono text-amber-400">${displayUrl}</code>)。請依循以下步驟啟用 CORS 設定：</p>
+                        
+                        <div class="space-y-3 bg-slate-950/50 border border-slate-800 rounded-xl p-4">
+                            <div class="flex gap-3">
+                                <span class="flex-shrink-0 w-5 h-5 rounded-full bg-violet-900/50 border border-violet-700/60 flex items-center justify-center font-bold text-violet-300 text-xs">1</span>
+                                <p>啟動您的 <strong class="text-slate-100">LM Studio</strong> 軟體。</p>
+                            </div>
+                            <div class="flex gap-3">
+                                <span class="flex-shrink-0 w-5 h-5 rounded-full bg-violet-900/50 border border-violet-700/60 flex items-center justify-center font-bold text-violet-300 text-xs">2</span>
+                                <p>切換至 <strong class="text-slate-100">Local Server</strong> (開發者/伺服器) 分頁。</p>
+                            </div>
+                            <div class="flex gap-3">
+                                <span class="flex-shrink-0 w-5 h-5 rounded-full bg-violet-900/50 border border-violet-700/60 flex items-center justify-center font-bold text-violet-300 text-xs">3</span>
+                                <p>在設定中找到 <strong class="text-slate-100">CORS</strong> 選項。</p>
+                            </div>
+                            <div class="flex gap-3">
+                                <span class="flex-shrink-0 w-5 h-5 rounded-full bg-violet-900/50 border border-violet-700/60 flex items-center justify-center font-bold text-violet-300 text-xs">4</span>
+                                <p>將 <strong class="text-slate-100">CORS</strong> 切換為 <strong class="text-pink-500 font-bold">ON (開啟)</strong> 狀態。</p>
+                            </div>
+                        </div>
+
+                        <div class="text-amber-500/80 bg-amber-950/20 border border-amber-900/30 rounded-lg p-2.5 flex gap-2 text-xs">
+                            <span>💡</span>
+                            <span>啟用 CORS 可允許遊戲網頁安全地向本地模型發送復盤請求。</span>
+                        </div>
+                    `;
+                }
             } else {
-                bodyEl.innerHTML = `
-                    <p>無法連線至本地運行的 LLM 服務 (<code class="bg-slate-950 px-1 py-0.5 rounded font-mono text-amber-400">${displayUrl}</code>)。請依循以下步驟啟用 CORS 設定：</p>
-                    
-                    <div class="space-y-3 bg-slate-950/50 border border-slate-800 rounded-xl p-4">
-                        <div class="flex gap-3">
-                            <span class="flex-shrink-0 w-5 h-5 rounded-full bg-violet-900/50 border border-violet-700/60 flex items-center justify-center font-bold text-violet-300 text-xs">1</span>
-                            <p>啟動您的 <strong class="text-slate-100">LM Studio</strong> 或本地端 LLM 軟體。</p>
+                if (isEn) {
+                    bodyEl.innerHTML = `
+                        <p>Unable to connect to local running LLM Service (<code class="bg-slate-950 px-1 py-0.5 rounded font-mono text-amber-400">${displayUrl}</code>).</p>
+                        
+                        <div class="space-y-3 bg-slate-950/50 border border-slate-800 rounded-xl p-4">
+                            <div class="flex gap-3">
+                                <span>1️⃣</span>
+                                <p>Make sure the local service is running and listening on the specified port.</p>
+                            </div>
+                            <div class="flex gap-3">
+                                <span>2️⃣</span>
+                                <p>Verify that your LLM provider allows incoming CORS requests from local origins.</p>
+                            </div>
                         </div>
-                        <div class="flex gap-3">
-                            <span class="flex-shrink-0 w-5 h-5 rounded-full bg-violet-900/50 border border-violet-700/60 flex items-center justify-center font-bold text-violet-300 text-xs">2</span>
-                            <p>切換至 <strong class="text-slate-100">Local Server</strong> (開發者/伺服器) 分頁。</p>
+                    `;
+                } else {
+                    bodyEl.innerHTML = `
+                        <p>無法連線至本地運行的 LLM 服務 (<code class="bg-slate-950 px-1 py-0.5 rounded font-mono text-amber-400">${displayUrl}</code>)。</p>
+                        
+                        <div class="space-y-3 bg-slate-950/50 border border-slate-800 rounded-xl p-4">
+                            <div class="flex gap-3">
+                                <span>1️⃣</span>
+                                <p>請確認本地 LLM 服務是否正常啟動，且連接端點埠號正確。</p>
+                            </div>
+                            <div class="flex gap-3">
+                                <span>2️⃣</span>
+                                <p>請確認該 LLM 服務已允許來自本機網頁 (Local Origin) 的 CORS 請求。</p>
+                            </div>
                         </div>
-                        <div class="flex gap-3">
-                            <span class="flex-shrink-0 w-5 h-5 rounded-full bg-violet-900/50 border border-violet-700/60 flex items-center justify-center font-bold text-violet-300 text-xs">3</span>
-                            <p>在設定中找到 <strong class="text-slate-100">CORS</strong> 選項。</p>
-                        </div>
-                        <div class="flex gap-3">
-                            <span class="flex-shrink-0 w-5 h-5 rounded-full bg-violet-900/50 border border-violet-700/60 flex items-center justify-center font-bold text-violet-300 text-xs">4</span>
-                            <p>將 <strong class="text-slate-100">CORS</strong> 切換為 <strong class="text-pink-500 font-bold">ON (開啟)</strong> 狀態。</p>
-                        </div>
-                    </div>
-
-                    <div class="text-amber-500/80 bg-amber-950/20 border border-amber-900/30 rounded-lg p-2.5 flex gap-2 text-xs">
-                        <span>💡</span>
-                        <span>啟用 CORS 可允許遊戲網頁安全地向本地模型發送復盤請求。</span>
-                    </div>
-                `;
+                    `;
+                }
             }
         }
 
@@ -380,22 +466,38 @@ class AISummarySystem {
         }, 200);
     }
 
+    getProviderName() {
+        const urlStr = (this.apiUrl || '').toLowerCase();
+        if (urlStr.includes('1234') || urlStr.includes('lmstudio') || urlStr.includes('lm-studio')) {
+            return 'LM Studio';
+        }
+        if (urlStr.includes('11434') || urlStr.includes('ollama')) {
+            return 'Ollama';
+        }
+        if (urlStr.includes('openai') || urlStr.includes('api.openai.com')) {
+            return 'OpenAI';
+        }
+        return 'LLM';
+    }
+
     // Update the visual status of the LM Studio connection
     updateConnectionStatus(status) {
         if (!this.indicator || !this.indicatorText) return;
         
         const isEn = window.currentLang === 'en';
+        const provider = this.getProviderName();
+
         if (status === 'checking') {
             this.indicator.className = 'w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse';
             this.indicatorText.textContent = isEn ? 'Testing connection...' : '正在測試連線...';
             this.indicatorText.className = 'text-xs text-amber-400 font-medium';
         } else if (status === 'connected') {
             this.indicator.className = 'w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-md shadow-emerald-500/50';
-            this.indicatorText.textContent = isEn ? 'LM Studio connected' : 'LM Studio 連線正常';
+            this.indicatorText.textContent = isEn ? `${provider} connected` : `${provider} 連線正常`;
             this.indicatorText.className = 'text-xs text-emerald-400 font-medium';
         } else {
             this.indicator.className = 'w-2.5 h-2.5 rounded-full bg-red-500 shadow-md shadow-red-500/50';
-            this.indicatorText.textContent = isEn ? 'Connection failed (Enable CORS)' : '連線失敗 (請開啟 CORS)';
+            this.indicatorText.textContent = isEn ? 'Connection failed' : '連線失敗';
             this.indicatorText.className = 'text-xs text-red-400 font-medium';
         }
     }
@@ -446,19 +548,27 @@ class AISummarySystem {
                 : `${displayName} 牌局復盤`;
         }
 
+        const provider = this.getProviderName();
+
         // Reset summary box and show status
         this.summaryContainer.innerHTML = isEn
-            ? '<div class="flex items-center gap-2 text-slate-400 text-xs"><span class="animate-spin text-sm">⌛</span> Connecting to local LM Studio...</div>'
-            : '<div class="flex items-center gap-2 text-slate-400 text-xs"><span class="animate-spin text-sm">⌛</span> 連線本地 LM Studio 中...</div>';
+            ? `<div class="flex items-center gap-2 text-slate-400 text-xs"><span class="animate-spin text-sm">⌛</span> Connecting to local ${provider}...</div>`
+            : `<div class="flex items-center gap-2 text-slate-400 text-xs"><span class="animate-spin text-sm">⌛</span> 連線本地 ${provider} 中...</div>`;
 
         this.updateConnectionStatus('checking');
         const isConnected = await this.checkConnection();
 
         if (!isConnected) {
             this.updateConnectionStatus('failed');
-            this.summaryContainer.innerHTML = isEn
-                ? '<div class="text-red-400 text-xs border border-red-950 bg-red-950/20 p-3 rounded-lg flex flex-col gap-2"><span>❌ Connection to local LM Studio failed.</span><span class="text-[11px] text-slate-400">Please enable CORS rules in LM Studio and try again.</span></div>'
-                : '<div class="text-red-400 text-xs border border-red-950 bg-red-950/20 p-3 rounded-lg flex flex-col gap-2"><span>❌ 無法連線至本地 LM Studio 服務。</span><span class="text-[11px] text-slate-400">請啟用 LM Studio 的 CORS 原則後重試。</span></div>';
+            if (provider === 'LM Studio') {
+                this.summaryContainer.innerHTML = isEn
+                    ? '<div class="text-red-400 text-xs border border-red-950 bg-red-950/20 p-3 rounded-lg flex flex-col gap-2"><span>❌ Connection to local LM Studio failed.</span><span class="text-[11px] text-slate-400">Please enable CORS rules in LM Studio and try again.</span></div>'
+                    : '<div class="text-red-400 text-xs border border-red-950 bg-red-950/20 p-3 rounded-lg flex flex-col gap-2"><span>❌ 無法連線至本地 LM Studio 服務。</span><span class="text-[11px] text-slate-400">請啟用 LM Studio 的 CORS 原則後重試。</span></div>';
+            } else {
+                this.summaryContainer.innerHTML = isEn
+                    ? `<div class="text-red-400 text-xs border border-red-950 bg-red-950/20 p-3 rounded-lg flex flex-col gap-2"><span>❌ Connection to local ${provider} failed.</span><span class="text-[11px] text-slate-400">Please check if the service is running at ${this.apiUrl} and allows CORS.</span></div>`
+                    : `<div class="text-red-400 text-xs border border-red-950 bg-red-950/20 p-3 rounded-lg flex flex-col gap-2"><span>❌ 無法連線至本地 ${provider} 服務。</span><span class="text-[11px] text-slate-400">請檢查該服務是否已在 ${this.apiUrl} 啟動，且已開放 CORS 連線。</span></div>`;
+            }
             this.showCORSModal();
             return;
         }
