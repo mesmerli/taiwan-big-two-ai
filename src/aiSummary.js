@@ -139,8 +139,7 @@ class AISummarySystem {
         // Bind LLM Model Setting
         const reviewLlmModelInput = document.getElementById('review-llm-model');
         if (reviewLlmModelInput) {
-            reviewLlmModelInput.value = typeof AppStorage !== 'undefined' ? (AppStorage.getItem('reviewLlmModel') || '') : '';
-            reviewLlmModelInput.oninput = () => {
+            reviewLlmModelInput.onchange = () => {
                 const val = reviewLlmModelInput.value.trim();
                 if (typeof AppStorage !== 'undefined') {
                     AppStorage.setItem('reviewLlmModel', val);
@@ -160,7 +159,7 @@ class AISummarySystem {
     }
 
     async testConnectionAndPopulateModels() {
-        // Cancel any in-flight request to prevent concurrent population of the datalist
+        // Cancel any in-flight request to prevent concurrent population of the select options
         if (this._modelFetchController) {
             this._modelFetchController.abort();
         }
@@ -168,8 +167,18 @@ class AISummarySystem {
         const controller = this._modelFetchController;
 
         const statusEl = document.getElementById('review-llm-connection-status');
-        const modelList = document.getElementById('review-llm-model-list');
+        const modelList = document.getElementById('review-llm-model'); // The select element itself
         const isEn = window.currentLang === 'en';
+
+        const savedModelId = typeof AppStorage !== 'undefined' ? (AppStorage.getItem('reviewLlmModel') || '') : '';
+
+        if (modelList) {
+            modelList.innerHTML = '';
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = isEn ? 'Auto-detect' : '自動選擇';
+            modelList.appendChild(defaultOption);
+        }
 
         if (statusEl) {
             statusEl.textContent = isEn ? '● Testing...' : '● 正在測試連線...';
@@ -202,28 +211,28 @@ class AISummarySystem {
                     statusEl.style.color = '#10b981'; // emerald
                 }
 
-                let firstModel = '';
                 if (modelList) {
-                    modelList.innerHTML = '';
+                    const seen = new Set();
+                    let hasSavedModel = false;
                     if (data && data.data) {
-                        const seen = new Set();
                         data.data.forEach((model) => {
                             const mId = model.id;
                             if (!mId || seen.has(mId)) return;
                             seen.add(mId);
-                            if (!firstModel) firstModel = mId;
+                            if (mId === savedModelId) hasSavedModel = true;
                             const option = document.createElement('option');
                             option.value = mId;
+                            option.textContent = mId;
                             modelList.appendChild(option);
                         });
                     }
-                }
-
-                const reviewLlmModelInput = document.getElementById('review-llm-model');
-                if (reviewLlmModelInput && !reviewLlmModelInput.value.trim() && firstModel) {
-                    reviewLlmModelInput.placeholder = isEn
-                        ? `Auto-detected: ${firstModel}`
-                        : `自動選擇：${firstModel}`;
+                    if (savedModelId && !hasSavedModel) {
+                        const customOption = document.createElement('option');
+                        customOption.value = savedModelId;
+                        customOption.textContent = savedModelId;
+                        modelList.appendChild(customOption);
+                    }
+                    modelList.value = savedModelId;
                 }
             } else {
                 throw new Error('Response not OK');
@@ -234,8 +243,12 @@ class AISummarySystem {
                 statusEl.textContent = isEn ? '● Connection Failed' : '● 連線失敗';
                 statusEl.style.color = '#ef4444'; // red
             }
-            if (modelList) {
-                modelList.innerHTML = '';
+            if (modelList && savedModelId) {
+                const customOption = document.createElement('option');
+                customOption.value = savedModelId;
+                customOption.textContent = savedModelId;
+                modelList.appendChild(customOption);
+                modelList.value = savedModelId;
             }
         }
     }

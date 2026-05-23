@@ -1280,7 +1280,6 @@ function setupAvatarClickListeners() {
                     currentEditingIndex = i;
                     const settings = char.getSettings();
                     apiUrlInput.value = settings.apiUrl || '';
-                    modelIdInput.value = settings.modelId || '';
                     const apiKeyInput = document.getElementById('ai-api-key');
                     if (apiKeyInput) {
                         apiKeyInput.value = settings.apiKey || '';
@@ -1289,7 +1288,7 @@ function setupAvatarClickListeners() {
                     settingsModal.classList.remove('hidden');
 
                     // Fetch models immediately when opening
-                    fetchAvailableModels(apiUrlInput.value, settings.apiKey || '');
+                    fetchAvailableModels(apiUrlInput.value, settings.apiKey || '', settings.modelId || '');
 
                     // Display learnings
                     updateLearningsUI(char);
@@ -1373,7 +1372,7 @@ function setupAvatarClickListeners() {
     };
 
     let _modelFetchController = null;
-    async function fetchAvailableModels(apiUrl, apiKey = '') {
+    async function fetchAvailableModels(apiUrl, apiKey = '', savedModelId = '') {
         // Cancel any in-flight request to prevent concurrent datalist population
         if (_modelFetchController) {
             _modelFetchController.abort();
@@ -1381,21 +1380,23 @@ function setupAvatarClickListeners() {
         _modelFetchController = new AbortController();
         const controller = _modelFetchController;
 
-        const modelList = document.getElementById('ai-model-list');
+        const modelList = document.getElementById('ai-model-id'); // select element
         if (!modelList) return;
         modelList.innerHTML = '';
 
         const statusEl = document.getElementById('ai-api-connection-status');
         const isEn = currentLang === 'en';
-        const modelIdInput = document.getElementById('ai-model-id');
 
-        if (modelIdInput) {
-            modelIdInput.placeholder = isEn
-                ? 'e.g., google/gemma-4-e2b (Leave blank for auto-detect)'
-                : '例如 google/gemma-4-e2b（留白以自動偵測）';
+        // Add default auto-detect option
+        const defaultOption = document.createElement('option');
+        defaultOption.value = '';
+        defaultOption.textContent = isEn ? 'Auto-detect' : '自動選擇';
+        modelList.appendChild(defaultOption);
+
+        if (!apiUrl) {
+            modelList.value = savedModelId;
+            return;
         }
-
-        if (!apiUrl) return;
 
         if (statusEl) {
             statusEl.textContent = isEn ? '● Testing...' : '● 正在測試連線...';
@@ -1419,24 +1420,28 @@ function setupAvatarClickListeners() {
                     statusEl.textContent = isEn ? '● Connected' : '● 連線成功';
                     statusEl.style.color = '#10b981'; // emerald
                 }
-                let firstModel = '';
-                if (data && data.data) {
+                if (modelList) {
                     const seen = new Set();
-                    data.data.forEach((model) => {
-                        const mId = model.id;
-                        if (!mId || seen.has(mId)) return;
-                        seen.add(mId);
-                        if (!firstModel) firstModel = mId;
-                        const option = document.createElement('option');
-                        option.value = mId;
-                        modelList.appendChild(option);
-                    });
-                    console.log(`[UI] Loaded ${seen.size} unique models into dropdown.`);
-                }
-                if (modelIdInput && !modelIdInput.value.trim() && firstModel) {
-                    modelIdInput.placeholder = isEn
-                        ? `Auto-detected: ${firstModel}`
-                        : `自動選擇：${firstModel}`;
+                    let hasSavedModel = false;
+                    if (data && data.data) {
+                        data.data.forEach((model) => {
+                            const mId = model.id;
+                            if (!mId || seen.has(mId)) return;
+                            seen.add(mId);
+                            if (mId === savedModelId) hasSavedModel = true;
+                            const option = document.createElement('option');
+                            option.value = mId;
+                            option.textContent = mId;
+                            modelList.appendChild(option);
+                        });
+                    }
+                    if (savedModelId && !hasSavedModel) {
+                        const customOption = document.createElement('option');
+                        customOption.value = savedModelId;
+                        customOption.textContent = savedModelId;
+                        modelList.appendChild(customOption);
+                    }
+                    modelList.value = savedModelId;
                 }
             } else {
                 throw new Error('Response not OK');
@@ -1446,6 +1451,13 @@ function setupAvatarClickListeners() {
             if (statusEl) {
                 statusEl.textContent = isEn ? '● Connection Failed' : '● 連線失敗';
                 statusEl.style.color = '#ef4444'; // red
+            }
+            if (modelList && savedModelId) {
+                const customOption = document.createElement('option');
+                customOption.value = savedModelId;
+                customOption.textContent = savedModelId;
+                modelList.appendChild(customOption);
+                modelList.value = savedModelId;
             }
         }
     }
@@ -1471,7 +1483,7 @@ function setupAvatarClickListeners() {
             autoSave();
             if (debounceTimeout) clearTimeout(debounceTimeout);
             debounceTimeout = setTimeout(() => {
-                fetchAvailableModels(apiUrlInput.value, apiKeyInput.value.trim());
+                fetchAvailableModels(apiUrlInput.value, apiKeyInput.value.trim(), modelIdInput.value);
             }, 800);
         };
     }
@@ -1480,11 +1492,11 @@ function setupAvatarClickListeners() {
         autoSave();
         if (debounceTimeout) clearTimeout(debounceTimeout);
         debounceTimeout = setTimeout(() => {
-            fetchAvailableModels(apiUrlInput.value, apiKeyInput ? apiKeyInput.value.trim() : '');
+            fetchAvailableModels(apiUrlInput.value, apiKeyInput ? apiKeyInput.value.trim() : '', modelIdInput.value);
         }, 800);
     };
 
-    modelIdInput.oninput = autoSave;
+    modelIdInput.onchange = autoSave;
     extraPromptInput.oninput = autoSave;
 
     resetBtn.onclick = () => {
@@ -1503,7 +1515,7 @@ function setupAvatarClickListeners() {
                         const apiKeyInput = document.getElementById('ai-api-key');
                         if (apiKeyInput) apiKeyInput.value = char.apiKey || '';
                         extraPromptInput.value = char.extraPrompt;
-                        fetchAvailableModels(apiUrlInput.value, char.apiKey || '');
+                        fetchAvailableModels(apiUrlInput.value, char.apiKey || '', char.modelId || '');
                     }
                 }
             }

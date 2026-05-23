@@ -873,6 +873,7 @@ body {
 }
 
 .form-group input,
+.form-group select,
 .form-group textarea {
     width: 100%;
     background: rgba(0, 0, 0, 0.2);
@@ -884,12 +885,18 @@ body {
     outline: none;
 }
 
+.form-group select option {
+    background-color: #1e293b;
+    color: white;
+}
+
 #ai-extra-prompt {
     min-height: 70px;
     line-height: 1.4;
 }
 
 .form-group input:focus,
+.form-group select:focus,
 .form-group textarea:focus {
     border-color: #9b59b6;
     box-shadow: 0 0 10px rgba(155, 89, 182, 0.3);
