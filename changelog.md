@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.18] - 2026-05-24
+
+### Added
+- **AI Tactical Review Customization**: Added dynamic wait screen titles displaying the configured model name (`reviewLlmModel` from `AppStorage`) instead of hardcoded strings.
+- **Constructive AI Feedback**: Configured the AI prompt to evaluate tactical plays using positive and educational feedback tags (`[檢討]` / `[Review]` and `[分析]` / `[Analysis]`) instead of sarcastic roasting comments.
+
+### Changed
+- **Optimized UI Flow**: Suppressed the standard victory alert pop-up (`showAlert`) when the AI review panel is initialized, directly sliding the review panel into view to avoid double prompts. The popup still functions as a fallback if the AI module is not loaded.
+- **Improved Wait Screen UX**: Tightened wait screen padding and removed the static progress bar to prevent screen overflow and scrollbars.
+- **Non-Streaming JSON Responses**: Swapped the typewriter SSE stream logic with a non-blocking asynchronous JSON response pipeline for faster rendering.
+- **Paragraph Fade-In Rendering**: Applied staggered CSS-based animations to fade in paragraphs sequentially within a 1-second total window.
+
 ## [1.5.17] - 2026-05-20
 
 ### Changed

@@ -60,6 +60,7 @@ let PLAYER_NAMES = PLAYER_NAMES_ZH;
 
 
 let currentLang = 'zh';
+window.currentLang = currentLang;
 
 // Keyboard interaction state
 let cycleIndex = -1;
@@ -72,10 +73,18 @@ function resetCycleState() {
 }
 
 function updateLanguage() {
+    window.currentLang = currentLang;
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
         if (I18N[currentLang][key]) {
             el.textContent = I18N[currentLang][key];
+        }
+    });
+
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        const key = el.getAttribute('data-i18n-placeholder');
+        if (I18N[currentLang][key]) {
+            el.placeholder = I18N[currentLang][key];
         }
     });
 
@@ -243,6 +252,7 @@ function updateLanguage() {
     }
     updateMuteUI();
     updateTrialStatusUI();
+    window.PLAYER_NAMES = PLAYER_NAMES;
     renderAll();
 }
 
@@ -310,6 +320,10 @@ let aiTurnTimeout = null;
 let aiProcessing = false;
 
 function initGame() {
+    if (window.AISummary && typeof window.AISummary.hidePanel === 'function') {
+        window.AISummary.hidePanel();
+    }
+    alertModal.classList.add('hidden');
     gameState.gameEnded = false;
     gameState.shouted = [false, false, false, false];
     gameState.canFinish = [true, true, true, true];
@@ -777,7 +791,11 @@ function executePlay(playerIndex, cards) {
         calculateScores(playerIndex);
         renderAll();
         AudioPlayer.playWin();
-        setTimeout(() => showAlert(t('winner', { name: PLAYER_NAMES[playerIndex] })), 100);
+        if (window.AISummary && typeof window.AISummary.showSummary === 'function') {
+            window.AISummary.showSummary(gameState, playerIndex);
+        } else {
+            setTimeout(() => showAlert(t('winner', { name: PLAYER_NAMES[playerIndex] })), 100);
+        }
 
         if (window.AI && typeof window.AI.postGameReflection === 'function') {
             window.AI.postGameReflection(gameState.gameLog, playerIndex, gameState.players);
@@ -965,7 +983,12 @@ function handleDragonWin(playerIndex) {
     gameState.scores[playerIndex] += totalGained;
     renderAll();
     AudioPlayer.playWin();
-    setTimeout(() => showAlert(t('dragonWin', { name: PLAYER_NAMES[playerIndex] })), 100);
+
+    if (window.AISummary && typeof window.AISummary.showSummary === 'function') {
+        window.AISummary.showSummary(gameState, playerIndex);
+    } else {
+        setTimeout(() => showAlert(t('dragonWin', { name: PLAYER_NAMES[playerIndex] })), 100);
+    }
 
     // Auto-Restart logic if Slot 0 is AI-controlled
     const p0Char = window.AI ? window.AI.getCharacter(0) : null;
@@ -1352,8 +1375,13 @@ function setupAvatarClickListeners() {
 
         if (!apiUrl) return;
 
-        const apiError = document.getElementById('ai-api-error');
-        if (apiError) apiError.textContent = '';
+        const statusEl = document.getElementById('ai-api-connection-status');
+        const isEn = currentLang === 'en';
+
+        if (statusEl) {
+            statusEl.textContent = isEn ? '● Testing...' : '● 正在測試連線...';
+            statusEl.style.color = '#f59e0b'; // amber
+        }
 
         try {
             const urlObj = new URL(apiUrl);
@@ -1364,6 +1392,10 @@ function setupAvatarClickListeners() {
             const response = await fetch(modelsUrl);
             if (response.ok) {
                 const data = await response.json();
+                if (statusEl) {
+                    statusEl.textContent = isEn ? '● Connected' : '● 連線成功';
+                    statusEl.style.color = '#10b981'; // emerald
+                }
                 if (data && data.data) {
                     data.data.forEach(model => {
                         const option = document.createElement('option');
@@ -1372,14 +1404,16 @@ function setupAvatarClickListeners() {
                     });
                     console.log(`[UI] Loaded ${data.data.length} models into dropdown.`);
                 }
+            } else {
+                throw new Error('Response not OK');
             }
         } catch (e) {
             console.warn("[UI] Failed to fetch models for dropdown:", e);
-            const apiError = document.getElementById('ai-api-error');
-            if (apiError) apiError.textContent = `(${t('apiError')})`;
+            if (statusEl) {
+                statusEl.textContent = isEn ? '● Connection Failed' : '● 連線失敗';
+                statusEl.style.color = '#ef4444'; // red
+            }
         }
-
-
     }
 
     const autoSave = () => {
@@ -1392,14 +1426,18 @@ function setupAvatarClickListeners() {
         }
     };
 
-    // Refresh model list and auto-save when API URL is changed
-    apiUrlInput.onchange = () => {
-        fetchAvailableModels(apiUrlInput.value);
+    // Refresh model list and auto-save when API URL is changed (with debounce)
+    let debounceTimeout = null;
+    apiUrlInput.oninput = () => {
         autoSave();
+        if (debounceTimeout) clearTimeout(debounceTimeout);
+        debounceTimeout = setTimeout(() => {
+            fetchAvailableModels(apiUrlInput.value);
+        }, 800);
     };
 
-    modelIdInput.onchange = autoSave;
-    extraPromptInput.onchange = autoSave;
+    modelIdInput.oninput = autoSave;
+    extraPromptInput.oninput = autoSave;
 
     resetBtn.onclick = () => {
         const msg = currentLang === 'zh' ? '確定要重設為預設值嗎？' : 'Reset to defaults?';
