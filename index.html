@@ -149,6 +149,9 @@
                         <div style="font-size: 11px; color: #94a3b8; line-height: 1.4; margin-top: 15px;">
                             <span data-i18n="reviewLlmUrlTip">💡 Enter the API endpoint URL for the post-game LLM review (e.g., LM Studio, Ollama, etc.). Defaults to http://127.0.0.1:1234/v1/chat/completions.</span>
                         </div>
+                        <div class="form-group" style="margin-top: 15px;">
+                            <button id="review-llm-guide-btn" class="premium-btn ghost mini w-full" style="width: 100%; justify-content: center; display: flex; font-size: 11px;" data-i18n="reviewLlmGuideBtn">Setup Guide</button>
+                        </div>
                     </div>
                 </div>
 
@@ -316,9 +319,14 @@
     <div id="ai-cors-modal" class="fixed inset-0 z-[2100] bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4 hidden text-slate-200">
         <div id="ai-cors-modal-content" class="bg-slate-900 border border-slate-700/50 rounded-2xl max-w-md w-full shadow-2xl overflow-hidden transform transition-all duration-300 scale-95 opacity-0">
             <!-- Modal Header -->
-            <div class="p-5 border-b border-slate-800 bg-slate-950/40 flex items-center gap-3">
-                <span class="text-2xl text-amber-500">⚠️</span>
-                <h3 class="text-base font-bold text-slate-100" data-i18n="aiCorsTitle">LM Studio 連線失敗 / CORS 未開啟</h3>
+            <div class="p-5 border-b border-slate-800 bg-slate-950/40 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <span class="text-2xl text-amber-500">⚠️</span>
+                    <h3 class="text-base font-bold text-slate-100" data-i18n="aiCorsTitle">LLM 網路設定導覽</h3>
+                </div>
+                <button id="ai-cors-close-btn" class="text-slate-400 hover:text-white p-2 rounded-lg hover:bg-slate-800 transition duration-150">
+                    <span class="text-2xl font-semibold leading-none">&times;</span>
+                </button>
             </div>
             
             <!-- Modal Body -->
@@ -348,16 +356,6 @@
                     <span>💡</span>
                     <span>啟用 CORS 可允許遊戲網頁安全地向本地模型發送復盤請求。</span>
                 </div>
-            </div>
-
-            <!-- Modal Footer -->
-            <div class="p-4 border-t border-slate-800 bg-slate-950/40 flex gap-2 justify-end">
-                <button id="ai-cors-close-btn" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-slate-300 font-bold rounded-lg transition duration-150">
-                    關閉
-                </button>
-                <button id="ai-cors-retry-btn" class="px-4 py-2 bg-violet-600 hover:bg-violet-700 active:bg-violet-800 text-white font-bold rounded-lg shadow-lg shadow-violet-900/30 transition duration-150">
-                    重新連線
-                </button>
             </div>
         </div>
     </div>

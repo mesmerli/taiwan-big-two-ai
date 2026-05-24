@@ -11,6 +11,9 @@ class AISummarySystem {
         this.apiKey = typeof AppStorage !== 'undefined' && AppStorage.getItem('reviewLlmApiKey')
             ? AppStorage.getItem('reviewLlmApiKey')
             : '';
+        this.reviewPanelEnabled = typeof AppStorage !== 'undefined' && AppStorage.getItem('reviewPanelEnabled') !== null
+            ? AppStorage.getItem('reviewPanelEnabled') === 'true'
+            : true;
         this.currentAbortController = null;
         this.typingInterval = null;
         this.loadingInterval = null;
@@ -95,14 +98,39 @@ class AISummarySystem {
             const btnNew = document.getElementById('btn-new');
             if (btnNew) btnNew.click();
         };
-
-        this.corsCloseBtn.onclick = () => this.hideCORSModal();
-        this.corsRetryBtn.onclick = async () => {
-            this.hideCORSModal();
-            if (this.lastGameState) {
-                this.showSummary(this.lastGameState, this.lastWinnerIndex);
-            }
-        };
+        if (this.corsCloseBtn) {
+            this.corsCloseBtn.onclick = () => this.hideCORSModal();
+        }
+        if (this.corsRetryBtn) {
+            this.corsRetryBtn.onclick = async () => {
+                this.hideCORSModal();
+                // Always retry connection test to update the Settings tab UI
+                await this.testConnectionAndPopulateModels();
+                // If there is an ended game context, retry the post-game summary review
+                if (this.lastGameState) {
+                    this.showSummary(this.lastGameState, this.lastWinnerIndex);
+                }
+            };
+        }
+        // Bind Review LLM Guide Button
+        const reviewLlmGuideBtn = document.getElementById('review-llm-guide-btn');
+        if (reviewLlmGuideBtn) {
+            reviewLlmGuideBtn.onclick = () => {
+                this.showCORSModal();
+            };
+        }
+        // Bind Review Panel Enabled Switch
+        const reviewPanelEnabledInput = document.getElementById('review-panel-enabled');
+        if (reviewPanelEnabledInput) {
+            reviewPanelEnabledInput.checked = this.reviewPanelEnabled;
+            reviewPanelEnabledInput.onchange = () => {
+                const checked = reviewPanelEnabledInput.checked;
+                this.reviewPanelEnabled = checked;
+                if (typeof AppStorage !== 'undefined') {
+                    AppStorage.setItem('reviewPanelEnabled', checked.toString());
+                }
+            };
+        }
 
         // Bind LLM URL Setting
         const reviewLlmUrlInput = document.getElementById('review-llm-url');
@@ -485,9 +513,6 @@ class AISummarySystem {
         }
 
         // Translate modal buttons
-        if (this.corsCloseBtn) {
-            this.corsCloseBtn.textContent = isEn ? 'Close' : '關閉';
-        }
         if (this.corsRetryBtn) {
             this.corsRetryBtn.textContent = isEn ? 'Retry Connection' : '重新連線';
         }
@@ -617,7 +642,6 @@ class AISummarySystem {
                     ? `<div class="text-red-400 text-xs border border-red-950 bg-red-950/20 p-3 rounded-lg flex flex-col gap-2"><span>❌ Connection to local ${provider} failed.</span><span class="text-[11px] text-slate-400">Please check if the service is running at ${this.apiUrl} and allows CORS.</span></div>`
                     : `<div class="text-red-400 text-xs border border-red-950 bg-red-950/20 p-3 rounded-lg flex flex-col gap-2"><span>❌ 無法連線至本地 ${provider} 服務。</span><span class="text-[11px] text-slate-400">請檢查該服務是否已在 ${this.apiUrl} 啟動，且已開放 CORS 連線。</span></div>`;
             }
-            this.showCORSModal();
             return;
         }
 

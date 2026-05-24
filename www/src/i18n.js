@@ -67,6 +67,8 @@ const I18N = {
         tabLicenseStore: "License & Authorization",
         tabAiSettings: "Settings",
         reviewLlmUrlLabel: "Review LLM URL",
+        reviewPanelEnabledLabel: "Enable Match Review Panel",
+        reviewLlmGuideBtn: "Connection Guide",
         reviewLlmUrlTip: "💡 Enter the API endpoint URL for the post-game LLM review (e.g., LM Studio, Ollama, etc.). Defaults to http://127.0.0.1:1234/v1/chat/completions.",
         reviewLlmModelLabel: "Review LLM Model",
         reviewLlmModelPlaceholder: "e.g., google/gemma-2-2b-it (Leave blank for auto-detect)",
@@ -87,7 +89,7 @@ const I18N = {
         aiReviewContentTitle: "AI Tactical Review",
         aiReviewRetryBtn: "Retry Review",
         aiReviewNewGameBtn: "New Match",
-        aiCorsTitle: "LM Studio Connection Failed / CORS Offline"
+        aiCorsTitle: "LLM Connection Guide"
     },
     'zh': {
         title: "台灣大老二 AI",
@@ -158,6 +160,8 @@ const I18N = {
         tabLicenseStore: "版權與授權",
         tabAiSettings: "設定",
         reviewLlmUrlLabel: "復盤 LLM URL",
+        reviewPanelEnabledLabel: "啟用牌局復盤畫面",
+        reviewLlmGuideBtn: "網路設定導覽",
         reviewLlmUrlTip: "💡 輸入局後 LLM 復盤用的 API 節點網址（例如 LM Studio、Ollama 等）。預設為 http://127.0.0.1:1234/v1/chat/completions。",
         reviewLlmModelLabel: "選擇 LLM 模型",
         reviewLlmModelPlaceholder: "例如 google/gemma-2-2b-it（留白以自動偵測）",
@@ -177,7 +181,7 @@ const I18N = {
         aiReviewContentTitle: "AI 戰術復盤",
         aiReviewRetryBtn: "重新分析",
         aiReviewNewGameBtn: "新局開打",
-        aiCorsTitle: "LM Studio 連線失敗 / CORS 未開啟"
+        aiCorsTitle: "LLM 網路設定導覽"
     }
 
 };

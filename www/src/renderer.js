@@ -791,7 +791,7 @@ function executePlay(playerIndex, cards) {
         calculateScores(playerIndex);
         renderAll();
         AudioPlayer.playWin();
-        if (window.AISummary && typeof window.AISummary.showSummary === 'function') {
+        if (window.AISummary && typeof window.AISummary.showSummary === 'function' && window.AISummary.reviewPanelEnabled !== false) {
             window.AISummary.showSummary(gameState, playerIndex);
         } else {
             setTimeout(() => showAlert(t('winner', { name: PLAYER_NAMES[playerIndex] })), 100);
@@ -984,7 +984,7 @@ function handleDragonWin(playerIndex) {
     renderAll();
     AudioPlayer.playWin();
 
-    if (window.AISummary && typeof window.AISummary.showSummary === 'function') {
+    if (window.AISummary && typeof window.AISummary.showSummary === 'function' && window.AISummary.reviewPanelEnabled !== false) {
         window.AISummary.showSummary(gameState, playerIndex);
     } else {
         setTimeout(() => showAlert(t('dragonWin', { name: PLAYER_NAMES[playerIndex] })), 100);
