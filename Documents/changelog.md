@@ -2,6 +2,17 @@
 
 All notable changes to the **Taiwan Big Two AI** project will be documented in this file.
 
+### [1.5.20] - 2026-05-25
+
+### Added
+- **Interactive Post-Game AI Q&A**: Replaced the "Re-analyze" (重新分析) button in the AI review panel with an interactive Q&A input and submit button, enabling players to ask follow-up questions about the match analysis.
+- **Context-Rich LLM Analysis**: Reconstructed starting hands of all four players from play history (`gameLog`) and passed complete chronological play logs for the LLM to analyze, providing much more accurate and deep tactical commentary.
+- **Default Persona Strategy Adjustment**: Configured default `extraPrompt` (客製化提示詞) for Diana (`DianaAI`) and Ares (`AresAI`) containing their respective match-improvement recommendations from the reviews.
+
+### Changed
+- **Response Length Optimization**: Configured `max_tokens: 4096` in LLM API calls to prevent responses from being cut off.
+- **Fallback Safety**: Improved fallback/reset logic for settings so that clearing customized prompts reverts to character-specific built-in defaults.
+
 ### [1.5.19] - 2026-05-24
 
 ### Added

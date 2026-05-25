@@ -305,11 +305,14 @@
         </div>
 
         <!-- Panel Footer -->
-        <div class="p-4 border-t border-slate-800/80 bg-slate-950/40 flex gap-2">
-            <button id="ai-review-retry-btn" class="flex-1 py-2.5 px-4 bg-violet-600 hover:bg-violet-700 active:bg-violet-800 text-white text-xs font-bold rounded-lg shadow-lg shadow-violet-900/30 transition duration-150 flex items-center justify-center gap-1.5">
-                <span>🔄</span> <span data-i18n="aiReviewRetryBtn">重新分析</span>
-            </button>
-            <button id="ai-review-newgame-btn" class="flex-1 py-2.5 px-4 bg-slate-700 hover:bg-slate-600 active:bg-slate-500 text-white text-xs font-bold rounded-lg shadow-lg shadow-slate-900/30 transition duration-150 flex items-center justify-center gap-1.5">
+        <div class="p-4 border-t border-slate-800/80 bg-slate-950/40 flex flex-col gap-2">
+            <div class="flex gap-2 w-full">
+                <input id="ai-review-question-input" type="text" class="flex-1 bg-slate-900/80 border border-slate-700/80 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-violet-500 transition" placeholder="輸入關於分析結果的疑問..." data-i18n-placeholder="aiReviewQuestionPlaceholder">
+                <button id="ai-review-ask-btn" class="py-2 px-4 bg-violet-600 hover:bg-violet-700 active:bg-violet-800 text-white text-xs font-bold rounded-lg shadow-lg shadow-violet-900/30 transition duration-150 flex items-center justify-center gap-1.5 whitespace-nowrap">
+                    <span>💬</span> <span data-i18n="aiReviewAskBtn">發問</span>
+                </button>
+            </div>
+            <button id="ai-review-newgame-btn" class="w-full py-2.5 px-4 bg-slate-700 hover:bg-slate-600 active:bg-slate-500 text-white text-xs font-bold rounded-lg shadow-lg shadow-slate-900/30 transition duration-150 flex items-center justify-center gap-1.5">
                 <span>🚀</span> <span data-i18n="aiReviewNewGameBtn">新局開打</span>
             </button>
         </div>

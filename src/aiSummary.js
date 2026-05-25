@@ -26,6 +26,8 @@ class AISummarySystem {
         // Cached gameState and winner
         this.lastGameState = null;
         this.lastWinnerIndex = -1;
+        this.chatHistory = [];
+        this.activeModel = '';
 
         // Initialize when DOM is ready
         if (document.readyState === 'loading') {
@@ -67,10 +69,14 @@ class AISummarySystem {
         // DOM Elements
         this.panel = document.getElementById('ai-review-panel');
         this.closeBtn = document.getElementById('ai-review-close-btn');
-        this.retryBtn = document.getElementById('ai-review-retry-btn');
         this.newGameBtn = document.getElementById('ai-review-newgame-btn');
         this.statsContainer = document.getElementById('ai-review-stats');
         this.summaryContainer = document.getElementById('ai-summary');
+        this.scrollContainer = this.summaryContainer ? this.summaryContainer.closest('.overflow-y-auto') : null;
+        
+        // Q&A elements
+        this.askBtn = document.getElementById('ai-review-ask-btn');
+        this.questionInput = document.getElementById('ai-review-question-input');
         
         this.indicator = document.getElementById('ai-connection-indicator');
         this.indicatorText = document.getElementById('ai-connection-text');
@@ -86,11 +92,17 @@ class AISummarySystem {
         // Setup Event Listeners
         this.closeBtn.onclick = () => this.hidePanel();
         
-        this.retryBtn.onclick = () => {
-            if (this.lastGameState) {
-                this.showSummary(this.lastGameState, this.lastWinnerIndex);
-            }
-        };
+        if (this.askBtn) {
+            this.askBtn.onclick = () => this.handleUserQuestion();
+        }
+        if (this.questionInput) {
+            this.questionInput.onkeydown = (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    this.handleUserQuestion();
+                }
+            };
+        }
 
         this.newGameBtn.onclick = () => {
             this.hidePanel();
@@ -603,6 +615,13 @@ class AISummarySystem {
     async showSummary(gameState, winnerIndex) {
         this.lastGameState = gameState;
         this.lastWinnerIndex = winnerIndex;
+        this.chatHistory = [];
+        this.activeModel = '';
+        
+        if (this.questionInput) {
+            this.questionInput.value = '';
+        }
+        this.setInputDisabledState(false);
 
         this.abortActiveAnalysis();
         this.currentAbortController = new AbortController();
@@ -754,14 +773,53 @@ class AISummarySystem {
         const isEn = window.currentLang === 'en';
         const playerNames = window.PLAYER_NAMES || (isEn ? ["You", "Alex", "Bella", "Chris"] : ["你", "艾力克斯", "貝拉", "克里斯"]);
 
-        // Prepare game JSON statistics
+        // Reconstruct starting hands from play history and final remaining cards
+        const startingHands = [[], [], [], []];
+        gameState.players.forEach((hand, idx) => {
+            startingHands[idx] = [...hand];
+        });
+        if (gameState.gameLog && Array.isArray(gameState.gameLog)) {
+            gameState.gameLog.forEach(entry => {
+                if (entry.action !== "PASS" && Array.isArray(entry.action)) {
+                    startingHands[entry.player].push(...entry.action);
+                }
+            });
+        }
+        startingHands.forEach((hand, idx) => {
+            if (typeof GameLogic !== 'undefined') {
+                startingHands[idx] = GameLogic.sortCards(hand);
+            } else {
+                startingHands[idx] = hand.sort((a, b) => a - b);
+            }
+        });
+
+        // Helper to format card names
+        const getCardName = (cardId) => {
+            const rankLabels = ['3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A', '2'];
+            const suitSymbols = ['♣', '♦', '♥', '♠'];
+            const rankIdx = typeof GameLogic !== 'undefined' ? GameLogic.getRank(cardId) : (cardId % 13);
+            const suitIdx = typeof GameLogic !== 'undefined' ? GameLogic.getSuit(cardId) : Math.floor(cardId / 13);
+            return suitSymbols[suitIdx] + rankLabels[rankIdx];
+        };
+
+        // Prepare game JSON statistics with full history
         const stats = {
             winner: playerNames[winnerIndex],
             players: gameState.players.map((hand, idx) => ({
                 name: playerNames[idx],
-                remaining_cards: hand.length,
+                starting_hand: startingHands[idx].map(getCardName),
+                remaining_cards: hand.map(getCardName),
+                remaining_count: hand.length,
                 is_homerun: hand.length === 13
-            }))
+            })),
+            game_play_history: (gameState.gameLog || []).map(entry => {
+                const name = playerNames[entry.player];
+                if (entry.action === "PASS") {
+                    return `Turn ${entry.turn + 1}: ${name} passed`;
+                } else {
+                    return `Turn ${entry.turn + 1}: ${name} played [${entry.action.map(getCardName).join(', ')}]`;
+                }
+            })
         };
 
         let systemPrompt = '';
@@ -769,46 +827,46 @@ class AISummarySystem {
 
         if (isEn) {
             systemPrompt = `You are a professional Big Two card game analysis expert reviewing a match that just ended.
-Your task is to analyze the match results and give constructive tactical commentary for each player based on their remaining cards. Keep the tone helpful, encouraging, and professional.
+Your task is to analyze the match results, the starting hands of each player, and the chronological play history. Give constructive tactical commentary for each player based on how they played their cards. Keep the tone helpful, encouraging, and professional.
 
 Your review MUST include the following sections and be presented in clean Markdown format:
 ### 🃏 Match Summary
-(Provide an overall summary of the match results and highlights)
+(Provide an overall summary of the match results, highlighting the key turns and interesting plays)
 
 ### 💡 Tactical Analysis
-(Provide tactical advice and analysis for the players, e.g., suggestions on when to play high cards or how to avoid being left with many cards)
+(Provide tactical advice and analysis for the players. Analyze their starting hands and how they managed their cards throughout the play history)
 
 Please structure your comments into distinct blocks of [Review] and [Analysis]:
-- Use [Review] at the beginning of a paragraph to explain which step was not played well (identify suboptimal plays or tactical mistakes) in a positive and constructive manner. Do NOT tease or roast the player.
+- Use [Review] at the beginning of a paragraph to explain which step was not played well (identify suboptimal plays, e.g., playing a high card too early or passing when they could have taken control) in a positive and constructive manner. Do NOT tease or roast the player.
 - Use [Analysis] at the beginning of a paragraph to explain how the player can do better in the future (provide improvement strategies and tactical suggestions).
 Ensure every paragraph starts with either [Review] or [Analysis]!`;
 
-            userPrompt = `Here is the Big Two game statistics in JSON format:
+            userPrompt = `Here is the Big Two game statistics, starting hands, and play history in JSON format:
 \`\`\`json
 ${JSON.stringify(stats, null, 2)}
 \`\`\`
-Please review this match according to the rules and output strictly in English.`;
+Please review this match according to the rules, analyze the play history, and output strictly in English.`;
         } else {
             systemPrompt = `你是一個專業的大老二牌局分析專家，在大老二牌局結束後進行戰術復盤。
-你的任務是點評這次牌局的結果，並針對每個玩家的剩餘牌數或勝負狀況給予客觀且專業的戰術點評。請保持態度積極正面、客觀且具建設性，切勿嘲諷玩家。
+你的任務是點評這次牌局的結果。請根據每位玩家的起始手牌（starting_hand）、完整的出牌歷程（game_play_history）以及最終賸餘手牌（remaining_cards），對每個人在關鍵輪次的出牌決策給予客觀、精準且具建設性的戰術點評。請保持態度積極正面、客觀且具建設性，切勿嘲諷玩家。
 
 你的點評必須包含以下部分，並以清晰的 Markdown 格式呈現：
 ### 🃏 戰局結果點評
-（對整體局勢進行精簡點評與勝負分析）
+（對整體局勢進行精簡點評，指出關鍵轉折點與勝負分析）
 
 ### 💡 戰術點評
-（針對各個玩家的表現，給出專業實用的戰術建議，例如出牌順序、關鍵牌的保留時機等）
+（針對各個玩家的起手牌與出牌歷史，指出哪些牌打得好，哪些牌的出牌時機不佳，並給出專業實用的戰術建議，例如出牌順序、控牌權的爭奪、大牌的保留時機等）
 
 請在點評時，將段落區分為 [檢討] 或 [分析] 兩類區塊：
-- 當你需要說明玩家本局哪一步做得不好，指出其戰術失誤或不夠妥當的出牌選擇時，請在段落開頭加上 [檢討]（例如：[檢討] 艾力克斯在第5輪過早打出梅花K，導致後期失去了控牌權...）。請務必用正面、客觀的態度指出問題，絕不帶任何挖苦與嘲諷。
+- 當你需要說明玩家本局哪一步做得不好，指出其戰術失誤或不夠妥當的出牌選擇時（例如過早打出關鍵大牌，或在有機會接牌時選擇過牌），請在段落開頭加上 [檢討]（例如：[檢討] 艾力克斯在第5輪過早打出梅花K，導致後期失去了控牌權...）。請務必用正面、客觀的態度指出問題，絕不帶任何挖苦與嘲諷。
 - 當你需要說明玩家將來可以怎麼做，提供專業的戰術建議與改進策略時，請在段落開頭加上 [分析]（例如：[分析] 艾力克斯將來在手牌大牌較少時，可以考慮優先保留黑桃2作為關鍵的斷牌工具...）。
 請確保每一段評語都要以 [檢討] 或 [分析] 開頭！`;
 
-            userPrompt = `以下為大老二牌局統計數據（JSON 格式）：
+            userPrompt = `以下為大老二牌局統計數據、起手牌及出牌歷程（JSON 格式）：
 \`\`\`json
 ${JSON.stringify(stats, null, 2)}
 \`\`\`
-請針對此數據進行復盤，並使用繁體中文輸出。`;
+請針對此數據與完整出牌歷程進行復盤，並使用繁體中文輸出。`;
         }
 
         // Fetch loaded model ID dynamically or fall back to default
@@ -816,6 +874,7 @@ ${JSON.stringify(stats, null, 2)}
         if (!activeModel) {
             try {
                 const urlObj = new URL(this.apiUrl);
+                const modelsUrl = `${urlObj.protocol}//${urlObj.host}/v1/models`;
                 const detectHeaders = {};
                 if (this.apiKey) {
                     detectHeaders['Authorization'] = `Bearer ${this.apiKey}`;
@@ -837,6 +896,8 @@ ${JSON.stringify(stats, null, 2)}
         if (!activeModel) {
             activeModel = 'local-model';
         }
+
+        this.activeModel = activeModel;
 
         // Update UI headers with the dynamically auto-detected model name
         const loadingMessageEl = document.getElementById('ai-loading-message');
@@ -860,6 +921,11 @@ ${JSON.stringify(stats, null, 2)}
                 : `自動選擇：${activeModel}`;
         }
 
+        this.chatHistory = [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt }
+        ];
+
         console.log('[AI Summary] requestAISummary activeModel:', activeModel);
         console.log('[AI Summary] requestAISummary sending POST to:', this.apiUrl);
         const reqHeaders = { 'Content-Type': 'application/json' };
@@ -871,11 +937,9 @@ ${JSON.stringify(stats, null, 2)}
             headers: reqHeaders,
             body: JSON.stringify({
                 model: activeModel,
-                messages: [
-                    { role: 'system', content: systemPrompt },
-                    { role: 'user', content: userPrompt }
-                ],
-                temperature: 0.8
+                messages: this.chatHistory,
+                temperature: 0.8,
+                max_tokens: 4096
             }),
             signal
         });
@@ -892,6 +956,8 @@ ${JSON.stringify(stats, null, 2)}
         this.stopLoadingAnimation();
 
         if (content) {
+            this.chatHistory.push({ role: 'assistant', content: content });
+
             // 1. Escape raw content to prevent HTML injection issues safely
             let html = content
                 .replace(/&/g, '&amp;')
@@ -1066,6 +1132,179 @@ ${JSON.stringify(stats, null, 2)}
         html = html.replace(/\n/g, '<br>');
 
         return html;
+    }
+
+    async fetchLLMResponse(signal) {
+        const reqHeaders = { 'Content-Type': 'application/json' };
+        if (this.apiKey) {
+            reqHeaders['Authorization'] = `Bearer ${this.apiKey}`;
+        }
+        
+        const response = await fetch(this.apiUrl, {
+            method: 'POST',
+            headers: reqHeaders,
+            body: JSON.stringify({
+                model: this.activeModel || 'local-model',
+                messages: this.chatHistory,
+                temperature: 0.8,
+                max_tokens: 4096
+            }),
+            signal
+        });
+
+        if (!response.ok) {
+            const text = await response.text();
+            throw new Error(`HTTP ${response.status}: ${text}`);
+        }
+
+        const data = await response.json();
+        return data.choices?.[0]?.message?.content || '';
+    }
+
+    async handleUserQuestion() {
+        if (!this.questionInput) return;
+        const question = this.questionInput.value.trim();
+        if (!question) return;
+
+        // Clear input field
+        this.questionInput.value = '';
+
+        // If there's an ongoing fetch/analysis, abort it or ignore
+        if (this.currentAbortController) {
+            this.currentAbortController.abort();
+        }
+        this.currentAbortController = new AbortController();
+        const signal = this.currentAbortController.signal;
+
+        // Append user question to history
+        this.chatHistory.push({ role: 'user', content: question });
+
+        // Add user question to the container visually
+        const isEn = window.currentLang === 'en';
+        const escapedQuestion = question
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+
+        const userMsgHtml = `
+            <div class="my-4 flex justify-end animate-fade-in">
+                <div class="max-w-[85%] bg-violet-600/30 border border-violet-500/40 rounded-2xl rounded-tr-none px-3.5 py-2 text-slate-100 text-xs lg-game:text-sm shadow-sm flex flex-col gap-1">
+                    <div class="text-[10px] text-violet-400 font-bold">${isEn ? 'You' : '你'}</div>
+                    <div class="whitespace-pre-wrap">${escapedQuestion}</div>
+                </div>
+            </div>
+        `;
+        
+        // Append user bubble to summaryContainer
+        if (this.summaryContainer) {
+            // Remove any previous loading element if any
+            const existingLoading = document.getElementById('ai-response-loading');
+            if (existingLoading) existingLoading.remove();
+
+            this.summaryContainer.insertAdjacentHTML('beforeend', userMsgHtml);
+            
+            // Append loading element
+            const loadingHtml = `
+                <div id="ai-response-loading" class="my-4 flex justify-start animate-fade-in">
+                    <div class="max-w-[85%] bg-slate-950/40 border border-slate-800 rounded-2xl rounded-tl-none px-3.5 py-2 text-slate-400 text-xs lg-game:text-sm flex items-center gap-2 shadow-sm">
+                        <span class="animate-spin text-sm">⌛</span>
+                        <span>${isEn ? 'AI is thinking...' : 'AI 正在思考中...'}</span>
+                    </div>
+                </div>
+            `;
+            this.summaryContainer.insertAdjacentHTML('beforeend', loadingHtml);
+            this.scrollToBottom();
+        }
+
+        // Disable input and button while loading
+        this.setInputDisabledState(true);
+
+        try {
+            // Call API
+            const responseContent = await this.fetchLLMResponse(signal);
+            
+            // Append response to history
+            this.chatHistory.push({ role: 'assistant', content: responseContent });
+
+            // Remove loading indicator
+            const loadingEl = document.getElementById('ai-response-loading');
+            if (loadingEl) loadingEl.remove();
+
+            // Format response
+            let html = responseContent
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+            html = this.parseRoastAndAnalysis(html);
+            html = this.parseBasicMarkdown(html, false);
+            html = this.applyFadeInEffects(html);
+
+            const displayName = this.activeModel || 'AI';
+
+            const aiMsgHtml = `
+                <div class="my-4 flex justify-start animate-fade-in">
+                    <div class="max-w-[85%] bg-slate-950/40 border border-slate-800 rounded-2xl rounded-tl-none px-3.5 py-2 text-slate-200 text-xs lg-game:text-sm shadow-sm flex flex-col gap-1 w-full">
+                        <div class="text-[10px] text-violet-400 font-bold">${displayName}</div>
+                        <div class="prose prose-invert max-w-none text-slate-200 text-xs lg-game:text-sm leading-relaxed whitespace-pre-wrap">${html}</div>
+                    </div>
+                </div>
+            `;
+
+            if (this.summaryContainer) {
+                this.summaryContainer.insertAdjacentHTML('beforeend', aiMsgHtml);
+                this.scrollToBottom();
+            }
+        } catch (err) {
+            if (err.name === 'AbortError') {
+                console.log('[AI Summary] Question fetch aborted.');
+                return;
+            }
+            console.error('[AI Summary] Question request failed:', err);
+            
+            const loadingEl = document.getElementById('ai-response-loading');
+            if (loadingEl) loadingEl.remove();
+
+            const errTitle = isEn ? 'Error' : '發問發生錯誤';
+            const errMsgHtml = `
+                <div class="my-4 flex justify-start animate-fade-in text-red-400 text-xs border border-red-950 bg-red-950/20 p-3 rounded-lg w-full">
+                    ❌ ${errTitle}：${err.message || err}
+                </div>
+            `;
+            if (this.summaryContainer) {
+                this.summaryContainer.insertAdjacentHTML('beforeend', errMsgHtml);
+                this.scrollToBottom();
+            }
+        } finally {
+            this.setInputDisabledState(false);
+        }
+    }
+
+    setInputDisabledState(disabled) {
+        if (this.questionInput) {
+            this.questionInput.disabled = disabled;
+            if (disabled) {
+                this.questionInput.classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                this.questionInput.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+        if (this.askBtn) {
+            this.askBtn.disabled = disabled;
+            if (disabled) {
+                this.askBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                this.askBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+    }
+
+    scrollToBottom() {
+        if (this.scrollContainer) {
+            this.scrollContainer.scrollTo({
+                top: this.scrollContainer.scrollHeight,
+                behavior: 'smooth'
+            });
+        }
     }
 }
 

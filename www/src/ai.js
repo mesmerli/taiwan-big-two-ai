@@ -258,9 +258,23 @@ class BaseLLMAI extends AICharacter {
 
         this.persona = personas[Math.floor(Math.random() * personas.length)];
         console.log(`%c[${this.name} Engine] Persona selected for this game: ${this.persona.name}`, 'color: #3498db; font-weight: bold;');
-    }
+    }    loadSettings() {
+        const defaultDianaPrompt = `[戰術調整策略 / Tactical Strategy Adjustment]
+1. 組合建設與出牌 (Combination Building & Active Play):
+   - 策略重點應從單純防守轉向主動的「組合建設」與「價值釋放」。
+   - 手牌中若有潛在的連串或組合（如順子、對子等），應更積極嘗試連動發牌、打出組合以爭奪中期控牌權，而非僅因應對手壓力被動防守。
+2. 高價值牌管理 (High-Value Cards Management):
+   - 靈活權衡「安全防守」與「主動進攻」的平衡。
+   - 善加利用高價值牌（J, Q, K）創造打出其他連串組合的發牌線路與得分機會，而非僅將其作為後期防禦手段。`;
 
-    loadSettings() {
+        const defaultAresPrompt = `[戰術調整策略 / Tactical Strategy Adjustment]
+1. 核心高價值牌管理與釋放節奏 (High-Value Cards Management & Timing):
+   - 視高價值牌（如 A, J）為戰術籌碼而非單純得分點。保留這些大牌於後期釋放，避免過早打出暴露實力。
+   - 精確拿捏發動時機，不急於對無威脅的牌做出過度反應，等待對手資源消耗或形成決定性勝負局時再果斷出手。
+2. 中低價值牌的防禦與控牌運用 (Defensive Use of Mid-Low Cards):
+   - 善用中低價值牌（如 3, 4, 7, 8, 9 組合）作為防禦墊或控制工具，在對手釋放高價值牌時維持牌面均衡。
+   - 後期利用中等牌（如 7, 8, 9）進行阻礙性出牌，破壞對手正嘗試建立的牌型組合，對其施加心理與實質壓力。`;
+
         try {
             const saved = AppStorage.getItem(this.settingsKey);
             if (saved) {
@@ -268,18 +282,18 @@ class BaseLLMAI extends AICharacter {
                 this.apiUrl = parsed.apiUrl || 'http://127.0.0.1:1234/v1/chat/completions';
                 this.modelId = parsed.modelId || '';
                 this.apiKey = parsed.apiKey || '';
-                this.extraPrompt = parsed.extraPrompt || "";
+                this.extraPrompt = (parsed.extraPrompt && parsed.extraPrompt.trim() !== "") ? parsed.extraPrompt : (this.name === "Diana" ? defaultDianaPrompt : (this.name === "Ares" ? defaultAresPrompt : ""));
             } else {
                 this.apiUrl = 'http://127.0.0.1:1234/v1/chat/completions';
                 this.modelId = '';
                 this.apiKey = '';
-                this.extraPrompt = "";
+                this.extraPrompt = this.name === "Diana" ? defaultDianaPrompt : (this.name === "Ares" ? defaultAresPrompt : "");
             }
         } catch (e) {
             this.apiUrl = 'http://127.0.0.1:1234/v1/chat/completions';
             this.modelId = '';
             this.apiKey = '';
-            this.extraPrompt = "";
+            this.extraPrompt = this.name === "Diana" ? defaultDianaPrompt : (this.name === "Ares" ? defaultAresPrompt : "");
         }
 
         // Load Memory (Learnings & Stats)
@@ -321,7 +335,24 @@ class BaseLLMAI extends AICharacter {
         this.apiUrl = settings.apiUrl || this.apiUrl;
         this.modelId = settings.modelId || this.modelId;
         this.apiKey = settings.apiKey !== undefined ? settings.apiKey : this.apiKey;
-        this.extraPrompt = settings.extraPrompt || "";
+
+        const defaultDianaPrompt = `[戰術調整策略 / Tactical Strategy Adjustment]
+1. 組合建設與主動出牌 (Combination Building & Active Play):
+   - 策略重點應從單純防守轉向主動的「組合建設」與「價值釋放」。
+   - 手牌中若有潛在的連串或組合（如順子、對子等），應更積極嘗試連動發牌、打出組合以爭奪中期控牌權，而非僅因應對手壓力被動防守。
+2. 高價值牌管理 (High-Value Cards Management):
+   - 靈活權衡「安全防守」與「主動進攻」的平衡。
+   - 善加利用高價值牌（J, Q, K）創造打出其他連串組合的發牌線路與得分機會，而非僅將其作為後期防禦手段。`;
+
+        const defaultAresPrompt = `[戰術調整策略 / Tactical Strategy Adjustment]
+1. 核心高價值牌管理與釋放節奏 (High-Value Cards Management & Timing):
+   - 視高價值牌（如 A, J）為戰術籌碼而非單純得分點。保留 these 大牌於後期釋放，避免過早打出暴露實力。
+   - 精確拿捏發動時機，不急於對無威脅的牌做出過度反應，等待對手資源消耗或形成決定性勝負局時再果斷出手。
+2. 中低價值牌的防禦與控牌運用 (Defensive Use of Mid-Low Cards):
+   - 善用中低價值牌（如 3, 4, 7, 8, 9 組合）作為防禦墊或控制工具，在對手釋放高價值牌時維持牌面均衡。
+   - 後期利用中等牌（如 7, 8, 9）進行阻礙性出牌，破壞對手正嘗試建立的牌型組合，對其施加心理與實質壓力。`;
+
+        this.extraPrompt = (settings.extraPrompt && settings.extraPrompt.trim() !== "") ? settings.extraPrompt : (this.name === "Diana" ? defaultDianaPrompt : (this.name === "Ares" ? defaultAresPrompt : ""));
         AppStorage.setItem(this.settingsKey, JSON.stringify({
             apiUrl: this.apiUrl,
             modelId: this.modelId,

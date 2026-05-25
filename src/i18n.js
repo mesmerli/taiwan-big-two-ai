@@ -89,6 +89,8 @@ const I18N = {
         aiReviewContentTitle: "AI Tactical Review",
         aiReviewRetryBtn: "Retry Review",
         aiReviewNewGameBtn: "New Match",
+        aiReviewQuestionPlaceholder: "Ask AI a question about this match...",
+        aiReviewAskBtn: "Ask",
         aiCorsTitle: "LLM Connection Guide"
     },
     'zh': {
@@ -181,6 +183,8 @@ const I18N = {
         aiReviewContentTitle: "AI 戰術復盤",
         aiReviewRetryBtn: "重新分析",
         aiReviewNewGameBtn: "新局開打",
+        aiReviewQuestionPlaceholder: "輸入關於分析結果的疑問...",
+        aiReviewAskBtn: "發問",
         aiCorsTitle: "LLM 網路設定導覽"
     }
 
