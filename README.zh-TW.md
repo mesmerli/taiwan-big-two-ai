@@ -22,7 +22,7 @@
 
 <p align="center">
   <img src="./screenshots/playground-zh.png" width="48%" />
-  <img src="./screenshots/aisetting_zh.png" width="48%" />
+  <img src="./screenshots/aisetting-zh.png" width="48%" />
 </p>
 <p align="center">
   <img src="./screenshots/gamerule-zh.png" width="32%" />
