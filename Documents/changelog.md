@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to the **Taiwan Big Two AI** project will be documented in this file.
+All notable changes to the **Taiwan Big2 AI** project will be documented in this file.
 
 ### [1.5.20] - 2026-05-25
 
@@ -234,7 +234,7 @@ All notable changes to the **Taiwan Big Two AI** project will be documented in t
 
 ## [1.0.0] - 2026-05-13
 ### Added
-- Initial release of Taiwan Big Two AI.
+- Initial release of Taiwan Big2 AI.
 - Core game engine with full card comparison and hand ranking logic.
 - **DianaAI**: The first LLM-powered persona capable of learning from its losses.
 - Persistent settings and memory storage via LocalStorage.

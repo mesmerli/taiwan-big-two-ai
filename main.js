@@ -3,8 +3,13 @@ const path = require('path');
 const I18N = require('./src/i18n.js');
 
 // Set AppUserModelId for Windows Taskbar/JumpList consistency
+// For Store (MSIX) builds the AUMID must match the Package Family Name so
+// that jump lists, notifications and the WinRT license API all bind correctly.
+const BUILD_TARGET = process.env.BUILD_TARGET || 'GITHUB';
+const PACKAGE_FAMILY_NAME = 'mesmerli.TaiwanBig2AI_6t1y50ntn36fm';
 if (process.platform === 'win32') {
-  app.setAppUserModelId('mesmerli.TaiwanBig2AI.debug');
+  const aumid = BUILD_TARGET === 'STORE' ? PACKAGE_FAMILY_NAME : 'mesmerli.TaiwanBig2AI.dev';
+  app.setAppUserModelId(aumid);
 }
 
 let currentLang = 'zh'; // Default
@@ -12,10 +17,11 @@ let currentLang = 'zh'; // Default
 let win = null;
 
 // Explicitly set the app name for consistent UI behavior
-app.name = 'Taiwan Big Two AI';
+app.name = 'Taiwan Big2 AI';
 
 // Set App User Model ID for Windows Jump Lists to work reliably
-const appId = 'com.mesmerli.taiwanbig2ai';
+// (already set above based on build target; this call is a no-op but kept for clarity)
+const appId = BUILD_TARGET === 'STORE' ? PACKAGE_FAMILY_NAME : 'mesmerli.TaiwanBig2AI.dev';
 app.setAppUserModelId(appId);
 
 function createWindow() {
@@ -27,7 +33,7 @@ function createWindow() {
       contextIsolation: false,
     },
     backgroundColor: '#1a1a1a', // Premium dark background
-    title: 'Taiwan Big Two AI',
+    title: 'Taiwan Big2 AI',
     icon: path.join(__dirname, 'src/assets/logo.png')
   });
 
@@ -148,7 +154,7 @@ function updateJumpList() {
       program: process.execPath,
       arguments: '--about',
       title: t('menuAbout'),
-      description: 'Taiwan Big Two AI'
+      description: 'Taiwan Big2 AI'
     }
   ]);
 
@@ -265,7 +271,7 @@ function handleTrialExpired() {
   const result = dialog.showMessageBoxSync(win, {
     type: 'warning',
     title: 'Trial Expired',
-    message: 'Your trial period for Taiwan Big Two AI has expired. Would you like to purchase the full version from the Microsoft Store?',
+    message: 'Your trial period for Taiwan Big2 AI has expired. Would you like to purchase the full version from the Microsoft Store?',
     buttons: ['Purchase Now', 'Close App'],
     defaultId: 0,
     cancelId: 1

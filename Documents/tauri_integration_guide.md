@@ -1,6 +1,6 @@
 # Tauri 跨平台整合與環境適配層 (Adapter Layer) 架構設計
 
-本指南專為 **Taiwan Big Two AI** 專案設計，旨在建立一套優雅、低耦合的「環境偵測與功能適配層 (Adapter Layer)」。確保單一前端程式碼庫能同時在 **Web 瀏覽器**、**Electron 桌面端**、**Tauri 桌面端** 以及 **Capacitor 行動端 (Android)** 完美運行，並維持既有 API 的相容性與無痛轉換。
+本指南專為 **Taiwan Big2 AI** 專案設計，旨在建立一套優雅、低耦合的「環境偵測與功能適配層 (Adapter Layer)」。確保單一前端程式碼庫能同時在 **Web 瀏覽器**、**Electron 桌面端**、**Tauri 桌面端** 以及 **Capacitor 行動端 (Android)** 完美運行，並維持既有 API 的相容性與無痛轉換。
 
 ---
 
@@ -44,7 +44,7 @@ taiwan-big-two-ai/
 
 ```javascript
 /**
- * Taiwan Big Two AI - Environment & Storage Module
+ * Taiwan Big2 AI - Environment & Storage Module
  * Supports Electron, Tauri, Android (Capacitor), and general web browsers.
  */
 
@@ -514,7 +514,7 @@ importLearningsBtn.onclick = async () => {
         "fullscreen": false,
         "height": 768,
         "resizable": true,
-        "title": "Taiwan Big Two AI",
+        "title": "Taiwan Big2 AI",
         "width": 1024
       }
     ]

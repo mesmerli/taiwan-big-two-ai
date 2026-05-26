@@ -1,5 +1,5 @@
 /**
- * Taiwan Big Two AI - Environment & Storage Module
+ * Taiwan Big2 AI - Environment & Storage Module
  * Supports Electron, Android (Capacitor), and general web browsers.
  */
 

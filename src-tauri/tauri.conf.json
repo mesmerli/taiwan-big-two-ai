@@ -10,7 +10,7 @@
     "withGlobalTauri": true,
     "windows": [
       {
-        "title": "Taiwan Big Two AI",
+        "title": "Taiwan Big2 AI",
         "width": 1024,
         "height": 768,
         "resizable": true,

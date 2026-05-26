@@ -1,6 +1,6 @@
 {
   "name": "taiwan-big-two-ai",
-  "version": "1.5.20",
+  "version": "1.5.24",
   "description": "Modern Big Two game with LLM-powered AI integration",
   "license": "AGPL-3.0-only",
   "main": "main.js",
@@ -11,7 +11,7 @@
     "dist:store": "cross-env BUILD_TARGET=STORE npm run dist",
     "dist:github": "cross-env BUILD_TARGET=GITHUB npm run dist",
     "dist:msix": "cross-env BUILD_TARGET=STORE npm run increment-build && electron-builder --win appx",
-    "package": "npm run increment-build && electron-packager . \"Taiwan Big Two AI\" --platform=win32 --arch=x64 --out=dist --overwrite",
+    "package": "npm run increment-build && electron-packager . \"Taiwan Big2 AI\" --platform=win32 --arch=x64 --out=dist --overwrite",
     "increment-build": "node scripts/increment-build.js",
     "test": "node tests/logic.test.js && node tests/ui.test.js",
     "test:ui": "node tests/ui.test.js",
@@ -19,9 +19,9 @@
   },
   "build": {
     "appId": "mesmerli.TaiwanBig2AI",
-    "buildVersion": "1.5.20.0",
-    "buildNumber": "20",
-    "productName": "Taiwan Big Two AI",
+    "buildVersion": "1.5.24.0",
+    "buildNumber": "24",
+    "productName": "Taiwan Big2 AI",
     "directories": {
       "output": "dist"
     },
@@ -32,7 +32,7 @@
         "appx"
       ],
       "icon": "src/assets/logo.png",
-      "artifactName": "Taiwan Big Two AI_1.5.20.0.${ext}"
+      "artifactName": "Taiwan Big2 AI_1.5.24.0.${ext}"
     },
     "appx": {
       "identityName": "mesmerli.TaiwanBig2AI",

@@ -1,5 +1,5 @@
 /**
- * Logic Test Suite for Taiwan Big Two
+ * Logic Test Suite for Taiwan Big2
  * Run with: node tests/logic.test.js
  */
 
@@ -68,7 +68,7 @@ runTest("Hand Identification (Flush - SHOULD BE INVALID)", () => {
     // 3C, 4C, 5C, 6C, 8C (Flush, not a straight)
     const flush = [0, 1, 2, 3, 5]; 
     const info = GameLogic.getHandInfo(flush);
-    return assert(info === null, "Flush should be INVALID in Taiwan Big Two");
+    return assert(info === null, "Flush should be INVALID in Taiwan Big2");
 });
 
 runTest("Hand Comparison (Full House vs Straight)", () => {

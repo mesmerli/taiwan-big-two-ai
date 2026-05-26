@@ -1,6 +1,6 @@
 # Microsoft Store 試用版集成指南 (MSIX)
 
-本文件說明如何為 **Taiwan Big Two AI** 集成 Microsoft Store 的試用版 (Time-limited Trial) 功能。我們採用了微軟官方推薦的 `@microsoft/winappcli` 工具鏈配合 C++ 原生插件橋接方案。
+本文件說明如何為 **Taiwan Big2 AI** 集成 Microsoft Store 的試用版 (Time-limited Trial) 功能。我們採用了微軟官方推薦的 `@microsoft/winappcli` 工具鏈配合 C++ 原生插件橋接方案。
 
 ---
 
@@ -69,7 +69,7 @@ npm start
 
 **當過期時：**
 1. 系統彈出 `dialog.showMessageBoxSync` 警告。
-2. 提供「立即購買」按鈕，導向 `ms-windows-store://pdp/?ProductId=9N2NBJLSCSN9`。
+2. 提供「立即購買」按鈕，導向 `ms-windows-store://pdp/?ProductId=9PM1S8GKBLK9`。
 3. 程式自動關閉 (`app.quit()`)。
 
 ---

@@ -18,7 +18,7 @@ const path = require('path');
         const title = await window.title();
         console.log(`✅ Window Title: ${title}`);
 
-        if (title !== 'Taiwan Big Two AI') {
+        if (title !== 'Taiwan Big2 AI') {
             throw new Error('Title mismatch!');
         }
 

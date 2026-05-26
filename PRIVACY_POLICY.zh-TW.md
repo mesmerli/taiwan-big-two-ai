@@ -1,4 +1,4 @@
-# 台灣大老二 AI (Taiwan Big Two AI) 隱私權政策
+# 台灣大老二 AI (Taiwan Big2 AI) 隱私權政策
 
 最後更新日期：2026年5月14日
 

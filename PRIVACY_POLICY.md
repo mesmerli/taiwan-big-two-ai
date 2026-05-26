@@ -1,9 +1,9 @@
-# Privacy Policy for Taiwan Big Two AI
+# Privacy Policy for Taiwan Big2 AI
 
 Last updated: May 14, 2026
 
 ## 1. Introduction
-"Taiwan Big Two AI" (the "Application") is a card game developed for research and entertainment purposes. We respect your privacy and are committed to protecting any information that might be processed through the Application.
+"Taiwan Big2 AI" (the "Application") is a card game developed for research and entertainment purposes. We respect your privacy and are committed to protecting any information that might be processed through the Application.
 
 ## 2. No Data Collection
 We do **not** collect, store, or transmit any personal data, gameplay statistics, or identifying information to our servers. All gameplay data, AI learning notes, and settings are stored locally on your device (using LocalStorage).

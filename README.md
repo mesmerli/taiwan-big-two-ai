@@ -1,4 +1,4 @@
-# Taiwan Big Two AI (台灣大老二 AI 版)
+# Taiwan Big2 AI (台灣大老二 AI 版)
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![Version](https://img.shields.io/badge/Version-1.5.20-blue.svg)](./changelog.md)

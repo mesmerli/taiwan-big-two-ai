@@ -1,6 +1,6 @@
 # 程式碼架構說明 (Architecture)
 
-本專案「Taiwan Big Two AI」採用跨平台架構，核心為基於 Web 技術 (HTML/CSS/JS) 所開發的前端應用，並透過不同的封裝技術發佈至多個平台（包含 Electron、Tauri 以及 Android Capacitor）。
+本專案「Taiwan Big2 AI」採用跨平台架構，核心為基於 Web 技術 (HTML/CSS/JS) 所開發的前端應用，並透過不同的封裝技術發佈至多個平台（包含 Electron、Tauri 以及 Android Capacitor）。
 
 ## 專案目錄結構
 

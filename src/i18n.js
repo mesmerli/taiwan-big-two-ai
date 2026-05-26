@@ -1,7 +1,7 @@
 const I18N = {
     en: {
-        title: "Taiwan Big Two AI",
-        rulesTitle: "Game Rules (Taiwan Big Two)",
+        title: "Taiwan Big2 AI",
+        rulesTitle: "Game Rules (Taiwan Big2)",
         handsTitle: "Hands",
         scoringTitle: "Scoring",
         rank: "Rank",
@@ -38,10 +38,10 @@ const I18N = {
         yes: "Yes",
         no: "No",
         ok: "OK",
-        aboutTitle: "About Taiwan Big Two AI",
+        aboutTitle: "About Taiwan Big2 AI",
         aboutDetail: "Author: {author}\n\nA modern Big Two game with LLM-powered AI integration.",
         aboutSourceSponsor: "The core logic of this game is open-source under the AGPLv3 license. You can obtain the source code on <a href=\"#\" class=\"about-link\" id=\"github-link\">GitHub</a>. If you like this work, please consider supporting the developer via the <a href=\"#\" class=\"about-link\" id=\"sponsor-link\">Sponsorship Link</a>.",
-        menuAbout: "About Taiwan Big Two AI",
+        menuAbout: "About Taiwan Big2 AI",
         aiSettingsTitle: "AI Settings",
         modelId: "Model ID (Leave blank to auto-detect)",
         extraPrompt: "Extra Prompt",
