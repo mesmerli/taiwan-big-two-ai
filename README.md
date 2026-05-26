@@ -25,9 +25,10 @@ A modernized **Taiwanese Big Two** card game built with Electron. This project i
   <img src="./screenshots/aisetting-en.png" width="48%" />
 </p>
 <p align="center">
-  <img src="./screenshots/gamerule-en.png" width="32%" />
-  <img src="./screenshots/keyboard-en.png" width="32%" />
-  <img src="./screenshots/about-en.png" width="32%" />
+  <img src="./screenshots/gamerule-en.png" width="24%" />
+  <img src="./screenshots/keyboard-en.png" width="24%" />
+  <img src="./screenshots/matchreview-en.png" width="24%" />
+  <img src="./screenshots/about-en.png" width="24%" />
 </p>
 
 ---

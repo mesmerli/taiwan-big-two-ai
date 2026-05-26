@@ -25,9 +25,10 @@
   <img src="./screenshots/aisetting-zh.png" width="48%" />
 </p>
 <p align="center">
-  <img src="./screenshots/gamerule-zh.png" width="32%" />
-  <img src="./screenshots/keyboard-zh.png" width="32%" />
-  <img src="./screenshots/about-zh.png" width="32%" />
+  <img src="./screenshots/gamerule-zh.png" width="24%" />
+  <img src="./screenshots/keyboard-zh.png" width="24%" />
+  <img src="./screenshots/matchreview-zh.png" width="24%" />
+  <img src="./screenshots/about-zh.png" width="24%" />
 </p>
 
 ---
