@@ -622,7 +622,12 @@ function updatePlayButtonVisibility() {
         const info = GameLogic.getHandInfo(selected);
         if (!info) return false;
         if (!hasLead && gameState.lastPlay) {
-            if (selected.length !== gameState.lastPlay.length) return false;
+            const isSelectedBomb = info.type === 'FOUR_OF_A_KIND' || info.type === 'STRAIGHT_FLUSH';
+            const isLastPlaySingleOrPair = gameState.lastPlay.length === 1 || gameState.lastPlay.length === 2;
+
+            if (selected.length !== gameState.lastPlay.length && !(isSelectedBomb && isLastPlaySingleOrPair)) {
+                return false;
+            }
             if (GameLogic.compareHands(selected, gameState.lastPlay) <= 0) return false;
         }
         // First turn rule: Must include 3 of Clubs (Card 0)
@@ -703,7 +708,10 @@ function playCards(shoutArg = false) {
 
     // Must follow previous play type/count
     if (gameState.lastPlay && gameState.lastPlayerIndex !== 0) {
-        if (selected.length !== gameState.lastPlay.length) {
+        const isSelectedBomb = info.type === 'FOUR_OF_A_KIND' || info.type === 'STRAIGHT_FLUSH';
+        const isLastPlaySingleOrPair = gameState.lastPlay.length === 1 || gameState.lastPlay.length === 2;
+
+        if (selected.length !== gameState.lastPlay.length && !(isSelectedBomb && isLastPlaySingleOrPair)) {
             showAlert(t('mustPlayCount', { count: gameState.lastPlay.length }));
             return;
         }

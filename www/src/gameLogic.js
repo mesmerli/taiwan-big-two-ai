@@ -152,6 +152,17 @@ class GameLogic {
 
         if (!info1 || !info2) return 0;
 
+        // Bombs (Four of a Kind and Straight Flush) can beat single or pair
+        const isBomb1 = info1.type === 'FOUR_OF_A_KIND' || info1.type === 'STRAIGHT_FLUSH';
+        const isBomb2 = info2.type === 'FOUR_OF_A_KIND' || info2.type === 'STRAIGHT_FLUSH';
+
+        if (hand1.length === 5 && (hand2.length === 1 || hand2.length === 2)) {
+            return isBomb1 ? 1 : 0;
+        }
+        if (hand2.length === 5 && (hand1.length === 1 || hand1.length === 2)) {
+            return isBomb2 ? -1 : 0;
+        }
+
         // Dragon is the largest
         if (info1.type === 'DRAGON' || info2.type === 'DRAGON') {
             if (info1.type === 'DRAGON' && info2.type === 'DRAGON') {
@@ -387,11 +398,25 @@ class GameLogic {
                         moves.push({ cards: [c], type: 'SINGLE' });
                     }
                 });
+                // Allow Four of a Kind and Straight Flush to beat single card (Bombs)
+                this.findFourOfAKinds(sortedHand).forEach(fk => {
+                    moves.push({ cards: fk, type: 'FOUR_OF_A_KIND' });
+                });
+                this.findStraightFlushes(sortedHand).forEach(sf => {
+                    moves.push({ cards: sf, type: 'STRAIGHT_FLUSH' });
+                });
             } else if (targetLen === 2) {
                 this.findPairs(sortedHand).forEach(p => {
                     if (this.compareHands(p, lastPlay) > 0) {
                         moves.push({ cards: p, type: 'PAIR' });
                     }
+                });
+                // Allow Four of a Kind and Straight Flush to beat pair (Bombs)
+                this.findFourOfAKinds(sortedHand).forEach(fk => {
+                    moves.push({ cards: fk, type: 'FOUR_OF_A_KIND' });
+                });
+                this.findStraightFlushes(sortedHand).forEach(sf => {
+                    moves.push({ cards: sf, type: 'STRAIGHT_FLUSH' });
                 });
             } else if (targetLen === 5) {
                 this.findFiveCardHands(sortedHand).forEach(h => {
