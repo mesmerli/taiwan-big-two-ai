@@ -87,13 +87,24 @@ class AICharacter {
 
                 // Play the smallest card that beats the table
                 for (let c of candidates) {
-                    if (Logic.compareCards(c, lastPlay[0]) > 0) return [c];
+                    if (Logic.compareCards(c, lastPlay[0]) > 0) {
+                        // Big-card preservation: Don't waste Ace (11) or 2 (12) on cards 10 or below (<= 7)
+                        if (Logic.getRank(c) >= 11 && Logic.getRank(lastPlay[0]) <= 7) {
+                            return null;
+                        }
+                        return [c];
+                    }
                 }
 
                 // Fallback: If stripping prevented us from following, try the full sorted hand
                 if (!isOpponentNearWin && candidates !== sorted) {
                     for (let c of sorted) {
-                        if (Logic.compareCards(c, lastPlay[0]) > 0) return [c];
+                        if (Logic.compareCards(c, lastPlay[0]) > 0) {
+                            if (Logic.getRank(c) >= 11 && Logic.getRank(lastPlay[0]) <= 7) {
+                                return null;
+                            }
+                            return [c];
+                        }
                     }
                 }
             }
