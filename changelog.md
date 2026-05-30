@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.25] - 2026-05-30
+
+### Added
+- **Fair Tactical AI Heuristics**: Rewrote legacy PalmOS computer-player cheats into fair, table-wide tactical AI heuristics that apply to all players (human and CPU) equally.
+  - When any opponent has exactly 1 card left, follow-singles logic throws the biggest valid single card to defend.
+  - When no opponent is near winning (<= 3 cards left), follow-singles logic avoids breaking pairs and 5-card combinations.
+  - The single-card holding control logic (passing on rank > 9 table plays) now checks all opponents.
+  - Updated AlexAI's lead logic to avoid playing pairs if any opponent has exactly 2 cards remaining.
+- **AI Character Documentation**: Created `Documents/ai_characters.md` documenting profiles and strategies of traditional AIs (Alex, Bella, Chris) and LLM-powered AIs (Diana, Ares).
+
 ## [1.5.20] - 2026-05-25
 
 ### Added
