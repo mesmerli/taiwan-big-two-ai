@@ -56,8 +56,46 @@ class AICharacter {
         const targetLen = lastPlay.length;
 
         if (targetLen === 1) {
-            for (let c of sorted) {
-                if (Logic.compareCards(c, lastPlay[0]) > 0) return [c];
+            // Check if any opponent has only 1 card left (lastcard phase)
+            const isLastCard = context.players && context.players.some((p, idx) => idx !== context.playerIndex && p && p.length === 1);
+            
+            // If it's not the lastcard phase and the played card has rank > 9 (King, Ace, 2), pass
+            if (!isLastCard && Logic.getRank(lastPlay[0]) > 9) {
+                return null;
+            }
+
+            if (isLastCard) {
+                // Defensive play: Throw the BIGGEST card that can beat the table play
+                for (let i = sorted.length - 1; i >= 0; i--) {
+                    const c = sorted[i];
+                    if (Logic.compareCards(c, lastPlay[0]) > 0) return [c];
+                }
+            } else {
+                // Check if any opponent has 3 or fewer cards left (near win phase)
+                const isOpponentNearWin = context.players && context.players.some((p, idx) => idx !== context.playerIndex && p && p.length <= 3);
+
+                let candidates = [...sorted];
+                if (!isOpponentNearWin) {
+                    // Strip cards that belong to pairs or 5-card combinations to preserve good hands
+                    const pairs = Logic.findPairs(sorted).flat();
+                    const fiveCardHands = Logic.findFiveCardHands(sorted).flat();
+                    candidates = sorted.filter(c => !pairs.includes(c) && !fiveCardHands.includes(c));
+                    if (candidates.length === 0) {
+                        candidates = sorted;
+                    }
+                }
+
+                // Play the smallest card that beats the table
+                for (let c of candidates) {
+                    if (Logic.compareCards(c, lastPlay[0]) > 0) return [c];
+                }
+
+                // Fallback: If stripping prevented us from following, try the full sorted hand
+                if (!isOpponentNearWin && candidates !== sorted) {
+                    for (let c of sorted) {
+                        if (Logic.compareCards(c, lastPlay[0]) > 0) return [c];
+                    }
+                }
             }
         } else if (targetLen === 2) {
             const pairs = Logic.findPairs(sorted);
@@ -149,9 +187,9 @@ class AlexAI extends AICharacter {
     async chooseLead(sorted, context) {
         const Logic = this.getLogic();
         const { players } = context;
-        const humanHasTwo = (players[0] && players[0].length === 2);
+        const anyOpponentHasTwo = players.some((p, idx) => idx !== context.playerIndex && p && p.length === 2);
 
-        if (humanHasTwo) {
+        if (anyOpponentHasTwo) {
             const five = Logic.findFiveCardHands(sorted);
             if (five.length > 0) return five[0];
             const nonTwos = sorted.filter(c => Logic.getRank(c) < 12);
