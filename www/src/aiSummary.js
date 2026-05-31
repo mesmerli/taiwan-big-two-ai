@@ -208,6 +208,33 @@ class AISummarySystem {
             });
         }
 
+        // Dynamically adjust collapse classes and icon on window resize
+        window.addEventListener('resize', () => {
+            if (!this.panel || this.panel.classList.contains('hidden')) return;
+
+            const isCollapsed = this.panel.classList.contains('translate-x-full') || this.panel.classList.contains('translate-y-full');
+            if (isCollapsed) {
+                const isNarrow = window.innerWidth < 900;
+                if (isNarrow) {
+                    this.panel.classList.remove('translate-x-full');
+                    this.panel.classList.add('translate-y-full');
+                } else {
+                    this.panel.classList.remove('translate-y-full');
+                    this.panel.classList.add('translate-x-full');
+                }
+                const iconEl = document.getElementById('ai-review-toggle-icon');
+                if (iconEl) {
+                    iconEl.textContent = isNarrow ? '▲' : '◀';
+                }
+            } else {
+                const iconEl = document.getElementById('ai-review-toggle-icon');
+                if (iconEl) {
+                    const isNarrow = window.innerWidth < 900;
+                    iconEl.textContent = isNarrow ? '▼' : '▶';
+                }
+            }
+        });
+
         console.log('[AI Summary] System initialized.');
     }
 
