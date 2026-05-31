@@ -212,15 +212,18 @@ class AISummarySystem {
         window.addEventListener('resize', () => {
             if (!this.panel || this.panel.classList.contains('hidden')) return;
 
-            const isCollapsed = this.panel.classList.contains('translate-x-full') || this.panel.classList.contains('translate-y-full');
+            const isCollapsed = this.panel.classList.contains('translate-x-full') || 
+                                this.panel.classList.contains('translate-y-full') ||
+                                this.panel.classList.contains('lg-game:translate-x-full') ||
+                                this.panel.classList.contains('lg-game:translate-y-full');
+            const isNarrow = document.body.classList.contains('mobile-layout') || document.documentElement.classList.contains('mobile-layout') || window.innerWidth < 900;
             if (isCollapsed) {
-                const isNarrow = window.innerWidth < 900;
                 if (isNarrow) {
-                    this.panel.classList.remove('translate-x-full');
+                    this.panel.classList.remove('translate-x-full', 'lg-game:translate-x-full');
                     this.panel.classList.add('translate-y-full');
                 } else {
                     this.panel.classList.remove('translate-y-full');
-                    this.panel.classList.add('translate-x-full');
+                    this.panel.classList.add('translate-x-full', 'lg-game:translate-x-full');
                 }
                 const iconEl = document.getElementById('ai-review-toggle-icon');
                 if (iconEl) {
@@ -229,7 +232,6 @@ class AISummarySystem {
             } else {
                 const iconEl = document.getElementById('ai-review-toggle-icon');
                 if (iconEl) {
-                    const isNarrow = window.innerWidth < 900;
                     iconEl.textContent = isNarrow ? '▼' : '▶';
                 }
             }
@@ -356,7 +358,7 @@ class AISummarySystem {
         // Update toggle arrow icon
         const iconEl = document.getElementById('ai-review-toggle-icon');
         if (iconEl) {
-            const isNarrow = window.innerWidth < 900;
+            const isNarrow = document.body.classList.contains('mobile-layout') || document.documentElement.classList.contains('mobile-layout') || window.innerWidth < 900;
             iconEl.textContent = isNarrow ? '▼' : '▶';
         }
     }
@@ -373,7 +375,7 @@ class AISummarySystem {
         );
         
         // Determine layout to apply the correct slide-out direction
-        const isNarrow = window.innerWidth < 900;
+        const isNarrow = document.body.classList.contains('mobile-layout') || document.documentElement.classList.contains('mobile-layout') || window.innerWidth < 900;
         if (isNarrow) {
             this.panel.classList.add('translate-y-full');
             this.panel.classList.add('lg-game:translate-x-full');

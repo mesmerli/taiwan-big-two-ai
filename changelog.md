@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.28] - 2026-05-31
+
+### Fixed
+- **Responsive Toggle Handle Arrow Directions**: Synchronized the toggle handle arrow directions with viewport layout modes. Added dynamic detection of the mobile-layout classes on window resize to ensure correct arrow orientations (◀/▶ for desktop, ▲/▼ for mobile) when minimizing or expanding the post-game review panel.
+
 ## [1.5.27] - 2026-05-31
 
 ### Fixed
