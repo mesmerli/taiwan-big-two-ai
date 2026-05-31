@@ -49,3 +49,7 @@ Resize-Image $sourcePath 71 71 "$outputDir/Square71x71Logo.png"
 Resize-Image $sourcePath 150 150 "$outputDir/Square150x150Logo.png"
 Resize-Image $sourcePath 310 310 "$outputDir/Square310x310Logo.png"
 Resize-Image $sourcePath 310 150 "$outputDir/Wide310x150Logo.png"
+
+# Generate PWA App Apple Touch Icon
+Resize-Image $sourcePath 180 180 "www/apple-touch-icon.png"
+Resize-Image $sourcePath 180 180 "apple-touch-icon.png"

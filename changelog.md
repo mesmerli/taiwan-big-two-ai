@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.29] - 2026-05-31
+
+### Added
+- **PWA Home Screen Support**: Generated standard PWA app icon `apple-touch-icon.png` (180x180 resolution) in the web root (`www/` and root directories) generated from `logo.png`. Added the corresponding `<link rel="apple-touch-icon">` tag in the `<head>` of both `index.html` and `www/index.html`.
+
 ## [1.5.28] - 2026-05-31
 
 ### Fixed
