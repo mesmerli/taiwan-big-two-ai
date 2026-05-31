@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 - **Responsive Toggle Handle Arrow Directions**: Synchronized the toggle handle arrow directions with viewport layout modes. Added dynamic detection of the mobile-layout classes on window resize to ensure correct arrow orientations (◀/▶ for desktop, ▲/▼ for mobile) when minimizing or expanding the post-game review panel.
+- **Mobile Card Selection Lift**: Fixed a CSS bug on mobile touch devices where selecting a card would highlight it with a blue border but fail to lift it upward (`translateY`). Modified the mobile hover media overrides to use `:not(.selected):hover` so persistent mobile touch hover states do not override the selected transformation.
 
 ## [1.5.27] - 2026-05-31
 

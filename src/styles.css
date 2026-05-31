@@ -1409,7 +1409,7 @@ body {
 }
 
 /* Mobile lift distance adjustments */
-.mobile-layout #human-area .card:hover {
+.mobile-layout #human-area .card:not(.selected):hover {
     transform: none !important; /* Disable ghost hover lift on mobile screens */
 }
 
