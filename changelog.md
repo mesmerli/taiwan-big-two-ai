@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.27] - 2026-05-31
+
+### Fixed
+- **Collapsible Review Panel Behavior**: Refined the collapsible behavior of the review panel. Minimizing the panel (via the edge toggle handle) now slides it off-screen but keeps the LLM generation active in the background. Dismissing the panel (via the "X" button) completely hides both the panel and the handle and aborts the LLM generation.
+- **Played Cards Stacking & Overlaps**: Resolved visual overlaps where pass slots and empty slots covered other players' played cards. Empty slots are now styled as transparent, and the active played cards slot's z-index is dynamically boosted to render on top of adjacent overlapping slots.
+
 ## [1.5.26] - 2026-05-31
 
 ### Fixed
