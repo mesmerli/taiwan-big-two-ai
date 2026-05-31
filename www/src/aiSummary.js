@@ -92,6 +92,19 @@ class AISummarySystem {
         // Setup Event Listeners
         this.closeBtn.onclick = () => this.hidePanel();
         
+        this.toggleHandle = document.getElementById('ai-review-toggle-handle');
+        if (this.toggleHandle) {
+            this.toggleHandle.onclick = (e) => {
+                e.stopPropagation();
+                const isCollapsed = this.panel.classList.contains('translate-x-full') || this.panel.classList.contains('translate-y-full');
+                if (isCollapsed) {
+                    this.showPanel();
+                } else {
+                    this.hidePanel(false, false);
+                }
+            };
+        }
+        
         if (this.askBtn) {
             this.askBtn.onclick = () => this.handleUserQuestion();
         }
@@ -293,7 +306,6 @@ class AISummarySystem {
         }
     }
 
-    // Toggle panel visibility with custom slide transitions
     showPanel() {
         if (!this.panel) return;
         this.panel.classList.remove('hidden');
@@ -313,9 +325,16 @@ class AISummarySystem {
             'translate-y-0', 
             'lg-game:translate-y-0'
         );
-    }
 
-    hidePanel() {
+        // Update toggle arrow icon
+        const iconEl = document.getElementById('ai-review-toggle-icon');
+        if (iconEl) {
+            const isNarrow = window.innerWidth < 900;
+            iconEl.textContent = isNarrow ? '▼' : '▶';
+        }
+    }
+ 
+    hidePanel(shouldHideCompletely = true, shouldAbort = true) {
         if (!this.panel) return;
         
         // Reset slide classes
@@ -336,18 +355,28 @@ class AISummarySystem {
             this.panel.classList.add('lg-game:translate-x-full');
         }
         
-        // Wait for transitions to finish before adding hidden
-        setTimeout(() => {
-            if (
-                this.panel.classList.contains('translate-x-full') || 
-                this.panel.classList.contains('translate-y-full') ||
-                this.panel.classList.contains('lg-game:translate-x-full')
-            ) {
-                this.panel.classList.add('hidden');
-            }
-        }, 500);
+        // Update toggle arrow icon
+        const iconEl = document.getElementById('ai-review-toggle-icon');
+        if (iconEl) {
+            iconEl.textContent = isNarrow ? '▲' : '◀';
+        }
 
-        this.abortActiveAnalysis();
+        if (shouldHideCompletely) {
+            // Wait for transitions to finish before adding hidden
+            setTimeout(() => {
+                if (
+                    this.panel.classList.contains('translate-x-full') || 
+                    this.panel.classList.contains('translate-y-full') ||
+                    this.panel.classList.contains('lg-game:translate-x-full')
+                ) {
+                    this.panel.classList.add('hidden');
+                }
+            }, 500);
+        }
+
+        if (shouldAbort) {
+            this.abortActiveAnalysis();
+        }
     }
 
     // Explicitly abort active LLM generation stream and stop typing

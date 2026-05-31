@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.26] - 2026-05-31
+
+### Fixed
+- **Card Selection Stacking & Transitions**: Fixed an issue where deselecting a card would cover the card to its right. Removed z-index from hovered cards to preserve natural DOM stacking order, and updated the selection click handler to toggle the `.selected` class directly instead of rebuilding the hand DOM to enable smooth sliding transitions.
+
 ## [1.5.25] - 2026-05-30
 
 ### Added

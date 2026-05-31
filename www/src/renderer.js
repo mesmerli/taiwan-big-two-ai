@@ -430,10 +430,11 @@ function renderHumanHand() {
             AudioPlayer.playCardSelect();
             if (gameState.selectedCards.has(cardId)) {
                 gameState.selectedCards.delete(cardId);
+                cardEl.classList.remove('selected');
             } else {
                 gameState.selectedCards.add(cardId);
+                cardEl.classList.add('selected');
             }
-            renderHumanHand();
             updatePlayButtonVisibility();
             updateShoutButton();
         };
@@ -532,9 +533,14 @@ function renderPlayerActions() {
         const slot = document.getElementById(`played-${i + 1}`);
         if (!slot) continue;
         slot.innerHTML = '';
+        slot.classList.remove('active-play');
 
         const action = gameState.playerLastActions[i];
         if (!action) continue;
+
+        if (i === gameState.lastPlayerIndex) {
+            slot.classList.add('active-play');
+        }
 
         if (action === "PASS") {
             const passEl = document.createElement('div');

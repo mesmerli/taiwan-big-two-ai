@@ -369,6 +369,16 @@ body {
     border: 1px dashed rgba(255, 255, 255, 0.05);
 }
 
+.played-cards-slot:empty {
+    background: transparent;
+    border-color: transparent;
+    pointer-events: none;
+}
+
+.played-cards-slot.active-play {
+    z-index: 30;
+}
+
 .p1 .played-cards-slot {
     position: absolute;
     top: -120px;
@@ -477,7 +487,6 @@ body {
 
 .card:hover {
     transform: translateY(-15px);
-    z-index: 10;
 }
 
 .card.selected {

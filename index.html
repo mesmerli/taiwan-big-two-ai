@@ -276,6 +276,10 @@
 
     <!-- AI Post-game Review Panel (Tailwind CSS) -->
     <div id="ai-review-panel" class="fixed z-[2000] transition-all duration-500 ease-in-out transform translate-x-full lg-game:translate-x-full translate-y-full lg-game:translate-y-0 right-0 bottom-0 lg-game:top-0 lg-game:h-full w-full lg-game:w-[450px] h-[70vh] lg-game:h-full bg-slate-900/95 backdrop-blur-md shadow-2xl border-t lg-game:border-t-0 lg-game:border-l border-slate-700/50 flex flex-col hidden text-slate-100">
+        <!-- Collapsible Toggle Handle -->
+        <div id="ai-review-toggle-handle" class="absolute flex items-center justify-center bg-violet-600 hover:bg-violet-700 text-white transition-all duration-300 shadow-lg border border-violet-500/50 cursor-pointer z-50 top-[-35px] left-1/2 -translate-x-1/2 w-[80px] h-[35px] rounded-t-xl lg-game:top-1/2 lg-game:left-[-40px] lg-game:translate-y-[-50%] lg-game:translate-x-0 lg-game:w-[40px] lg-game:h-[80px] lg-game:rounded-l-xl lg-game:rounded-tr-none">
+            <span id="ai-review-toggle-icon" class="text-sm font-bold select-none">◀</span>
+        </div>
         <!-- Panel Header -->
         <div class="p-4 border-b border-slate-800/80 flex items-center justify-between bg-slate-950/40">
             <div class="flex items-center gap-3">
