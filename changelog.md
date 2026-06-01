@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.30] - 2026-06-01
+
+### Added
+- **Match Replay Score Display**: Displayed individual round scores (e.g., +30 in green, -12 in red) on player stats cards inside the AI Tactical Review panel.
+
+### Fixed
+- **Replay Remaining Card Duplication**: Removed the duplicate/redundant remaining card count from the footer of player card in the review screen, resolving the issue where both English and Chinese card count versions displayed simultaneously.
+- **Immediate Review Panel Language Syncing**: Added immediate rendering and localization logic for the entire review panel (including match review title, player stats, connection status indicator, input placeholders, and API connecting/loading labels) to translate seamlessly as soon as language is toggled.
+- **Loading Slideshow Closure Bug**: Fixed a closure caching bug where the loading text slideshow during AI analysis would revert to the previous language after the first message on language toggle.
+
 ## [1.5.29] - 2026-05-31
 
 ### Added

@@ -28,6 +28,7 @@ class AISummarySystem {
         this.lastWinnerIndex = -1;
         this.chatHistory = [];
         this.activeModel = '';
+        this.lastConnectionStatus = null;
 
         // Initialize when DOM is ready
         if (document.readyState === 'loading') {
@@ -617,9 +618,68 @@ class AISummarySystem {
         return 'LLM';
     }
 
+    updateLanguage() {
+        const isEn = window.currentLang === 'en';
+        
+        // Update title
+        const titleEl = document.getElementById('ai-review-title');
+        if (titleEl) {
+            const displayName = this.activeModel || 'AI';
+            titleEl.textContent = isEn
+                ? `${displayName} Match Review`
+                : `${displayName} 牌局復盤`;
+        }
+
+        // Re-render player stats cards if we have round data
+        if (this.lastGameState) {
+            this.renderStats(this.lastGameState, this.lastWinnerIndex);
+        }
+
+        // Update connection status label
+        if (this.lastConnectionStatus) {
+            this.updateConnectionStatus(this.lastConnectionStatus);
+        }
+
+        // Update connecting message if it is currently displayed
+        const connectingEl = document.getElementById('ai-connecting-message');
+        if (connectingEl) {
+            const provider = this.getProviderName();
+            connectingEl.innerHTML = `
+                <span class="animate-spin text-sm">⌛</span> ${isEn ? `Connecting to local ${provider}...` : `連線本地 ${provider} 中...`}
+            `;
+        }
+
+        // Update loading animation messages if it is currently loading
+        const loadingMessageEl = document.getElementById('ai-loading-message');
+        if (loadingMessageEl) {
+            let activeModel = typeof AppStorage !== 'undefined' ? (AppStorage.getItem('reviewLlmModel') || '').trim() : '';
+            if (!activeModel) activeModel = this.activeModel || 'AI';
+            loadingMessageEl.textContent = isEn
+                ? `${activeModel} is analyzing the match...`
+                : `${activeModel} 正在分析牌局中...`;
+        }
+
+        const loadingSubEl = document.getElementById('ai-loading-submessage');
+        if (loadingSubEl && this.loadingMessagesEn && this.loadingMessagesZh) {
+            const messages = isEn ? this.loadingMessagesEn : this.loadingMessagesZh;
+            const prevIndex = (this.currentLoadingIndex - 1 + messages.length) % messages.length;
+            loadingSubEl.textContent = messages[prevIndex];
+        }
+
+        // Update input placeholder for Model ID input
+        const reviewLlmModelInput = document.getElementById('review-llm-model');
+        if (reviewLlmModelInput && !reviewLlmModelInput.value.trim()) {
+            const activeModel = this.activeModel || 'AI';
+            reviewLlmModelInput.placeholder = isEn
+                ? `Auto-detected: ${activeModel}`
+                : `自動選擇：${activeModel}`;
+        }
+    }
+
     // Update the visual status of the LM Studio connection
     updateConnectionStatus(status) {
         if (!this.indicator || !this.indicatorText) return;
+        this.lastConnectionStatus = status;
         
         const isEn = window.currentLang === 'en';
         const provider = this.getProviderName();
@@ -701,9 +761,11 @@ class AISummarySystem {
         const provider = this.getProviderName();
 
         // Reset summary box and show status
-        this.summaryContainer.innerHTML = isEn
-            ? `<div class="flex items-center gap-2 text-slate-400 text-xs"><span class="animate-spin text-sm">⌛</span> Connecting to local ${provider}...</div>`
-            : `<div class="flex items-center gap-2 text-slate-400 text-xs"><span class="animate-spin text-sm">⌛</span> 連線本地 ${provider} 中...</div>`;
+        this.summaryContainer.innerHTML = `
+            <div id="ai-connecting-message" class="flex items-center gap-2 text-slate-400 text-xs">
+                <span class="animate-spin text-sm">⌛</span> ${isEn ? `Connecting to local ${provider}...` : `連線本地 ${provider} 中...`}
+            </div>
+        `;
 
         this.updateConnectionStatus('checking');
         const isConnected = await this.checkConnection();
@@ -747,11 +809,71 @@ class AISummarySystem {
         const isEn = window.currentLang === 'en';
         const playerNames = window.PLAYER_NAMES || (isEn ? ["You", "Alex", "Bella", "Chris"] : ["你", "艾力克斯", "貝拉", "克里斯"]);
 
+        // Calculate round scores for each player
+        const roundScores = [0, 0, 0, 0];
+        const isDragon = gameState.players.some(hand => {
+            const info = typeof GameLogic !== 'undefined' ? GameLogic.getHandInfo(hand) : null;
+            return info && info.type === 'DRAGON';
+        }) || (gameState.gameLog && gameState.gameLog.length === 0);
+
+        if (isDragon) {
+            let totalGained = 0;
+            for (let i = 0; i < 4; i++) {
+                if (i === winnerIndex) continue;
+                const lost = 13 * 2;
+                roundScores[i] = -lost;
+                totalGained += lost;
+            }
+            roundScores[winnerIndex] = totalGained;
+        } else {
+            let winnerMult = 1;
+            if (gameState.lastPlay) {
+                const info = typeof GameLogic !== 'undefined' ? GameLogic.getHandInfo(gameState.lastPlay) : null;
+                const has2 = gameState.lastPlay.some(c => (typeof GameLogic !== 'undefined' ? GameLogic.getRank(c) : (c % 13)) === 12);
+                
+                if (info) {
+                    if (info.type === 'FOUR_OF_A_KIND') {
+                        winnerMult = has2 ? 4 : 2;
+                    } else if (info.type === 'STRAIGHT_FLUSH') {
+                        winnerMult = (info.special === '23456') ? 4 : 2;
+                    } else if (has2) {
+                        winnerMult = 2;
+                    }
+                }
+            }
+
+            let totalGained = 0;
+            for (let i = 0; i < 4; i++) {
+                if (i === winnerIndex) continue;
+
+                let hand = gameState.players[i];
+                let baseLost = hand.length;
+                let loserMult = 1;
+
+                if (baseLost >= 10) loserMult *= 2;
+
+                const twosCount = hand.filter(c => (typeof GameLogic !== 'undefined' ? GameLogic.getRank(c) : (c % 13)) === 12).length;
+                loserMult *= Math.pow(2, twosCount);
+
+                const fkCount = typeof GameLogic !== 'undefined' ? GameLogic.countFourOfAKinds(hand) : 0;
+                loserMult *= Math.pow(2, fkCount);
+
+                const sfCount = typeof GameLogic !== 'undefined' ? GameLogic.countStraightFlushes(hand) : 0;
+                loserMult *= Math.pow(2, sfCount);
+
+                const finalLost = baseLost * winnerMult * loserMult;
+                roundScores[i] = -finalLost;
+                totalGained += finalLost;
+            }
+            roundScores[winnerIndex] = totalGained;
+        }
+
         gameState.players.forEach((hand, idx) => {
             const name = playerNames[idx];
             const remainingCount = hand.length;
             const isWinner = idx === winnerIndex;
             const isHomeRun = remainingCount === 13;
+            const roundScore = roundScores[idx];
 
             const cardDiv = document.createElement('div');
             
@@ -806,19 +928,25 @@ class AISummarySystem {
             }
 
             cardDiv.innerHTML = `
-                <div class="flex items-center gap-2">
-                    <div class="w-7 h-7 rounded-full bg-slate-800 border border-slate-700 overflow-hidden flex-shrink-0 flex items-center justify-center">
-                        <img src="${avatarImgSrc}" class="w-full h-full object-cover">
+                <div class="flex items-center gap-2 justify-between w-full">
+                    <div class="flex items-center gap-2 truncate flex-1">
+                        <div class="w-7 h-7 rounded-full bg-slate-800 border border-slate-700 overflow-hidden flex-shrink-0 flex items-center justify-center">
+                            <img src="${avatarImgSrc}" class="w-full h-full object-cover">
+                        </div>
+                        <div class="truncate">
+                            <div class="font-bold text-slate-200 truncate">${name}</div>
+                            <div class="text-[10px] text-slate-400">${isWinner ? winText : leftText}</div>
+                        </div>
                     </div>
-                    <div class="truncate">
-                        <div class="font-bold text-slate-200 truncate">${name}</div>
-                        <div class="text-[10px] text-slate-400">${isWinner ? winText : leftText}</div>
+                    <div class="text-right pl-2 flex-shrink-0">
+                        <div class="text-xs font-mono font-extrabold ${roundScore >= 0 ? 'text-emerald-400' : 'text-rose-400'}">
+                            ${roundScore >= 0 ? `+${roundScore}` : roundScore}
+                        </div>
                     </div>
                 </div>
                 <div class="mt-2 flex items-center justify-between">
-                    ${isWinner ? '<span class="px-1.5 py-0.5 rounded bg-emerald-950 border border-emerald-500/40 text-emerald-400 text-[9px] font-extrabold">WINNER</span>' : ''}
+                    ${isWinner ? `<span class="px-1.5 py-0.5 rounded bg-emerald-950 border border-emerald-500/40 text-emerald-400 text-[9px] font-extrabold">${isEn ? 'WINNER' : '贏家'}</span>` : ''}
                     ${isHomeRun ? `<span class="px-1.5 py-0.5 rounded bg-rose-950 border border-rose-500/40 text-rose-400 text-[9px] font-extrabold animate-pulse">${hrBadge}</span>` : ''}
-                    ${!isWinner && !isHomeRun ? `<span class="text-slate-500 text-[10px] font-mono">${remainingCount} Cards</span>` : ''}
                 </div>
                 ${cardsHtml}
             `;
@@ -1043,14 +1171,15 @@ ${JSON.stringify(stats, null, 2)}
         this.stopLoadingAnimation();
 
         const isEn = window.currentLang === 'en';
-        const messages = isEn ? [
+        this.loadingMessagesEn = [
             "AI is carefully studying your brilliant card placement...",
             "AI is identifying key highlights of your strategies...",
             "AI is drafting professional suggestions to level up your game...",
             "AI is analyzing the math to find your next winning move...",
             "AI is looking for outstanding plays in this round...",
             "AI is preparing a tactical summary to optimize your next win..."
-        ] : [
+        ];
+        this.loadingMessagesZh = [
             "AI 正在認真分析您精彩的出牌策略...",
             "AI 正在整理本局的戰術亮點與精彩瞬間...",
             "AI 正在為您量身打造專業的進階戰術建議...",
@@ -1059,10 +1188,12 @@ ${JSON.stringify(stats, null, 2)}
             "AI 正在為您的下一場勝利做戰術複盤準備..."
         ];
 
-        let currentIndex = Math.floor(Math.random() * messages.length);
+        this.currentLoadingIndex = Math.floor(Math.random() * this.loadingMessagesEn.length);
         const getNextMessage = () => {
-            const msg = messages[currentIndex];
-            currentIndex = (currentIndex + 1) % messages.length;
+            const currentIsEn = window.currentLang === 'en';
+            const messages = currentIsEn ? this.loadingMessagesEn : this.loadingMessagesZh;
+            const msg = messages[this.currentLoadingIndex];
+            this.currentLoadingIndex = (this.currentLoadingIndex + 1) % messages.length;
             return msg;
         };
 

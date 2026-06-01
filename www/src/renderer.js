@@ -254,6 +254,10 @@ function updateLanguage() {
     updateTrialStatusUI();
     window.PLAYER_NAMES = PLAYER_NAMES;
     renderAll();
+    
+    if (window.AISummary && typeof window.AISummary.updateLanguage === 'function') {
+        window.AISummary.updateLanguage();
+    }
 }
 
 function updateTrialStatusUI() {
