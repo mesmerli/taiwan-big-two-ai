@@ -14,59 +14,68 @@
 
 ## 2. 模擬各種授權狀態
 
-您可以直接編輯 `src-tauri/src/lib.rs` 中 `check_windows_store_license` 函數的開發分支（約第 11-21 行）來模擬各種試用與授權狀態：
+在偵錯模式下，會依據啟動的設定自動切換模擬狀態：
+
+*   **執行社群開發版 (`npm run tauri:dev`)**：預設模擬為「已啟用完整版」（免授權檢查）。
+*   **執行商店開發版 (`npm run tauri:dev:store`)**：預設模擬為「試用期剩餘 7 天」。
+
+若需要手動測試其他天數或狀態，可以直接編輯 `src-tauri/src/lib.rs` 中 `check_windows_store_license` 函數的偵錯分支：
 
 ### A. 模擬試用期運作中（例如：剩餘 5 天）
 在代碼中將 `is_trial` 設為 `true`，並指定 `trial_days_remaining` 的天數：
 ```rust
-    if cfg!(debug_assertions) || !cfg!(feature = "store") {
-        let _ = window;
-        return Ok(LicenseStatus {
-            is_active: true,
-            is_trial: true,          // 啟用試用狀態
-            trial_days_remaining: 5,  // 模擬剩餘 5 天
-        });
-    }
+        if cfg!(feature = "store") {
+            return Ok(LicenseStatus {
+                is_active: true,
+                is_trial: true,          // 啟用試用狀態
+                trial_days_remaining: 5,  // 模擬剩餘 5 天
+            });
+        }
 ```
-*   **預期 UI 行為**：右上角與關於頁面會顯示黃色的「試用版剩餘 5 天」提示。
+*   **預期 UI 行為**：遊戲內會顯示黃色的「試用版剩餘 5 天」提示。
+*   **點擊行為**：滑鼠點擊該天數黃色提示，會透過 Tauri Shell 原生開啟並導向微軟商店網址（`ms-windows-store://pdp/?ProductId=9PM1S8GKBLK9`）。
 
 ### B. 模擬試用期過期（天數為 0 或負數）
 將 `is_trial` 設為 `true`，天數設為 `0`：
 ```rust
-    if cfg!(debug_assertions) || !cfg!(feature = "store") {
-        let _ = window;
-        return Ok(LicenseStatus {
-            is_active: true,
-            is_trial: true,
-            trial_days_remaining: 0,  // 模擬已過期
-        });
-    }
+        if cfg!(feature = "store") {
+            return Ok(LicenseStatus {
+                is_active: true,
+                is_trial: true,
+                trial_days_remaining: 0,  // 模擬已過期
+            });
+        }
 ```
-*   **預期 UI 行為**：系統會彈出「試用期已屆滿」的微軟商店購買提示對話框，點選「立即購買」會開啟瀏覽器並導向您的微軟商店商品頁面，關閉或點選取消則會自動退出遊戲 (`app.quit()`)。
+*   **預期 UI 行為**：系統會彈出「試用期已屆滿」的微軟商店購買提示對話框。
+*   **點擊行為**：點選「立即購買」會透過 Tauri Shell 開啟微軟商店商品頁面，關閉或點選取消則會自動退出遊戲 (`app.quit()`)。
 
 ### C. 模擬商店完整版（已購買）
 將 `is_trial` 設為 `false`：
 ```rust
-    if cfg!(debug_assertions) || !cfg!(feature = "store") {
-        let _ = window;
-        return Ok(LicenseStatus {
-            is_active: true,
-            is_trial: false,         // 已購買完整版
-            trial_days_remaining: 0,
-        });
-    }
+        if cfg!(feature = "store") {
+            return Ok(LicenseStatus {
+                is_active: true,
+                is_trial: false,         // 已購買完整版
+                trial_days_remaining: 0,
+            });
+        }
 ```
-*   **預期 UI 行為**：右上角不會顯示任何試用期提示，關於頁面授權狀態會顯示綠色的「商店完整版」。
+*   **預期 UI 行為**：遊戲內不會顯示任何試用期提示，關於頁面授權狀態會顯示綠色的「商店完整版」。
 
 ---
 
 ## 3. 開始執行測試
 
-完成代碼模擬數值的修改後，執行以下指令啟動 Tauri 偵錯視窗進行測試：
-```bash
-npm run tauri:dev
-```
-*注意：請確保您啟動的是 `tauri:dev` 而非普通的發佈版建置，否則會進入真實的商店授權查詢通道。*
+根據您要測試的環境，執行對應指令啟動 Tauri 偵錯視窗：
+
+*   **測試商店版（試用與授權引導）**：
+    ```bash
+    npm run tauri:dev:store
+    ```
+*   **測試社群版（無限制）**：
+    ```bash
+    npm run tauri:dev
+    ```
 
 ---
 
