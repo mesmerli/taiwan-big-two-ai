@@ -53,15 +53,25 @@
 ## 2. Tauri (輕量級桌面版)
 Tauri 提供比 Electron 更輕巧、記憶體佔用更低的桌面應用版本。
 
-*   **執行開發模式**：
+*   **執行社群開發模式 (自動同步網頁資源至 www 目錄，免授權檢查)**：
     ```bash
-    npx tauri dev
+    npm run tauri:dev
     ```
-*   **建置 (打包出安裝檔)**：
+*   **執行商店開發模式 (自動同步網頁資源，包含商店授權與試用期模擬)**：
     ```bash
-    npx tauri build
+    npm run tauri:dev:store
     ```
-    > 💡 **輸出位置**：打包完成的安裝程式（如 .msi 或 .nsis）會存放在 `src-tauri/target/release/bundle/` 資料夾下；單純編譯出的可執行檔則在 `src-tauri/target/release/` 內。
+*   **建置社群直裝版 (GitHub 發佈，打包成一般安裝檔，免授權檢查)**：
+    ```bash
+    npm run tauri:build:github
+    ```
+*   **建置微軟商店版 (打包成 MSIX 封裝檔，內嵌商店授權檢查)**：
+    ```bash
+    npm run tauri:build:store
+    ```
+    > 💡 **輸出位置**：打包完成的安裝程式（社群版 `.msi`/`.exe` 或商店版 `.msix`）會存放在 `src-tauri/target/release/bundle/` 資料夾下；單純編譯出的可執行檔則在 `src-tauri/target/release/` 內。
+    >
+    > 💡 **授權與試用期測試**：關於如何模擬與測試商店版的授權/天數機制，請參閱 [Tauri 商店版授權與試用期測試指南](file:///c:/Users/julia/workspace/TwBig2/Documents/TauriLicenseTest.md)。
 
 ---
 

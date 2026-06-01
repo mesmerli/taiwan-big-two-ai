@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Taiwan Big2 AI</title>
+    <style>
+        body {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: white;
+            font-family: 'Inter', -apple-system, sans-serif;
+            margin: 0;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+            text-align: center;
+            -webkit-app-region: drag;
+        }
+
+        .logo {
+            margin-bottom: 20px;
+            filter: drop-shadow(0 0 20px rgba(155, 89, 182, 0.5));
+        }
+
+        .logo img {
+            width: 120px;
+            height: 120px;
+            object-fit: contain;
+            display: block;
+        }
+
+        h1 {
+            font-size: 24px;
+            color: #9b59b6;
+            margin: 0 0 10px 0;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .version {
+            font-family: monospace;
+            color: #64748b;
+            font-size: 14px;
+            margin-bottom: 25px;
+        }
+
+        .detail {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #cbd5e1;
+            max-width: 300px;
+        }
+
+        .source-sponsor {
+            font-size: 12px;
+            line-height: 1.6;
+            color: #94a3b8;
+            max-width: 340px;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #334155;
+            -webkit-app-region: no-drag;
+        }
+
+        .about-link {
+            color: #a855f7;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.2s, text-shadow 0.2s;
+        }
+
+        .about-link:hover {
+            color: #d8b4fe;
+            text-shadow: 0 0 8px rgba(168, 85, 247, 0.5);
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #64748b;
+            transition: color 0.2s;
+            -webkit-app-region: no-drag;
+            z-index: 100;
+        }
+
+        .close-btn:hover {
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <span class="close-btn" onclick="window.close()">&times;</span>
+    <div class="logo">
+        <img src="src/assets/logo.png" alt="Taiwan Big2 AI Logo">
+    </div>
+
+    <h1 id="about-title">Taiwan Big2 AI</h1>
+    <div class="version" id="version">v1.2.0.0</div>
+
+    <div class="detail" id="about-detail">
+        A research project exploring autonomous LLM personas in strategic card games.
+        <br><br>
+        Developed by mesmerli
+    </div>
+    <div class="source-sponsor" id="source-sponsor"></div>
+    <div id="license-status" style="margin-top: 15px; font-size: 13px; color: #94a3b8; -webkit-app-region: no-drag;"></div>
+
+    <script src="src/i18n.js"></script>
+    <script>
+        const buildTarget = window.aboutAPI.getBuildTarget();
+        const appInfo = window.aboutAPI.getAppInfo();
+        const licenseStatus = window.aboutAPI.getLicenseStatus();
+
+        // Get language from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const lang = urlParams.get('lang') || 'zh';
+        const t = (key, params = {}) => {
+            const translations = typeof I18N !== 'undefined' ? I18N : (window.I18N || {});
+            let str = (translations[lang] && translations[lang][key]) || (translations['en'] && translations['en'][key]) || key;
+            for (const [k, v] of Object.entries(params)) {
+                str = str.replace(`{${k}}`, v);
+            }
+            return str;
+        };
+
+        // Update UI
+        document.getElementById('about-title').textContent = t('title');
+        document.getElementById('version').textContent = 'v' + appInfo.version;
+
+        document.getElementById('about-detail').innerHTML = t('aboutDetail', {
+            version: appInfo.version,
+            author: appInfo.author
+        }).replace(/\n/g, '<br>');
+
+        const licenseStatusEl = document.getElementById('license-status');
+
+        if (buildTarget === 'STORE') {
+            document.getElementById('source-sponsor').innerHTML = t('aboutSourceStore');
+            
+            // Display Microsoft Store license status
+            if (!licenseStatus) {
+                licenseStatusEl.textContent = t('storeCheckingLicense');
+                licenseStatusEl.style.color = '#94a3b8';
+            } else if (licenseStatus.isTrial) {
+                const now = new Date();
+                const expirationDate = new Date(licenseStatus.expirationDate);
+                const daysLeft = Math.ceil((expirationDate - now) / (1000 * 60 * 60 * 24));
+                licenseStatusEl.textContent = t('trialDaysLeft', { days: daysLeft });
+                licenseStatusEl.style.color = '#f39c12';
+            } else {
+                licenseStatusEl.textContent = t('storeFullVersion');
+                licenseStatusEl.style.color = '#10b981';
+            }
+        } else {
+            document.getElementById('source-sponsor').innerHTML = t('aboutSourceSponsor');
+            licenseStatusEl.textContent = t('githubVersionWarning');
+            licenseStatusEl.style.color = '#ef4444';
+        }
+
+        // Bind link clicks to open externally
+        const bindLink = (id, url) => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    window.aboutAPI.openExternal(url);
+                });
+            }
+        };
+        bindLink('github-link', 'https://github.com/mesmerli/taiwan-big-two-ai');
+        bindLink('sponsor-link', 'https://github.com/sponsors/mesmerli');
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') window.aboutAPI.closeWindow();
+        });
+    </script>
+</body>
+</html>

@@ -15,6 +15,19 @@
     <title>Taiwan Big2 AI</title>
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <link rel="stylesheet" href="src/styles.css">
+    <!-- Tailwind CSS CDN -->
+    <script src="src/tailwindcss.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    screens: {
+                        'lg-game': '900px',
+                    }
+                }
+            }
+        };
+    </script>
     <!-- Fast-path platform layout injection to completely eliminate startup visual flicker -->
     <script>
         (function() {
@@ -72,6 +85,7 @@
                     <button class="tab-btn active" data-tab="rules" data-i18n="tabRules">Rules</button>
                     <button class="tab-btn" data-tab="keyboard" data-i18n="tabKeyboard">Keyboard</button>
                     <button class="tab-btn" data-tab="license" data-i18n="tabLicense">License & Sponsor</button>
+                    <button class="tab-btn" data-tab="ai-settings" data-i18n="tabAiSettings">Settings</button>
                 </div>
 
                 <div id="tab-rules" class="tab-content active">
@@ -117,6 +131,39 @@
                     </div>
                 </div>
 
+                <div id="tab-ai-settings" class="tab-content">
+                    <div class="settings-form">
+                        <div class="form-group" style="flex-direction: row; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <label for="review-panel-enabled" data-i18n="reviewPanelEnabledLabel" style="margin-bottom: 0; cursor: pointer;">Enable Match Review Panel</label>
+                            <label class="switch">
+                                <input type="checkbox" id="review-panel-enabled">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                                <label for="review-llm-url" style="margin-bottom: 0;" data-i18n="reviewLlmUrlLabel">Review LLM URL</label>
+                                <span id="review-llm-connection-status" style="font-size: 11px; font-weight: bold; transition: color 0.3s ease;"></span>
+                            </div>
+                            <input type="text" id="review-llm-url" placeholder="http://127.0.0.1:1234/v1/chat/completions">
+                        </div>
+                        <div class="form-group" style="margin-top: 15px;">
+                            <label for="review-llm-model" data-i18n="reviewLlmModelLabel">Review LLM Model</label>
+                            <select id="review-llm-model"></select>
+                        </div>
+                        <div class="form-group" style="margin-top: 15px;">
+                            <label for="review-llm-api-key" data-i18n="reviewLlmApiKeyLabel">Review LLM API Key</label>
+                            <input type="password" id="review-llm-api-key" placeholder="sk-... (Optional)" data-i18n-placeholder="reviewLlmApiKeyPlaceholder">
+                        </div>
+                        <div style="font-size: 11px; color: #94a3b8; line-height: 1.4; margin-top: 15px;">
+                            <span data-i18n="reviewLlmUrlTip">💡 Enter the API endpoint URL for the post-game LLM review (e.g., LM Studio, Ollama, etc.). Defaults to http://127.0.0.1:1234/v1/chat/completions.</span>
+                        </div>
+                        <div class="form-group" style="margin-top: 15px;">
+                            <button id="review-llm-guide-btn" class="premium-btn ghost mini w-full" style="width: 100%; justify-content: center; display: flex; font-size: 11px;" data-i18n="reviewLlmGuideBtn">Setup Guide</button>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="rules-footer">
                     <span id="rules-version"></span>
                     <span id="rules-author"></span>
@@ -130,8 +177,10 @@
                 <span class="close-btn">&times;</span>
                 <h2 data-i18n="aiSettingsTitle">AI Settings</h2>
                 <div class="form-group">
-                    <label for="ai-api-url">API URL <span id="ai-api-error" class="api-error-text"></span></label>
-
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                        <label for="ai-api-url" style="margin-bottom: 0;">API URL</label>
+                        <span id="ai-api-connection-status" style="font-size: 11px; font-weight: bold; transition: color 0.3s ease;"></span>
+                    </div>
                     <input type="text" id="ai-api-url" placeholder="http://127.0.0.1:1234/v1/chat/completions">
                 </div>
                 <div class="form-group">
@@ -226,15 +275,122 @@
     <!-- Trial Status (Moved outside to ensure it's on top) -->
     <div id="trial-status" class="hidden"></div>
 
+    <!-- AI Post-game Review Panel (Tailwind CSS) -->
+    <div id="ai-review-panel" class="fixed z-[2000] transition-all duration-500 ease-in-out transform translate-x-full lg-game:translate-x-full translate-y-full lg-game:translate-y-0 right-0 bottom-0 lg-game:top-0 lg-game:h-full w-full lg-game:w-[450px] h-[70vh] lg-game:h-full bg-slate-900/95 backdrop-blur-md shadow-2xl border-t lg-game:border-t-0 lg-game:border-l border-slate-700/50 flex flex-col hidden text-slate-100">
+        <!-- Collapsible Toggle Handle -->
+        <div id="ai-review-toggle-handle" class="absolute flex items-center justify-center bg-violet-600 hover:bg-violet-700 text-white transition-all duration-300 shadow-lg border border-violet-500/50 cursor-pointer z-50 top-[-35px] left-1/2 -translate-x-1/2 w-[80px] h-[35px] rounded-t-xl lg-game:top-1/2 lg-game:left-[-40px] lg-game:translate-y-[-50%] lg-game:translate-x-0 lg-game:w-[40px] lg-game:h-[80px] lg-game:rounded-l-xl lg-game:rounded-tr-none">
+            <span id="ai-review-toggle-icon" class="text-sm font-bold select-none">◀</span>
+        </div>
+        <!-- Panel Header -->
+        <div class="p-4 border-b border-slate-800/80 flex items-center justify-between bg-slate-950/40">
+            <div class="flex items-center gap-3">
+                <span class="text-xl">🤖</span>
+                <div>
+                    <h3 id="ai-review-title" class="font-bold text-sm lg-game:text-base text-violet-400">Gemma-4-2b 牌局復盤</h3>
+                    <div class="flex items-center gap-1.5 mt-0.5">
+                        <span id="ai-connection-indicator" class="w-2.5 h-2.5 rounded-full bg-slate-500"></span>
+                        <span id="ai-connection-text" class="text-xs text-slate-400 font-medium">連線偵測中</span>
+                    </div>
+                </div>
+            </div>
+            <button id="ai-review-close-btn" class="text-slate-400 hover:text-white p-2 rounded-lg hover:bg-slate-800 transition duration-150">
+                <span class="text-2xl font-semibold leading-none">&times;</span>
+            </button>
+        </div>
+
+        <!-- Panel Scrollable Content -->
+        <div class="flex-1 overflow-y-auto p-4 space-y-4">
+            <!-- Game Results Section -->
+            <div class="bg-slate-950/30 rounded-xl p-3 border border-slate-800/50">
+                <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2" data-i18n="aiReviewStatsTitle">牌局對戰統計</h4>
+                <div id="ai-review-stats" class="grid grid-cols-2 gap-2 text-xs">
+                    <!-- Dynamic stat cards go here -->
+                </div>
+            </div>
+
+            <!-- AI Summary Content -->
+            <div class="bg-slate-950/60 rounded-xl p-4 border border-slate-800 shadow-inner flex-1 flex flex-col min-h-[250px]">
+                <h4 class="text-xs font-bold uppercase tracking-wider text-violet-400 mb-3 border-b border-slate-800 pb-1.5" data-i18n="aiReviewContentTitle">老牌咖毒舌復盤</h4>
+                <div id="ai-summary" class="prose prose-invert max-w-none text-slate-200 text-sm leading-relaxed whitespace-pre-wrap flex-1">
+                    <!-- Typed text goes here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel Footer -->
+        <div class="p-4 border-t border-slate-800/80 bg-slate-950/40 flex flex-col gap-2">
+            <div class="flex gap-2 w-full">
+                <input id="ai-review-question-input" type="text" class="flex-1 bg-slate-900/80 border border-slate-700/80 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-violet-500 transition" placeholder="輸入關於分析結果的疑問..." data-i18n-placeholder="aiReviewQuestionPlaceholder">
+                <button id="ai-review-ask-btn" class="py-2 px-4 bg-violet-600 hover:bg-violet-700 active:bg-violet-800 text-white text-xs font-bold rounded-lg shadow-lg shadow-violet-900/30 transition duration-150 flex items-center justify-center gap-1.5 whitespace-nowrap">
+                    <span>💬</span> <span data-i18n="aiReviewAskBtn">發問</span>
+                </button>
+            </div>
+            <button id="ai-review-newgame-btn" class="w-full py-2.5 px-4 bg-slate-700 hover:bg-slate-600 active:bg-slate-500 text-white text-xs font-bold rounded-lg shadow-lg shadow-slate-900/30 transition duration-150 flex items-center justify-center gap-1.5">
+                <span>🚀</span> <span data-i18n="aiReviewNewGameBtn">新局開打</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- CORS Settings Guide Modal (Tailwind CSS) -->
+    <div id="ai-cors-modal" class="fixed inset-0 z-[2100] bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4 hidden text-slate-200">
+        <div id="ai-cors-modal-content" class="bg-slate-900 border border-slate-700/50 rounded-2xl max-w-md w-full shadow-2xl overflow-hidden transform transition-all duration-300 scale-95 opacity-0">
+            <!-- Modal Header -->
+            <div class="p-5 border-b border-slate-800 bg-slate-950/40 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <span class="text-2xl text-amber-500">⚠️</span>
+                    <h3 class="text-base font-bold text-slate-100" data-i18n="aiCorsTitle">LLM 網路設定導覽</h3>
+                </div>
+                <button id="ai-cors-close-btn" class="text-slate-400 hover:text-white p-2 rounded-lg hover:bg-slate-800 transition duration-150">
+                    <span class="text-2xl font-semibold leading-none">&times;</span>
+                </button>
+            </div>
+            
+            <!-- Modal Body -->
+            <div class="p-5 space-y-4 text-xs lg-game:text-sm text-slate-300">
+                <p>無法連線至本地運行的 LM Studio (<code class="bg-slate-950 px-1 py-0.5 rounded font-mono text-amber-400">http://127.0.0.1:1234</code>)。請依循以下步驟啟用 CORS 設定：</p>
+                
+                <div class="space-y-3 bg-slate-950/50 border border-slate-800 rounded-xl p-4">
+                    <div class="flex gap-3">
+                        <span class="flex-shrink-0 w-5 h-5 rounded-full bg-violet-900/50 border border-violet-700/60 flex items-center justify-center font-bold text-violet-300 text-xs">1</span>
+                        <p>啟動您的 <strong class="text-slate-100">LM Studio</strong> 軟體。</p>
+                    </div>
+                    <div class="flex gap-3">
+                        <span class="flex-shrink-0 w-5 h-5 rounded-full bg-violet-900/50 border border-violet-700/60 flex items-center justify-center font-bold text-violet-300 text-xs">2</span>
+                        <p>切換至左側選單的 <strong class="text-slate-100">Local Server</strong> (開發者/伺服器) 分頁。</p>
+                    </div>
+                    <div class="flex gap-3">
+                        <span class="flex-shrink-0 w-5 h-5 rounded-full bg-violet-900/50 border border-violet-700/60 flex items-center justify-center font-bold text-violet-300 text-xs">3</span>
+                        <p>在右側面板的 <strong class="text-slate-100">Server Policies</strong> 設定中找到 <strong class="text-slate-100">CORS</strong> 選項。</p>
+                    </div>
+                    <div class="flex gap-3">
+                        <span class="flex-shrink-0 w-5 h-5 rounded-full bg-violet-900/50 border border-violet-700/60 flex items-center justify-center font-bold text-violet-300 text-xs">4</span>
+                        <p>將 <strong class="text-slate-100">CORS</strong> 切換為 <strong class="text-pink-500 font-bold">ON (開啟)</strong> 狀態。</p>
+                    </div>
+                </div>
+
+                <div class="text-amber-500/80 bg-amber-950/20 border border-amber-900/30 rounded-lg p-2.5 flex gap-2 text-xs">
+                    <span>💡</span>
+                    <span>啟用 CORS 可允許遊戲網頁安全地向本地模型發送復盤請求。</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Environment & Storage Detection -->
     <script src="src/env.js"></script>
+    <script src="src/version.js"></script>
+    <script src="src/services/licenseService.js"></script>
     <script>
         (async function() {
             try {
                 // Wait for storage (including Capacitor Preferences) to initialize
                 await window.AppStorage.init();
+                // 初始化授權與建置類型服務
+                if (window.LicenseService && typeof window.LicenseService.init === 'function') {
+                    await window.LicenseService.init();
+                }
             } catch (e) {
-                console.error("Failed to initialize AppStorage:", e);
+                console.error("Failed to initialize AppStorage or LicenseService:", e);
             }
             
             // Dynamically load remaining scripts in the correct dependency order
@@ -244,7 +400,8 @@
                 'src/gameLogic.js',
                 'src/ai.js',
                 'src/i18n.js',
-                'src/renderer.js'
+                'src/renderer.js',
+                'src/aiSummary.js'
             ];
             for (const src of scripts) {
                 await new Promise((resolve, reject) => {

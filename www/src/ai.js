@@ -307,7 +307,9 @@ class BaseLLMAI extends AICharacter {
 
         this.persona = personas[Math.floor(Math.random() * personas.length)];
         console.log(`%c[${this.name} Engine] Persona selected for this game: ${this.persona.name}`, 'color: #3498db; font-weight: bold;');
-    }    loadSettings() {
+    }
+
+    loadSettings() {
         const defaultDianaPrompt = `[戰術調整策略 / Tactical Strategy Adjustment]
 1. 組合建設與出牌 (Combination Building & Active Play):
    - 策略重點應從單純防守轉向主動的「組合建設」與「價值釋放」。

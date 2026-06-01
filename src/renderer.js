@@ -74,6 +74,18 @@ function resetCycleState() {
 
 function updateLanguage() {
     window.currentLang = currentLang;
+
+    // 同步授權狀態下的試用天數至本地狀態變數
+    if (typeof LicenseService !== 'undefined') {
+        const licenseStatus = LicenseService.getLicenseStatusSync();
+        if (licenseStatus && licenseStatus.isActive) {
+            if (licenseStatus.isTrial) {
+                trialDaysRemaining = licenseStatus.trialDaysRemaining;
+            } else {
+                trialDaysRemaining = null;
+            }
+        }
+    }
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
         if (I18N[currentLang][key]) {
@@ -89,7 +101,7 @@ function updateLanguage() {
     });
 
     // Populate License & Sponsor tab dynamically to support clickable links safely
-    const buildTarget = ipcRenderer ? ipcRenderer.sendSync('get-build-target') : 'GITHUB';
+    const buildTarget = typeof LicenseService !== 'undefined' ? LicenseService.getBuildTarget() : (ipcRenderer ? ipcRenderer.sendSync('get-build-target') : 'GITHUB');
     
     const tabLicenseBtn = document.querySelector('[data-i18n="tabLicense"]');
     if (tabLicenseBtn) {
@@ -112,7 +124,9 @@ function updateLanguage() {
         const rulesGhLink = document.getElementById('rules-github-link');
         const rulesSpLink = document.getElementById('rules-sponsor-link');
         const openLink = (url) => {
-            if (typeof require !== 'undefined' && ipcRenderer) {
+            if (typeof SystemService !== 'undefined') {
+                SystemService.openExternal(url);
+            } else if (typeof require !== 'undefined' && ipcRenderer) {
                 try {
                     const { shell } = require('electron');
                     shell.openExternal(url);
@@ -141,17 +155,19 @@ function updateLanguage() {
     const licenseStoreStatus = document.getElementById('license-store-status');
     if (licenseStoreStatus) {
         if (buildTarget === 'STORE') {
-            const licenseStatus = ipcRenderer ? ipcRenderer.sendSync('get-license-status-sync') : null;
-            if (!licenseStatus) {
+            const licenseStatus = typeof LicenseService !== 'undefined' ? LicenseService.getLicenseStatusSync() : (ipcRenderer ? ipcRenderer.sendSync('get-license-status-sync') : null);
+            if (!licenseStatus || !licenseStatus.isActive) {
                 licenseStoreStatus.textContent = t('storeCheckingLicense');
                 licenseStoreStatus.style.color = '#94a3b8';
                 licenseStoreStatus.style.cursor = 'default';
                 licenseStoreStatus.style.textDecoration = 'none';
                 licenseStoreStatus.title = '';
             } else if (licenseStatus.isTrial) {
-                const now = new Date();
-                const expirationDate = new Date(licenseStatus.expirationDate);
-                const daysLeft = Math.ceil((expirationDate - now) / (1000 * 60 * 60 * 24));
+                const daysLeft = licenseStatus.trialDaysRemaining !== undefined ? licenseStatus.trialDaysRemaining : (() => {
+                    const now = new Date();
+                    const expirationDate = new Date(licenseStatus.expirationDate);
+                    return Math.ceil((expirationDate - now) / (1000 * 60 * 60 * 24));
+                })();
                 licenseStoreStatus.textContent = t('trialDaysLeft', { days: daysLeft });
                 licenseStoreStatus.style.color = '#f39c12';
                 licenseStoreStatus.style.cursor = 'pointer';
@@ -179,8 +195,8 @@ function updateLanguage() {
     }
 
     // Update Rules Footer (Version & Author)
-    let pkg = { version: "1.5.0", author: "mesmerli", buildVersion: "1.5.0.0" };
-    if (typeof require !== 'undefined') {
+    let pkg = window.AppVersionInfo || { version: "1.5.0", author: "mesmerli", buildVersion: "1.5.0.0" };
+    if (typeof require !== 'undefined' && !window.AppVersionInfo) {
         try {
             pkg = require('./package.json');
         } catch (e) {
@@ -267,20 +283,28 @@ function updateTrialStatusUI() {
     trialStatus.classList.remove('hidden');
 }
 
+const openStore = () => {
+    if (typeof LicenseService !== 'undefined') {
+        LicenseService.openStore();
+    } else if (ipcRenderer) {
+        ipcRenderer.send('open-store');
+    } else if (typeof SystemService !== 'undefined') {
+        SystemService.openExternal('ms-windows-store://pdp/?ProductId=9PM1S8GKBLK9');
+    }
+};
+
 if (trialStatus) {
-    trialStatus.addEventListener('click', () => {
-        if (ipcRenderer) ipcRenderer.send('open-store');
-    });
+    trialStatus.addEventListener('click', openStore);
 }
 
 const licenseStoreStatus = document.getElementById('license-store-status');
 if (licenseStoreStatus) {
     licenseStoreStatus.addEventListener('click', () => {
-        const buildTarget = ipcRenderer ? ipcRenderer.sendSync('get-build-target') : 'GITHUB';
+        const buildTarget = typeof LicenseService !== 'undefined' ? LicenseService.getBuildTarget() : (ipcRenderer ? ipcRenderer.sendSync('get-build-target') : 'GITHUB');
         if (buildTarget === 'STORE') {
-            const licenseStatus = ipcRenderer ? ipcRenderer.sendSync('get-license-status-sync') : null;
+            const licenseStatus = typeof LicenseService !== 'undefined' ? LicenseService.getLicenseStatusSync() : (ipcRenderer ? ipcRenderer.sendSync('get-license-status-sync') : null);
             if (licenseStatus && licenseStatus.isTrial) {
-                if (ipcRenderer) ipcRenderer.send('open-store');
+                openStore();
             }
         }
     });

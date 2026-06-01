@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "taiwan-big-two-ai",
-  "version": "1.5.30",
+  "version": "1.5.38",
   "identifier": "com.mesmerli.taiwanbig2ai",
   "build": {
     "frontendDist": "../www"
@@ -31,6 +31,7 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
+    "publisher": "CN=B50F36C9-7E5E-4652-A715-0185D35ADE64",
     "android": {
       "debugApplicationIdSuffix": ".debug"
     }

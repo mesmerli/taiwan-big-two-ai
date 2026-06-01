@@ -378,13 +378,19 @@
 
     <!-- Environment & Storage Detection -->
     <script src="src/env.js"></script>
+    <script src="src/version.js"></script>
+    <script src="src/services/licenseService.js"></script>
     <script>
         (async function() {
             try {
                 // Wait for storage (including Capacitor Preferences) to initialize
                 await window.AppStorage.init();
+                // 初始化授權與建置類型服務
+                if (window.LicenseService && typeof window.LicenseService.init === 'function') {
+                    await window.LicenseService.init();
+                }
             } catch (e) {
-                console.error("Failed to initialize AppStorage:", e);
+                console.error("Failed to initialize AppStorage or LicenseService:", e);
             }
             
             // Dynamically load remaining scripts in the correct dependency order

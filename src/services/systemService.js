@@ -31,11 +31,18 @@
             // A. Tauri 環境
             if (AppEnv.isTauri) {
                 try {
-                    if (window.__TAURI__ && window.__TAURI__.shell) {
+                    let invoke = null;
+                    if (window.__TAURI__) {
+                        if (window.__TAURI__.core && typeof window.__TAURI__.core.invoke === 'function') {
+                            invoke = window.__TAURI__.core.invoke;
+                        } else if (typeof window.__TAURI__.invoke === 'function') {
+                            invoke = window.__TAURI__.invoke;
+                        }
+                    }
+                    if (invoke) {
+                        await invoke('open_external_url', { url });
+                    } else if (window.__TAURI__ && window.__TAURI__.shell) {
                         await window.__TAURI__.shell.open(url);
-                    } else if (window.__TAURI__ && window.__TAURI__.path) {
-                        const { open } = window.__TAURI__.shell;
-                        await open(url);
                     } else {
                         window.open(url, '_blank', 'noopener,noreferrer');
                     }
