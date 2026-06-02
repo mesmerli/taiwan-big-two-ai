@@ -7,10 +7,10 @@
 
 A modernized **Taiwanese Big Two** card game built with Electron. This project integrates sophisticated heuristic algorithms with an advanced multi-persona research engine powered by **Large Language Models (LLM)**, designed for autonomous strategic gameplay analysis, local WebGPU execution, and evolutionary learning.
 
-### 🌐 [Play Online Directly](https://mesmerli.github.io/taiwan-big-two-ai/) | 🖥️ [Download Windows MSI](./release/Windows/) | 🤖 [Download Android APK](./release/Android/)
+### 🌐 [Play Online Directly](https://mesmerli.github.io/taiwan-big-two-ai/) | 🛍️ [Get on Microsoft Store](https://apps.microsoft.com/detail/9PM1S8GKBLK9) | 🖥️ [Download Windows MSI](./release/Windows/) | 🤖 [Download Android APK](./release/Android/)
 
 ### 💡 How to get this game:
-* **Support the Developer**: Purchase the official version on the **Microsoft Store** for automatic updates and easy installation.
+* **Support the Developer**: Purchase the official version on the **[Microsoft Store](https://apps.microsoft.com/detail/9PM1S8GKBLK9)** for automatic updates and easy installation.
 * **Windows Version**: Browse the **[Windows Release Folder](./release/Windows/)** to download and install the latest **`taiwan-big2-ai_1.5.41_x64_en-US.msi`** (built with Tauri).
 * **Android Version**: Browse the **[Android Release Folder](./release/Android/)** to download and install the latest **`twbig2ai-1.5.41.apk`** installation package.
 * **Open Source**: This game is licensed under **AGPLv3**. You are welcome to clone this repository and build it yourself for free. Check out our [Build & Run Guide](./Documents/BuildnRun.md) and [Architecture Overview](./Documents/architecture.md) for more details.
