@@ -7,7 +7,7 @@
 
 本專案打造了一個現代化的大老二遊戲，基於 Electron 桌面應用框架。它結合了高效的啟發式算法與進階的多人格大型語言模型 (LLM) 研究引擎，專為自動化戰略對弈、本地 WebGPU 執行與進化學習分析而設計。
 
-### 🌐 [線上直接玩](https://mesmerli.github.io/taiwan-big-two-ai/) | 🛍️ [Microsoft Store 購買](https://apps.microsoft.com/detail/9PM1S8GKBLK9) | 🖥️ [下載 Windows MSI](./release/Windows/) | 🤖 [下載 Android APK](./release/Android/)
+### 🌐 [線上直接玩](https://mesmerli.github.io/taiwan-big-two-ai/) | <a href="https://apps.microsoft.com/detail/9PM1S8GKBLK9"><img src="https://get.microsoft.com/images/en-us-dark.svg" height="25" style="vertical-align: middle; display: inline-block;" alt="Download from Microsoft Store" /></a> | 🖥️ [下載 Windows MSI](./release/Windows/) | 🤖 [下載 Android APK](./release/Android/)
 
 ### 💡 如何取得此遊戲：
 * **支持開發者**：歡迎在 **[Microsoft Store](https://apps.microsoft.com/detail/9PM1S8GKBLK9)** 購買官方版本，享有自動更新與便捷安裝服務。
