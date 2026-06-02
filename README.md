@@ -7,7 +7,7 @@
 
 A modernized **Taiwanese Big Two** card game built with Electron. This project integrates sophisticated heuristic algorithms with an advanced multi-persona research engine powered by **Large Language Models (LLM)**, designed for autonomous strategic gameplay analysis, local WebGPU execution, and evolutionary learning.
 
-### 🌐 [Play Online Directly](https://mesmerli.github.io/taiwan-big-two-ai/) | <a href="https://apps.microsoft.com/detail/9PM1S8GKBLK9"><img src="https://get.microsoft.com/images/en-us-dark.svg" height="25" style="vertical-align: middle; display: inline-block;" alt="Download from Microsoft Store" /></a> | 🖥️ [Download Windows MSI](./release/Windows/) | 🤖 [Download Android APK](./release/Android/)
+### 🌐 [Play Online Directly](https://mesmerli.github.io/taiwan-big-two-ai/) | <a href="https://apps.microsoft.com/detail/9PM1S8GKBLK9"><img src="https://get.microsoft.com/images/en-us%20dark.svg" height="25" style="vertical-align: middle; display: inline-block;" alt="Download from Microsoft Store" /></a> | 🖥️ [Download Windows MSI](./release/Windows/) | 🤖 [Download Android APK](./release/Android/)
 
 ### 💡 How to get this game:
 * **Support the Developer**: Purchase the official version on the **[Microsoft Store](https://apps.microsoft.com/detail/9PM1S8GKBLK9)** for automatic updates and easy installation.
