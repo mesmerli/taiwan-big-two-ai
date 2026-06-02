@@ -1161,6 +1161,7 @@ function showPassIndicator(playerIndex) {
 }
 
 function triggerShoutEffect(playerIndex, message = "拉", shake = true) {
+    window.triggerShoutEffect = triggerShoutEffect;
     const container = document.getElementById('game-container');
     const playerEl = playerIndex === 0 ? document.getElementById('human-area') : document.getElementById(`player-${playerIndex + 1}`);
     if (!playerEl) return;
@@ -1168,8 +1169,27 @@ function triggerShoutEffect(playerIndex, message = "拉", shake = true) {
     const bubble = playerEl.querySelector('.speech-bubble');
     if (bubble) {
         bubble.textContent = message;
+        
+        // If message is short (e.g. "Pass", "拉", "過", length <= 4), use narrow layout and short delay (2s).
+        // Otherwise use wide layout and long delay (4.5s) for trash talk.
+        const isShort = message.length <= 4;
+        if (isShort) {
+            bubble.classList.add('short-bubble');
+        } else {
+            bubble.classList.remove('short-bubble');
+        }
+
         bubble.classList.remove('hidden');
-        setTimeout(() => bubble.classList.add('hidden'), 2000);
+        
+        // Clear any previous active timeout on this bubble if we want to avoid premature hiding,
+        // but a simple timeout replacement is standard here.
+        if (bubble._hideTimeout) {
+            clearTimeout(bubble._hideTimeout);
+        }
+        bubble._hideTimeout = setTimeout(() => {
+            bubble.classList.add('hidden');
+            bubble.classList.remove('short-bubble');
+        }, isShort ? 2000 : 4500);
     }
 
     // Screen Shake
@@ -1326,6 +1346,11 @@ function setupAvatarClickListeners() {
                     if (apiKeyInput) {
                         apiKeyInput.value = settings.apiKey || '';
                     }
+                    const useWebGpuCheckbox = document.getElementById('ai-use-webgpu');
+                    if (useWebGpuCheckbox) {
+                        useWebGpuCheckbox.checked = AppStorage.getItem('useLocalWebGPU') === 'true';
+                    }
+
                     extraPromptInput.value = settings.extraPrompt || '';
                     settingsModal.classList.remove('hidden');
 
@@ -1415,19 +1440,54 @@ function setupAvatarClickListeners() {
 
     let _modelFetchController = null;
     async function fetchAvailableModels(apiUrl, apiKey = '', savedModelId = '') {
-        // Cancel any in-flight request to prevent concurrent datalist population
-        if (_modelFetchController) {
-            _modelFetchController.abort();
-        }
-        _modelFetchController = new AbortController();
-        const controller = _modelFetchController;
-
+        const useLocalWebGPU = AppStorage.getItem('useLocalWebGPU') === 'true';
         const modelList = document.getElementById('ai-model-id'); // select element
         if (!modelList) return;
         modelList.innerHTML = '';
 
         const statusEl = document.getElementById('ai-api-connection-status');
         const isEn = currentLang === 'en';
+
+        if (useLocalWebGPU) {
+            if (statusEl) {
+                statusEl.textContent = isEn ? '● Local WebGPU Active' : '● 本地 WebGPU 已啟用';
+                statusEl.style.color = '#10b981'; // emerald
+            }
+
+            const localModels = [
+                { id: 'gemma-2-2b-it-q4f16_1-MLC', name: 'Gemma 2 2B (f16 - High Performance)' },
+                { id: 'gemma-2-2b-it-q4f32_1-MLC', name: 'Gemma 2 2B (f32 - High Compatibility)' },
+                { id: 'Qwen2.5-1.5B-Instruct-q4f32_1-MLC', name: 'Qwen 2.5 1.5B (f32 - High Compatibility)' },
+                { id: 'Qwen2.5-1.5B-Instruct-q4f16_1-MLC', name: 'Qwen 2.5 1.5B (f16 - High Performance)' },
+                { id: 'Llama-3.2-1B-Instruct-q4f16_1-MLC', name: 'Llama 3.2 1B (f16)' },
+                { id: 'Llama-3.2-3B-Instruct-q4f16_1-MLC', name: 'Llama 3.2 3B (f16)' },
+                { id: 'Phi-3.5-mini-instruct-q4f16_1-MLC', name: 'Phi 3.5 Mini 3.8B (f16)' }
+            ];
+
+            localModels.forEach(m => {
+                const option = document.createElement('option');
+                option.value = m.id;
+                option.textContent = m.name;
+                modelList.appendChild(option);
+            });
+
+            if (savedModelId && !localModels.some(m => m.id === savedModelId)) {
+                const customOption = document.createElement('option');
+                customOption.value = savedModelId;
+                customOption.textContent = savedModelId;
+                modelList.appendChild(customOption);
+            }
+
+            modelList.value = savedModelId || 'gemma-2-2b-it-q4f16_1-MLC';
+            return;
+        }
+
+        // Cancel any in-flight request to prevent concurrent datalist population
+        if (_modelFetchController) {
+            _modelFetchController.abort();
+        }
+        _modelFetchController = new AbortController();
+        const controller = _modelFetchController;
 
         // Add default auto-detect option
         const defaultOption = document.createElement('option');
@@ -1540,6 +1600,17 @@ function setupAvatarClickListeners() {
 
     modelIdInput.onchange = autoSave;
     extraPromptInput.oninput = autoSave;
+
+    const useWebGpuCheckbox = document.getElementById('ai-use-webgpu');
+    if (useWebGpuCheckbox) {
+        useWebGpuCheckbox.onchange = () => {
+            AppStorage.setItem('useLocalWebGPU', useWebGpuCheckbox.checked ? 'true' : 'false');
+            fetchAvailableModels(apiUrlInput.value, apiKeyInput ? apiKeyInput.value.trim() : '', modelIdInput.value);
+            autoSave();
+        };
+    }
+
+
 
     resetBtn.onclick = () => {
         const msg = currentLang === 'zh' ? '確定要重設為預設值嗎？' : 'Reset to defaults?';
@@ -1680,6 +1751,14 @@ window.addEventListener('keydown', (e) => {
             renderHumanHand();
             updatePlayButtonVisibility();
             updateShoutButton();
+        }
+    } else if (e.key === 'Enter') {
+        e.preventDefault();
+        const isHumanTurn = (gameState.turn === 0 && (!window.AI || !window.AI.getCharacter(0)));
+        if (!isHumanTurn) return;
+
+        if (btnShout && !btnShout.classList.contains('hidden')) {
+            shoutLa();
         }
     } else if (e.key === ' ' || e.key === 'Spacebar' || e.code === 'Space' || e.keyCode === 32) {
         e.preventDefault();

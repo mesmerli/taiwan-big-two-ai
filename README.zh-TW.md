@@ -1,18 +1,18 @@
 # Taiwan Big2 AI (台灣大老二 AI 版)
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
-[![Version](https://img.shields.io/badge/Version-1.5.24-blue.svg)](./changelog.md)
+[![Version](https://img.shields.io/badge/Version-1.5.41-blue.svg)](./changelog.md)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Electron%20%7C%20Tauri%20%7C%20Android%20%7C%20Browser-brightgreen.svg)](https://capacitorjs.com/)
 [![Sponsor](https://img.shields.io/badge/Sponsor-GitHub%20Sponsors-ea4aaa?style=flat&logo=github-sponsors)](https://github.com/sponsors/mesmerli)
 
-本專案打造了一個現代化的大老二遊戲，基於 Electron 桌面應用框架。它結合了高效的啟發式算法與進階的多人格大型語言模型 (LLM) 研究引擎，專為自動化戰略對弈與進化學習分析而設計。
+本專案打造了一個現代化的大老二遊戲，基於 Electron 桌面應用框架。它結合了高效的啟發式算法與進階的多人格大型語言模型 (LLM) 研究引擎，專為自動化戰略對弈、本地 WebGPU 執行與進化學習分析而設計。
 
 ### 🌐 [線上直接玩](https://mesmerli.github.io/taiwan-big-two-ai/) | 🖥️ [下載 Windows MSI](./release/Windows/) | 🤖 [下載 Android APK](./release/Android/)
 
 ### 💡 如何取得此遊戲：
 * **支持開發者**：歡迎在 **Microsoft Store** 購買官方版本，享有自動更新與便捷安裝服務。
-* **Windows 版本**：請造訪 **[Windows 發佈資料夾](./release/Windows/)** 下載並安裝最新的 **`taiwan-big2-ai_1.5.24_x64_en-US.msi`** 安裝包（Tauri 版本）。
-* **安卓版本**：請造訪 **[Android 發佈資料夾](./release/Android/)** 下載並安裝最新的 **`twbig2ai-1.5.24.apk`** 安裝包。
+* **Windows 版本**：請造訪 **[Windows 發佈資料夾](./release/Windows/)** 下載並安裝最新的 **`taiwan-big2-ai_1.5.41_x64_en-US.msi`** 安裝包（Tauri 版本）。
+* **安卓版本**：請造訪 **[Android 發佈資料夾](./release/Android/)** 下載並安裝最新的 **`twbig2ai-1.5.41.apk`** 安裝包。
 * **開源社群**：本遊戲基於 **AGPLv3** 開源授權。歡迎自由克隆 (Clone) 此儲存庫，並免費自行編譯與建置。想了解更多可參閱我們的 [建置與執行指南](./Documents/BuildnRun.md) 及 [程式碼架構說明](./Documents/architecture.md)。
 * **小額贊助**：如果您覺得本專案的 AI 對抗邏輯對您的學習或專案有所幫助，歡迎透過以下方式進行贊助與支持：
 
@@ -74,6 +74,7 @@
 為了提供更高效且專業的對弈體驗，本專案支援以下快捷鍵：
 - **左 / 右方向鍵**：自動循環選擇當下手中所有**合法的出牌組合**。
 - **上方向鍵**：直接打出目前選取的牌組（若符合剩餘 1 張條件則自動喊拉）。
+- **Enter 鍵**：直接出牌並喊拉（僅在滿足喊拉條件時有效）。
 - **下方向鍵**：
   - **遊戲中**：取消目前所有選取的卡片。
   - **結算時**：**連續快速按三下**即可立即開啟新局。
@@ -118,14 +119,22 @@ npm test
 
 ---
 
-## ⚙️ 搭配 LM Studio 使用 LLM
+## ⚙️ 在本地執行 AI 模型 (WebGPU / LM Studio)
 
-本專案的 AI 角色需要相容於 OpenAI 的 API。建議使用 [LM Studio](https://lmstudio.ai/) 在本地端運行。
+專案中的「深度學習」AI 角色 (Diana & Ares) 可以透過 WebGPU 直接在瀏覽器完全離線執行，或者連接至相容於 OpenAI 的 API 伺服器 (如 LM Studio)。
 
-1. **下載 LM Studio**：前往 [lmstudio.ai](https://lmstudio.ai/)。
-2. **下載模型**：搜尋並下載 `google/gemma-4-e2b`。
-3. **啟動本地伺服器**：在 **Local Server** 分頁點擊 **Start Server**。
-4. **連接至遊戲**：開啟遊戲中的 **AI 設定 (⚙️)**，貼上 API URL 後即可自動偵測。
+### 方案 A：本地 WebGPU 模式 (WebLLM) - 推薦使用 🚀
+此方案利用 WebGPU 技術，直接在您瀏覽器的硬體加速背景執行緒 (Web Worker) 中載入並執行 AI 模型，完全不需架設伺服器。
+1. 確保您的瀏覽器與硬體環境支援 **WebGPU**（如最新版 Chrome 或 Edge）。
+2. 開啟遊戲中的 **AI 設定 (⚙️)**。
+3. 勾選 **「啟用本地 WebGPU 模式 (WebLLM)」** 複選框。
+4. 選擇模型（例如 `Qwen2.5-1.5B-Instruct-q4f32_1-MLC`）。模型在首次啟動時會直接下載至瀏覽器快取中（介面會顯示下載進度條），此後即可在完全斷網的環境下流暢出牌。
+
+### 方案 B：使用遠端 / 本地 API 伺服器 (LM Studio)
+1. **下載 LM Studio**：造訪 [lmstudio.ai](https://lmstudio.ai/)。
+2. **下載模型**：搜尋並下載 GGUF 格式的模型（例如 `gemma-2-2b-it` 或 `Qwen2.5-1.5B-Instruct`）。
+3. **啟動本地伺服器**：前往 **Local Server** 分頁，將 Port 設為 `1234` 並點擊 **Start Server**。
+4. **連接至遊戲**：在遊戲的 **AI 設定 (⚙️)** 中取消勾選本地 WebGPU 模式，並在 API 網址欄輸入本地伺服器端點（如 `http://127.0.0.1:1234/v1/chat/completions`），系統便會自動偵測載入的模型。
 
 ---
 

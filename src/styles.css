@@ -712,7 +712,7 @@ body {
     position: absolute;
     background: white;
     color: #1e293b;
-    padding: 8px 16px;
+    padding: 10px 20px;
     border-radius: 16px;
     font-weight: 800;
     font-size: 18px;
@@ -723,6 +723,19 @@ body {
     transform: translateX(var(--x-offset));
     animation: bubblePop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     border: 2px solid var(--primary-color);
+    min-width: 260px;
+    max-width: 400px;
+    width: max-content;
+    white-space: normal;
+    word-break: break-word;
+    line-height: 1.4;
+}
+
+.speech-bubble.short-bubble {
+    min-width: unset;
+    max-width: unset;
+    width: auto;
+    white-space: nowrap;
 }
 
 .speech-bubble::after {
@@ -1178,6 +1191,19 @@ body {
     height: 20px;
     position: relative;
     padding: 0;
+}
+
+.key.enter-key {
+    min-width: 45px;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    padding: 3px 0;
+}
+
+.enter-svg {
+    display: inline-block;
+    vertical-align: middle;
 }
 
 .key.space-key::after,

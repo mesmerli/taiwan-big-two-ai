@@ -465,7 +465,7 @@ class BaseLLMAI extends AICharacter {
 
     async decide(context) {
         const Logic = this.getLogic();
-        const { hand, lastPlay } = context;
+        const { hand, lastPlay, lastPlayerIndex } = context;
 
         console.log(`%c[${this.name} Engine] Generating legal moves...`, 'color: #9b59b6;');
         const legalMoves = this.getAllLegalMoves(context);
@@ -482,24 +482,88 @@ class BaseLLMAI extends AICharacter {
 
         console.log(`%c[${this.name} Engine] Requesting Strategic Selection...`, 'color: #9b59b6; font-weight: bold;');
 
-        const userPrompt = this.generatePrompt(context, legalMoves);
+        try {
+            // Dynamic import of the factory
+            const { AiServiceFactory } = await import('./services/AiServiceFactory.js');
+            const useLocalWebGPU = AppStorage.getItem('useLocalWebGPU') === 'true';
 
-        // Dynamic Profile
-        let profile = "Balanced";
-        const totalGames = this.stats.wins + this.stats.losses;
-        if (totalGames >= 5) {
-            const winRate = this.stats.wins / totalGames;
-            if (winRate < 0.2) profile = "Aggressive (Prioritize taking control)";
-            else if (winRate > 0.6) profile = "Defensive (Save big cards for the endgame)";
-        }
 
-        const systemPrompt = `Strategic Game Engine for Taiwanese Big Two. 
+            // Show loading progress on UI if using WebGPU
+            const progressContainer = document.getElementById('ai-webgpu-progress-container');
+            const progressText = document.getElementById('ai-webgpu-progress-text');
+            const progressPercent = document.getElementById('ai-webgpu-progress-percent');
+            const progressBar = document.getElementById('ai-webgpu-progress-bar');
+
+            // Check if we can reuse the existing service
+            const currentSettingsKey = `${useLocalWebGPU}_${this.modelId}_${this.apiUrl}_${this.apiKey}`;
+            if (!this.activeService || this._lastServiceSettingsKey !== currentSettingsKey) {
+                if (this.activeService && this.activeService.engine) {
+                    try {
+                        console.log(`[${this.name} Engine] Terminating previous WebLLM engine...`);
+                        if (typeof this.activeService.engine.unload === 'function') {
+                            this.activeService.engine.unload();
+                        }
+                    } catch (e) {
+                        console.warn("Failed to unload old engine:", e);
+                    }
+                }
+
+                console.log(`[${this.name} Engine] Creating new AI Service instance...`);
+                this.activeService = AiServiceFactory.createService({
+                    useLocalWebGPU,
+
+                    modelId: this.modelId,
+                    apiUrl: this.apiUrl,
+                    apiKey: this.apiKey,
+                    workerPath: '../aiWorker.js',
+                    initProgressCallback: (progress) => {
+                        console.log(`[${this.name} WebLLM Load] ${progress.percent}% - ${progress.text}`);
+                        if (progressContainer) progressContainer.classList.remove('hidden');
+                        if (progressText) progressText.textContent = progress.text;
+                        if (progressPercent) progressPercent.textContent = `${progress.percent}%`;
+                        if (progressBar) progressBar.style.width = `${progress.percent}%`;
+                    }
+                });
+                this._lastServiceSettingsKey = currentSettingsKey;
+            } else {
+                console.log(`[${this.name} Engine] Reusing active AI Service instance.`);
+                if (this.activeService.constructor.name === 'WebLlmAiService') {
+                    this.activeService.initProgressCallback = (progress) => {
+                        console.log(`[${this.name} WebLLM Load] ${progress.percent}% - ${progress.text}`);
+                        if (progressContainer) progressContainer.classList.remove('hidden');
+                        if (progressText) progressText.textContent = progress.text;
+                        if (progressPercent) progressPercent.textContent = `${progress.percent}%`;
+                        if (progressBar) progressBar.style.width = `${progress.percent}%`;
+                    };
+                }
+            }
+
+            const service = this.activeService;
+
+            if (service.constructor.name === 'WebLlmAiService' && !service.isReady) {
+                if (progressContainer) progressContainer.classList.remove('hidden');
+                await service.init();
+                if (progressContainer) progressContainer.classList.add('hidden');
+            }
+
+            // Map game state to unified format
+            let profile = "Balanced";
+            const totalGames = this.stats.wins + this.stats.losses;
+            if (totalGames >= 5) {
+                const winRate = this.stats.wins / totalGames;
+                if (winRate < 0.2) profile = "Aggressive (Prioritize taking control)";
+                else if (winRate > 0.6) profile = "Defensive (Save big cards for the endgame)";
+            }
+
+            const outputSchema = `{
+  "selected_index": number,
+  "confidence_score": number, (1-10)
+  "strategy": "Brief explanation of your logic",
+  "trashTalk": "你的台味垃圾話或心理戰台詞"
+}`;
+
+            const systemPrompt = `Strategic Game Engine for Taiwanese Big Two. 
 Task: Evaluate each legal move from 1-10 based on how likely it leads to a win. Select the move index with the highest score.
-
-Current Persona: ${this.persona.name}
-Role Play Instructions: ${this.persona.desc}
-
-Current Profile: ${profile}
 
 Game Logic (Taiwanese Rules):
 - Rank: 3 < 4 < 5 < 6 < 7 < 8 < 9 < 10 < J < Q < K < A < 2.
@@ -511,130 +575,103 @@ Defensive Rules:
 2. If an opponent is [AGGRESSIVE], they are likely trying to empty their hand. Be prepared to fight for control.
 
 Output Schema:
-{
-  "selected_index": number,
-  "confidence_score": number, (1-10)
-  "strategy": "Brief explanation of your logic"
-}
+${outputSchema}
+
+Current Persona: ${this.persona.name}
+Role Play Instructions: ${this.persona.desc}
+
+Current Profile: ${profile}
 
 ${this.learnings.length > 0 ? `[PAST_LEARNINGS]\n- ${this.learnings.map(l => l.tip).join('\n- ')}\n` : ''}
 ${this.extraPrompt ? `Additional Custom Instructions:\n${this.extraPrompt}` : ''}`;
 
-        // Auto-detect model if not manually specified
-        let activeModel = this.modelId;
-        if (!activeModel) {
-            try {
-                const urlObj = new URL(this.apiUrl);
-                const modelsUrl = `${urlObj.protocol}//${urlObj.host}/v1/models`;
-                const detectHeaders = {};
-                if (this.apiKey) {
-                    detectHeaders['Authorization'] = `Bearer ${this.apiKey}`;
-                }
-                const modelRes = await fetch(modelsUrl, { headers: detectHeaders });
-                if (modelRes.ok) {
-                    const modelData = await modelRes.json();
-                    if (modelData && modelData.data && modelData.data.length > 0) {
-                        activeModel = modelData.data[0].id;
-                        console.log(`%c[Diana Engine] Auto-detected model: ${activeModel}`, 'color: #16a085;');
-                    }
-                }
-            } catch (e) {
-                console.warn("[Diana Engine] Model auto-detection failed, falling back to default.", e);
-            }
-        }
-        if (!activeModel) activeModel = "local-model"; // Fallback
+            const userPrompt = this.generatePrompt(context, legalMoves);
 
-        try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 90000);
+            const gameStatePayload = {
+                playerIndex: context.playerIndex,
+                playerNames: context.playerNames || ["P1", "P2", "P3", "P4"],
+                hand: hand.map(c => this.cardToString(c)),
+                lastPlay: lastPlay ? lastPlay.map(c => this.cardToString(c)) : [],
+                lastPlayerIndex,
+                legalMoves: legalMoves.map(m => m.cards.map(c => this.cardToString(c))),
+                opponents: context.players.map((p, idx) => {
+                    if (idx === context.playerIndex) return null;
+                    const name = (context.playerNames && context.playerNames[idx]) ? context.playerNames[idx] : `P${idx + 1}`;
+                    return { name, cardCount: p.length };
+                }).filter(Boolean),
+                systemPrompt,
+                userPrompt
+            };
 
-            const reqHeaders = { 'Content-Type': 'application/json' };
-            if (this.apiKey) {
-                reqHeaders['Authorization'] = `Bearer ${this.apiKey}`;
+            console.log(`[${this.name} Engine] ===== System Prompt =====\n`, systemPrompt);
+            console.log(`[${this.name} Engine] ===== User Prompt =====\n`, userPrompt);
+
+            const result = await service.fetchAiMove(gameStatePayload);
+
+            console.log(`[${this.name} Engine] ===== Response =====\n`, result);
+
+            // Display trash talk if returned
+            if (result.trashTalk && typeof window.triggerShoutEffect === 'function') {
+                window.triggerShoutEffect(context.playerIndex, result.trashTalk, false);
             }
 
-            const response = await fetch(this.apiUrl, {
-                method: 'POST',
-                headers: reqHeaders,
-                body: JSON.stringify({
-                    model: activeModel,
-                    messages: [
-                        { role: "system", content: systemPrompt },
-                        { role: "user", content: userPrompt }
-                    ],
-                    temperature: 0.1, // Lower temperature as recommended
-                    top_p: 0.9,       // Top-P set to 0.9
-                    max_tokens: 300,
-                    stream: false
-                }),
-                signal: controller.signal
+            if (result.actionType === "PASS" || !result.cardsPlayed || result.cardsPlayed.length === 0) {
+                console.log(`%c[${this.name} Engine] Selected: PASS`, 'color: #e74c3c;');
+                return null;
+            }
+
+            // Convert string cards back to card IDs
+            const selectedCards = result.cardsPlayed.map(c => this.stringToCardId(c)).filter(id => id !== null);
+
+            // Find matching legal move
+            const match = legalMoves.find(m => {
+                if (m.cards.length !== selectedCards.length) return false;
+                const sortedM = [...m.cards].sort((a, b) => a - b);
+                const sortedS = [...selectedCards].sort((a, b) => a - b);
+                return sortedM.every((val, idx) => val === sortedS[idx]);
             });
 
-            clearTimeout(timeoutId);
-
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`HTTP ${response.status}: ${errorText}`);
-            }
-
-            console.log(`%c[${this.name} Engine] System Prompt:`, 'color: #34495e; font-weight: bold;', systemPrompt);
-            console.log(`%c[${this.name} Engine] User Prompt:`, 'color: #34495e; font-weight: bold;', userPrompt);
-
-            const data = await response.json();
-
-
-            if (!data.choices || data.choices.length === 0) {
-                console.warn(`[${this.name} Engine] No choices returned from API.`);
-                return await this.localDecide(context);
-            }
-
-            const content = data.choices[0].message.content.trim();
-            console.log(`%c[${this.name} Raw Output]:`, 'color: #8e44ad;', content);
-            if (!content) return await this.localDecide(context);
-
-            // Clean up possible markdown blocks and robustly extract JSON
-            let jsonStr = content.replace(/```json/g, '').replace(/```/g, '').trim();
-
-            try {
-                const decision = JSON.parse(jsonStr);
-                console.log(`%c[${this.name} Strategy]:`, 'color: #9b59b6; font-style: italic;', decision.strategy);
-
-                const index = parseInt(decision.selected_index);
-                if (!isNaN(index) && index >= 0 && index < legalMoves.length) {
-                    const selectedMove = legalMoves[index];
-                    console.log(`%c${this.name} Plays (Index ${index}):`, 'color: #e74c3c; font-weight: bold;', selectedMove.cards.map(id => this.cardToString(id)));
-                    return selectedMove.cards;
-                } else {
-                    console.warn(`[${this.name} Engine] Invalid index returned:`, index);
-                    return await this.localDecide(context);
-                }
-            } catch (parseError) {
-                console.error(`%c[${this.name} Engine] JSON Parse Error:`, 'color: #c0392b; font-weight: bold;', parseError.message);
-                console.log(`%c[Raw Response Context]:`, 'color: #7f8c8d;', jsonStr);
+            if (match) {
+                console.log(`%c${this.name} Plays (Matched):`, 'color: #e74c3c; font-weight: bold;', match.cards.map(id => this.cardToString(id)));
+                return match.cards;
+            } else {
+                console.warn(`[${this.name} Engine] AI suggested cards that do not match any legal moves:`, result.cardsPlayed, "Falling back to local heuristic.");
                 return await this.localDecide(context);
             }
 
         } catch (e) {
-            console.error(`[${this.name} Engine] Error:`, e);
-            // Show vivid error in settings modal
+            console.error(`[${this.name} Engine] Error during AI Service invocation:`, e);
             const apiError = document.getElementById('ai-api-error');
             if (apiError) {
-                // Use global t if available, otherwise fallback
                 const msg = (typeof t === 'function') ? t('apiError') : 'Connection Failed';
                 apiError.textContent = `(${msg})`;
             }
         }
 
-        // Clear error on new request attempt
         const apiError = document.getElementById('ai-api-error');
-        if (apiError && !aiProcessing) apiError.textContent = '';
-
+        if (apiError && !window.aiProcessing) apiError.textContent = '';
 
         return await this.localDecide(context);
     }
 
     stringToCardId(name) {
         if (!name) return null;
+        
+        // 短格式解析 (例如 "3C", "10S", "AH", "2D")
+        const suitsShort = ['C', 'D', 'H', 'S'];
+        const ranksShort = ['3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A', '2'];
+        
+        const suitChar = name.slice(-1).toUpperCase();
+        const rankStr = name.slice(0, -1);
+        
+        const foundSuitShort = suitsShort.indexOf(suitChar);
+        const foundRankShort = ranksShort.indexOf(rankStr);
+        
+        if (foundSuitShort !== -1 && foundRankShort !== -1) {
+            return foundRankShort + (foundSuitShort * 13);
+        }
+
+        // 長格式解析備用 (例如 "Club 3", "Spade 2")
         const suits = ['Club', 'Diamond', 'Heart', 'Spade'];
         const ranks = ['3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A', '2'];
 
@@ -713,11 +750,7 @@ ${this.extraPrompt ? `Additional Custom Instructions:\n${this.extraPrompt}` : ''
                 if (isFirstRound && hasThreeOfClubs && !p.includes(0)) return;
                 moves.push({ cards: p, description: `[${p.map(c => this.cardToVerboseString(c)).join(', ')}] (PAIR)` });
             });
-            // Triples
-            Logic.findTriples(sortedHand).forEach(t => {
-                if (isFirstRound && hasThreeOfClubs && !t.includes(0)) return;
-                moves.push({ cards: t, description: `[${t.map(c => this.cardToVerboseString(c)).join(', ')}] (TRIPLE)` });
-            });
+
             // 5-Card Hands
             Logic.findFiveCardHands(sortedHand).forEach(h => {
                 if (isFirstRound && hasThreeOfClubs && !h.includes(0)) return;
@@ -738,12 +771,7 @@ ${this.extraPrompt ? `Additional Custom Instructions:\n${this.extraPrompt}` : ''
                         moves.push({ cards: p, description: `[${p.map(c => this.cardToVerboseString(c)).join(', ')}] (PAIR beats table)` });
                     }
                 });
-            } else if (targetLen === 3) {
-                Logic.findTriples(sortedHand).forEach(t => {
-                    if (Logic.compareHands(t, lastPlay) > 0) {
-                        moves.push({ cards: t, description: `[${t.map(c => this.cardToVerboseString(c)).join(', ')}] (TRIPLE beats table)` });
-                    }
-                });
+
             } else if (targetLen === 5) {
                 Logic.findFiveCardHands(sortedHand).forEach(h => {
                     if (Logic.compareHands(h, lastPlay) > 0) {
@@ -829,6 +857,22 @@ ${this.extraPrompt ? `Additional Custom Instructions:\n${this.extraPrompt}` : ''
         });
 
         prompt += `\nInstruction: Select the best index.`;
+        return prompt;
+    }
+
+    generateCompactPrompt(context, legalMoves) {
+        const { hand, lastPlay } = context;
+        let prompt = `Hand: [${hand.map(c => this.cardToString(c)).join(',')}]\n`;
+        if (lastPlay && lastPlay.length > 0) {
+            prompt += `Last Play: [${lastPlay.map(c => this.cardToString(c)).join(',')}]\n`;
+        } else {
+            prompt += `Last Play: None\n`;
+        }
+        prompt += `Legal Moves:\n`;
+        legalMoves.forEach((move, i) => {
+            prompt += `${i}: [${move.cards.map(c => this.cardToString(c)).join(',')}]\n`;
+        });
+        prompt += `\nSelect the best index.`;
         return prompt;
     }
 
@@ -963,123 +1007,186 @@ ${logStr}
 
         console.log(`%c[${this.name} Reflection Prompt]:`, 'color: #f39c12; font-weight: bold;', prompt);
 
-        // Auto-detect model if not manually specified
-        let activeModel = this.modelId;
-        if (!activeModel) {
+        // Auto-detect or run reflection locally via WebGPU/LM Studio
+        let rawContent = "";
+        const useLocalWebGPU = AppStorage.getItem('useLocalWebGPU') === 'true';
+        let succeeded = false;
+
+        if (useLocalWebGPU) {
             try {
-                const urlObj = new URL(this.apiUrl);
-                const modelsUrl = `${urlObj.protocol}//${urlObj.host}/v1/models`;
-                const detectHeaders = {};
-                if (this.apiKey) {
-                    detectHeaders['Authorization'] = `Bearer ${this.apiKey}`;
-                }
-                const modelRes = await fetch(modelsUrl, { headers: detectHeaders });
-                if (modelRes.ok) {
-                    const modelData = await modelRes.json();
-                    if (modelData && modelData.data && modelData.data.length > 0) {
-                        activeModel = modelData.data[0].id;
-                        console.log(`%c[${this.name} Engine] Auto-detected reflection model: ${activeModel}`, 'color: #16a085;');
+                const { AiServiceFactory } = await import('./services/AiServiceFactory.js');
+
+
+                const progressContainer = document.getElementById('ai-webgpu-progress-container');
+                const progressText = document.getElementById('ai-webgpu-progress-text');
+                const progressPercent = document.getElementById('ai-webgpu-progress-percent');
+                const progressBar = document.getElementById('ai-webgpu-progress-bar');
+
+                const service = AiServiceFactory.createService({
+                    useLocalWebGPU: true,
+
+                    modelId: this.modelId,
+                    apiUrl: this.apiUrl,
+                    apiKey: this.apiKey,
+                    workerPath: '../aiWorker.js',
+                    initProgressCallback: (progress) => {
+                        console.log(`[${this.name} WebLLM Load] ${progress.percent}% - ${progress.text}`);
+                        if (progressContainer) progressContainer.classList.remove('hidden');
+                        if (progressText) progressText.textContent = progress.text;
+                        if (progressPercent) progressPercent.textContent = `${progress.percent}%`;
+                        if (progressBar) progressBar.style.width = `${progress.percent}%`;
+                    }
+                });
+
+                if (service && service.constructor.name === 'WebLlmAiService') {
+                    if (!service.isReady) {
+                        if (progressContainer) progressContainer.classList.remove('hidden');
+                        await service.init();
+                        if (progressContainer) progressContainer.classList.add('hidden');
+                    }
+
+                    if (service.engine) {
+                        console.log(`[${this.name} WebGPU Reflection] Running inference...`);
+                        const response = await service.engine.chat.completions.create({
+                            messages: [
+                                { role: "user", content: "Instruction: SKIP thinking. Do NOT provide a reasoning process. Output ONLY the strategic rule.\n\n" + prompt }
+                            ],
+                            temperature: 0.1,
+                            max_tokens: 4096,
+                            stream: false
+                        });
+
+                        rawContent = (response.choices?.[0]?.message?.content || "").trim();
+                        succeeded = true;
                     }
                 }
             } catch (e) {
-                console.warn(`[${this.name} Engine] Model auto-detection failed for reflection.`, e);
+                console.warn(`[${this.name} Engine] Local WebGPU reflection failed.`, e);
             }
         }
-        if (!activeModel) activeModel = "local-model"; // Fallback
 
-        try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 60000);
-
-            const reqHeaders = { 'Content-Type': 'application/json' };
-            if (this.apiKey) {
-                reqHeaders['Authorization'] = `Bearer ${this.apiKey}`;
-            }
-
-            const response = await fetch(this.apiUrl, {
-                method: 'POST',
-                headers: reqHeaders,
-                body: JSON.stringify({
-                    model: activeModel,
-                    messages: [
-                        { role: "user", content: "Instruction: SKIP thinking. Do NOT provide a reasoning process. Output ONLY the strategic rule.\n\n" + prompt }
-                    ],
-                    temperature: 0.1,
-                    max_tokens: 4096,
-                    stream: false
-                }),
-                signal: controller.signal
-            });
-            console.log(`%c[${this.name} Engine] API Response Status: ${response.status}`, 'color: #3498db;');
-            if (response.ok) {
-                const data = await response.json();
-                console.log(`[${this.name} Engine] Raw Reflection Data:`, data);
-
-                if (data.choices && data.choices.length > 0 && data.choices[0].message) {
-                    const msg = data.choices[0].message;
-                    // Support models that put output in reasoning_content
-                    let rawContent = (msg.content || msg.reasoning_content || "").trim();
-                    console.log(`[${this.name} Engine] Parsed Rule Candidate (Raw):`, rawContent);
-
-                    // EXTRACTION: Small models often ignore instructions to skip thinking.
-                    // We look for the specific required prefix.
-                    let rule = "";
-                    const match = rawContent.match(/, I should[\s\S]*/i);
-                    if (match) {
-                        // Capture until the first double newline or end of string
-                        rule = match[0].split("\n\n")[0].trim();
-                    } else {
-                        rule = rawContent; // Fallback
+        if (!succeeded) {
+            // Auto-detect model if not manually specified
+            let activeModel = this.modelId;
+            if (!activeModel) {
+                try {
+                    const urlObj = new URL(this.apiUrl);
+                    const modelsUrl = `${urlObj.protocol}//${urlObj.host}/v1/models`;
+                    const detectHeaders = {};
+                    if (this.apiKey) {
+                        detectHeaders['Authorization'] = `Bearer ${this.apiKey}`;
                     }
-
-                    // Clean up common LLM artifacts and thinking blocks
-                    rule = rule.replace(/<think>[\s\S]*?<\/think>/g, '');
-                    rule = rule.replace(/Thinking Process:[\s\S]*?\n\n/gi, '');
-                    rule = rule.replace(/^[\d.\s*-]+/, ''); // Remove leading numbers/bullets like "1. " or "- "
-                    rule = rule.replace(/^["'*]+|["'*]+$/g, '').replace(/^Rule: /i, '').trim();
-
-                    // Robust prefix stripping
-                    rule = rule.replace(/^(Next time,\s*)?I should\s*/i, '').trim();
-                    if (rule) rule = rule.charAt(0).toUpperCase() + rule.slice(1);
-
-                    if (rule && rule.length > 3) {
-                        // 1. Determine Priority
-                        let priority = "P2"; // Default: Efficiency
-                        const lowRule = rule.toLowerCase();
-                        if (lowRule.includes("one card") || lowRule.includes("last") || lowRule.includes("shout") || lowRule.includes("stop") || lowRule.includes("endgame")) {
-                            priority = "P0"; // Endgame Survival
-                        } else if (lowRule.includes("2") || lowRule.includes("ace") || lowRule.includes("control") || lowRule.includes("lead") || lowRule.includes("pass")) {
-                            priority = "P1"; // Control/Tactical
+                    const modelRes = await fetch(modelsUrl, { headers: detectHeaders });
+                    if (modelRes.ok) {
+                        const modelData = await modelRes.json();
+                        if (modelData && modelData.data && modelData.data.length > 0) {
+                            activeModel = modelData.data[0].id;
+                            console.log(`%c[${this.name} Engine] Auto-detected reflection model: ${activeModel}`, 'color: #16a085;');
                         }
-
-                        // 2. Check for Duplicates / Frequency Update (Using Similarity)
-                        const existing = this.learnings.find(l => this.isSimilar(l.tip, rule));
-                        if (existing) {
-                            existing.count++;
-                            existing.timestamp = Date.now();
-                            // If the new rule is slightly different but similar, keep the shorter one
-                            if (rule.length < existing.tip.length) existing.tip = rule;
-                            existing.priority = priority;
-                        } else {
-                            this.learnings.push({
-                                tip: rule,
-                                count: 1,
-                                priority: priority,
-                                timestamp: Date.now()
-                            });
-                        }
-
-                        // 3. Intelligent Pruning
-                        this.pruneLearnings();
-                        this.saveMemory();
-                        console.log(`%c[${this.name} Learning] Rule processed (${priority}, count: ${existing ? existing.count : 1}): ${rule}`, 'color: #2ecc71; font-weight: bold;');
-                    } else {
-                        console.log(`%c[${this.name} Engine] Rule rejected (too short or no 'Next time' prefix)`, 'color: #e67e22;');
                     }
+                } catch (e) {
+                    console.warn(`[${this.name} Engine] Model auto-detection failed for reflection.`, e);
                 }
             }
-        } catch (e) {
-            console.warn(`[${this.name} Engine] Reflection failed.`, e);
+            if (!activeModel) activeModel = "local-model"; // Fallback
+
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 60000);
+
+                const reqHeaders = { 'Content-Type': 'application/json' };
+                if (this.apiKey) {
+                    reqHeaders['Authorization'] = `Bearer ${this.apiKey}`;
+                }
+
+                const response = await fetch(this.apiUrl, {
+                    method: 'POST',
+                    headers: reqHeaders,
+                    body: JSON.stringify({
+                        model: activeModel,
+                        messages: [
+                            { role: "user", content: "Instruction: SKIP thinking. Do NOT provide a reasoning process. Output ONLY the strategic rule.\n\n" + prompt }
+                        ],
+                        temperature: 0.1,
+                        max_tokens: 4096,
+                        stream: false
+                    }),
+                    signal: controller.signal
+                });
+                console.log(`%c[${this.name} Engine] API Response Status: ${response.status}`, 'color: #3498db;');
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log(`[${this.name} Engine] Raw Reflection Data:`, data);
+
+                    if (data.choices && data.choices.length > 0 && data.choices[0].message) {
+                        const msg = data.choices[0].message;
+                        rawContent = (msg.content || msg.reasoning_content || "").trim();
+                    }
+                }
+            } catch (e) {
+                console.warn(`[${this.name} Engine] Remote reflection failed.`, e);
+                return;
+            }
+        }
+
+        if (rawContent) {
+            console.log(`[${this.name} Engine] Parsed Rule Candidate (Raw):`, rawContent);
+
+            // EXTRACTION: Small models often ignore instructions to skip thinking.
+            // We look for the specific required prefix.
+            let rule = "";
+            const match = rawContent.match(/, I should[\s\S]*/i);
+            if (match) {
+                // Capture until the first double newline or end of string
+                rule = match[0].split("\n\n")[0].trim();
+            } else {
+                rule = rawContent; // Fallback
+            }
+
+            // Clean up common LLM artifacts and thinking blocks
+            rule = rule.replace(/<think>[\s\S]*?<\/think>/g, '');
+            rule = rule.replace(/Thinking Process:[\s\S]*?\n\n/gi, '');
+            rule = rule.replace(/^[\d.\s*-]+/, ''); // Remove leading numbers/bullets like "1. " or "- "
+            rule = rule.replace(/^["'*]+|["'*]+$/g, '').replace(/^Rule: /i, '').trim();
+
+            // Robust prefix stripping
+            rule = rule.replace(/^(Next time,\s*)?I should\s*/i, '').trim();
+            if (rule) rule = rule.charAt(0).toUpperCase() + rule.slice(1);
+
+            if (rule && rule.length > 3) {
+                // 1. Determine Priority
+                let priority = "P2"; // Default: Efficiency
+                const lowRule = rule.toLowerCase();
+                if (lowRule.includes("one card") || lowRule.includes("last") || lowRule.includes("shout") || lowRule.includes("stop") || lowRule.includes("endgame")) {
+                    priority = "P0"; // Endgame Survival
+                } else if (lowRule.includes("2") || lowRule.includes("ace") || lowRule.includes("control") || lowRule.includes("lead") || lowRule.includes("pass")) {
+                    priority = "P1"; // Control/Tactical
+                }
+
+                // 2. Check for Duplicates / Frequency Update (Using Similarity)
+                const existing = this.learnings.find(l => this.isSimilar(l.tip, rule));
+                if (existing) {
+                    existing.count++;
+                    existing.timestamp = Date.now();
+                    // If the new rule is slightly different but similar, keep the shorter one
+                    if (rule.length < existing.tip.length) existing.tip = rule;
+                    existing.priority = priority;
+                } else {
+                    this.learnings.push({
+                        tip: rule,
+                        count: 1,
+                        priority: priority,
+                        timestamp: Date.now()
+                    });
+                }
+
+                // 3. Intelligent Pruning
+                this.pruneLearnings();
+                this.saveMemory();
+                console.log(`%c[${this.name} Learning] Rule processed (${priority}, count: ${existing ? existing.count : 1}): ${rule}`, 'color: #2ecc71; font-weight: bold;');
+            } else {
+                console.log(`%c[${this.name} Engine] Rule rejected (too short or no 'Next time' prefix)`, 'color: #e67e22;');
+            }
         }
     }
 }
@@ -1238,5 +1345,4 @@ if (typeof module !== 'undefined') {
     module.exports = { BigTwoAI, AlexAI, BellaAI, DianaAI };
 }
 
-window.AI = new BigTwoAI(window.GameLogic || (typeof GameLogic !== 'undefined' ? GameLogic : null));
 window.AI = new BigTwoAI(window.GameLogic || (typeof GameLogic !== 'undefined' ? GameLogic : null));

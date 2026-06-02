@@ -14,6 +14,7 @@ class AISummarySystem {
         this.reviewPanelEnabled = typeof AppStorage !== 'undefined' && AppStorage.getItem('reviewPanelEnabled') !== null
             ? AppStorage.getItem('reviewPanelEnabled') === 'true'
             : true;
+        this.reviewUseWebGPU = typeof AppStorage !== 'undefined' && AppStorage.getItem('reviewUseWebGPU') === 'true';
         this.currentAbortController = null;
         this.typingInterval = null;
         this.loadingInterval = null;
@@ -158,6 +159,20 @@ class AISummarySystem {
             };
         }
 
+        // Bind Review Use WebGPU Switch
+        const reviewUseWebGpuInput = document.getElementById('review-use-webgpu');
+        if (reviewUseWebGpuInput) {
+            reviewUseWebGpuInput.checked = this.reviewUseWebGPU;
+            reviewUseWebGpuInput.onchange = () => {
+                const checked = reviewUseWebGpuInput.checked;
+                this.reviewUseWebGPU = checked;
+                if (typeof AppStorage !== 'undefined') {
+                    AppStorage.setItem('reviewUseWebGPU', checked.toString());
+                }
+                this.testConnectionAndPopulateModels();
+            };
+        }
+
         // Bind LLM URL Setting
         const reviewLlmUrlInput = document.getElementById('review-llm-url');
         let debounceTimeout = null;
@@ -242,13 +257,6 @@ class AISummarySystem {
     }
 
     async testConnectionAndPopulateModels() {
-        // Cancel any in-flight request to prevent concurrent population of the select options
-        if (this._modelFetchController) {
-            this._modelFetchController.abort();
-        }
-        this._modelFetchController = new AbortController();
-        const controller = this._modelFetchController;
-
         const statusEl = document.getElementById('review-llm-connection-status');
         const modelList = document.getElementById('review-llm-model'); // The select element itself
         const isEn = window.currentLang === 'en';
@@ -257,6 +265,52 @@ class AISummarySystem {
 
         if (modelList) {
             modelList.innerHTML = '';
+        }
+
+        if (this.reviewUseWebGPU) {
+            if (statusEl) {
+                statusEl.textContent = isEn ? '● Local WebGPU Active' : '● 本地 WebGPU 已啟用';
+                statusEl.style.color = '#10b981'; // emerald
+            }
+
+            if (modelList) {
+                const localModels = [
+                    { id: 'gemma-2-2b-it-q4f16_1-MLC', name: 'Gemma 2 2B (f16 - High Performance)' },
+                    { id: 'gemma-2-2b-it-q4f32_1-MLC', name: 'Gemma 2 2B (f32 - High Compatibility)' },
+                    { id: 'Qwen2.5-1.5B-Instruct-q4f32_1-MLC', name: 'Qwen 2.5 1.5B (f32 - High Compatibility)' },
+                    { id: 'Qwen2.5-1.5B-Instruct-q4f16_1-MLC', name: 'Qwen 2.5 1.5B (f16 - High Performance)' },
+                    { id: 'Llama-3.2-1B-Instruct-q4f16_1-MLC', name: 'Llama 3.2 1B (f16)' },
+                    { id: 'Llama-3.2-3B-Instruct-q4f16_1-MLC', name: 'Llama 3.2 3B (f16)' },
+                    { id: 'Phi-3.5-mini-instruct-q4f16_1-MLC', name: 'Phi 3.5 Mini 3.8B (f16)' }
+                ];
+
+                localModels.forEach(m => {
+                    const option = document.createElement('option');
+                    option.value = m.id;
+                    option.textContent = m.name;
+                    modelList.appendChild(option);
+                });
+
+                if (savedModelId && !localModels.some(m => m.id === savedModelId)) {
+                    const customOption = document.createElement('option');
+                    customOption.value = savedModelId;
+                    customOption.textContent = savedModelId;
+                    modelList.appendChild(customOption);
+                }
+
+                modelList.value = savedModelId || 'gemma-2-2b-it-q4f16_1-MLC';
+            }
+            return;
+        }
+
+        // Cancel any in-flight request to prevent concurrent population of the select options
+        if (this._modelFetchController) {
+            this._modelFetchController.abort();
+        }
+        this._modelFetchController = new AbortController();
+        const controller = this._modelFetchController;
+
+        if (modelList) {
             const defaultOption = document.createElement('option');
             defaultOption.value = '';
             defaultOption.textContent = isEn ? 'Auto-detect' : '自動選擇';
@@ -605,6 +659,9 @@ class AISummarySystem {
     }
 
     getProviderName() {
+        if (this.reviewUseWebGPU) {
+            return 'WebLLM';
+        }
         const urlStr = (this.apiUrl || '').toLowerCase();
         if (urlStr.includes('1234') || urlStr.includes('lmstudio') || urlStr.includes('lm-studio')) {
             return 'LM Studio';
@@ -690,7 +747,11 @@ class AISummarySystem {
             this.indicatorText.className = 'text-xs text-amber-400 font-medium';
         } else if (status === 'connected') {
             this.indicator.className = 'w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-md shadow-emerald-500/50';
-            this.indicatorText.textContent = isEn ? `${provider} connected` : `${provider} 連線正常`;
+            if (provider === 'WebLLM') {
+                this.indicatorText.textContent = isEn ? 'WebLLM (WebGPU) Active' : 'WebLLM (WebGPU) 已啟用';
+            } else {
+                this.indicatorText.textContent = isEn ? `${provider} connected` : `${provider} 連線正常`;
+            }
             this.indicatorText.className = 'text-xs text-emerald-400 font-medium';
         } else {
             this.indicator.className = 'w-2.5 h-2.5 rounded-full bg-red-500 shadow-md shadow-red-500/50';
@@ -767,25 +828,34 @@ class AISummarySystem {
             </div>
         `;
 
-        this.updateConnectionStatus('checking');
-        const isConnected = await this.checkConnection();
-
-        if (!isConnected) {
-            this.updateConnectionStatus('failed');
-            if (provider === 'LM Studio') {
-                this.summaryContainer.innerHTML = isEn
-                    ? '<div class="text-red-400 text-xs border border-red-950 bg-red-950/20 p-3 rounded-lg flex flex-col gap-2"><span>❌ Connection to local LM Studio failed.</span><span class="text-[11px] text-slate-400">Please enable CORS rules in LM Studio and try again.</span></div>'
-                    : '<div class="text-red-400 text-xs border border-red-950 bg-red-950/20 p-3 rounded-lg flex flex-col gap-2"><span>❌ 無法連線至本地 LM Studio 服務。</span><span class="text-[11px] text-slate-400">請啟用 LM Studio 的 CORS 原則後重試。</span></div>';
-            } else {
-                this.summaryContainer.innerHTML = isEn
-                    ? `<div class="text-red-400 text-xs border border-red-950 bg-red-950/20 p-3 rounded-lg flex flex-col gap-2"><span>❌ Connection to local ${provider} failed.</span><span class="text-[11px] text-slate-400">Please check if the service is running at ${this.apiUrl} and allows CORS.</span></div>`
-                    : `<div class="text-red-400 text-xs border border-red-950 bg-red-950/20 p-3 rounded-lg flex flex-col gap-2"><span>❌ 無法連線至本地 ${provider} 服務。</span><span class="text-[11px] text-slate-400">請檢查該服務是否已在 ${this.apiUrl} 啟動，且已開放 CORS 連線。</span></div>`;
+        if (this.reviewUseWebGPU) {
+            this.updateConnectionStatus('connected');
+            this.startLoadingAnimation();
+            const subEl = document.getElementById('ai-loading-submessage');
+            if (subEl) {
+                subEl.textContent = isEn ? 'Preparing WebGPU Model...' : '準備 WebGPU 模型中...';
             }
-            return;
-        }
+        } else {
+            this.updateConnectionStatus('checking');
+            const isConnected = await this.checkConnection();
 
-        this.updateConnectionStatus('connected');
-        this.startLoadingAnimation();
+            if (!isConnected) {
+                this.updateConnectionStatus('failed');
+                if (provider === 'LM Studio') {
+                    this.summaryContainer.innerHTML = isEn
+                        ? '<div class="text-red-400 text-xs border border-red-950 bg-red-950/20 p-3 rounded-lg flex flex-col gap-2"><span>❌ Connection to local LM Studio failed.</span><span class="text-[11px] text-slate-400">Please enable CORS rules in LM Studio and try again.</span></div>'
+                        : '<div class="text-red-400 text-xs border border-red-950 bg-red-950/20 p-3 rounded-lg flex flex-col gap-2"><span>❌ 無法連線至本地 LM Studio 服務。</span><span class="text-[11px] text-slate-400">請啟用 LM Studio 的 CORS 原則後重試。</span></div>';
+                } else {
+                    this.summaryContainer.innerHTML = isEn
+                        ? `<div class="text-red-400 text-xs border border-red-950 bg-red-950/20 p-3 rounded-lg flex flex-col gap-2"><span>❌ Connection to local ${provider} failed.</span><span class="text-[11px] text-slate-400">Please check if the service is running at ${this.apiUrl} and allows CORS.</span></div>`
+                        : `<div class="text-red-400 text-xs border border-red-950 bg-red-950/20 p-3 rounded-lg flex flex-col gap-2"><span>❌ 無法連線至本地 ${provider} 服務。</span><span class="text-[11px] text-slate-400">請檢查該服務是否已在 ${this.apiUrl} 啟動，且已開放 CORS 連線。</span></div>`;
+                }
+                return;
+            }
+
+            this.updateConnectionStatus('connected');
+            this.startLoadingAnimation();
+        }
         
         try {
             await this.requestAISummary(gameState, winnerIndex, this.currentAbortController.signal);
@@ -1057,7 +1127,7 @@ ${JSON.stringify(stats, null, 2)}
 
         // Fetch loaded model ID dynamically or fall back to default
         let activeModel = typeof AppStorage !== 'undefined' ? (AppStorage.getItem('reviewLlmModel') || '').trim() : '';
-        if (!activeModel) {
+        if (!activeModel && !this.reviewUseWebGPU) {
             try {
                 const urlObj = new URL(this.apiUrl);
                 const modelsUrl = `${urlObj.protocol}//${urlObj.host}/v1/models`;
@@ -1080,7 +1150,7 @@ ${JSON.stringify(stats, null, 2)}
             }
         }
         if (!activeModel) {
-            activeModel = 'local-model';
+            activeModel = this.reviewUseWebGPU ? 'gemma-2-2b-it-q4f16_1-MLC' : 'local-model';
         }
 
         this.activeModel = activeModel;
@@ -1112,32 +1182,70 @@ ${JSON.stringify(stats, null, 2)}
             { role: 'user', content: userPrompt }
         ];
 
-        console.log('[AI Summary] requestAISummary activeModel:', activeModel);
-        console.log('[AI Summary] requestAISummary sending POST to:', this.apiUrl);
-        const reqHeaders = { 'Content-Type': 'application/json' };
-        if (this.apiKey) {
-            reqHeaders['Authorization'] = `Bearer ${this.apiKey}`;
-        }
-        const response = await fetch(this.apiUrl, {
-            method: 'POST',
-            headers: reqHeaders,
-            body: JSON.stringify({
-                model: activeModel,
+        let content = '';
+
+        if (this.reviewUseWebGPU) {
+            const { AiServiceFactory } = await import('./services/AiServiceFactory.js');
+            const actualModel = activeModel && activeModel !== 'local-model' ? activeModel : 'gemma-2-2b-it-q4f16_1-MLC';
+            
+            this.webLlmService = AiServiceFactory.createService({
+                useLocalWebGPU: true,
+                modelId: actualModel,
+                workerPath: '../aiWorker.js',
+                initProgressCallback: (progress) => {
+                    console.log(`[Review WebLLM Load] ${progress.percent}% - ${progress.text}`);
+                    const subEl = document.getElementById('ai-loading-submessage');
+                    if (subEl) {
+                        subEl.textContent = `${isEn ? 'Loading Model' : '模型載入中'}: ${progress.percent}% (${progress.text})`;
+                    }
+                }
+            });
+
+            if (!this.webLlmService.isReady) {
+                const subEl = document.getElementById('ai-loading-submessage');
+                if (subEl) {
+                    subEl.textContent = isEn ? 'Loading local WebGPU model...' : '正在載入本地 WebGPU 模型...';
+                }
+                await this.webLlmService.init();
+            }
+
+            console.log('[AI Summary WebGPU] Running inference...');
+            const response = await this.webLlmService.engine.chat.completions.create({
                 messages: this.chatHistory,
                 temperature: 0.8,
-                max_tokens: 4096
-            }),
-            signal
-        });
+                max_tokens: 4096,
+                stream: false
+            });
 
-        console.log('[AI Summary] requestAISummary response status:', response.status);
-        if (!response.ok) {
-            const text = await response.text();
-            throw new Error(`HTTP ${response.status}: ${text}`);
+            content = response.choices?.[0]?.message?.content || '';
+        } else {
+            console.log('[AI Summary] requestAISummary activeModel:', activeModel);
+            console.log('[AI Summary] requestAISummary sending POST to:', this.apiUrl);
+            const reqHeaders = { 'Content-Type': 'application/json' };
+            if (this.apiKey) {
+                reqHeaders['Authorization'] = `Bearer ${this.apiKey}`;
+            }
+            const response = await fetch(this.apiUrl, {
+                method: 'POST',
+                headers: reqHeaders,
+                body: JSON.stringify({
+                    model: activeModel,
+                    messages: this.chatHistory,
+                    temperature: 0.8,
+                    max_tokens: 4096
+                }),
+                signal
+            });
+
+            console.log('[AI Summary] requestAISummary response status:', response.status);
+            if (!response.ok) {
+                const text = await response.text();
+                throw new Error(`HTTP ${response.status}: ${text}`);
+            }
+
+            const data = await response.json();
+            content = data.choices?.[0]?.message?.content || '';
         }
-
-        const data = await response.json();
-        const content = data.choices?.[0]?.message?.content || '';
 
         this.stopLoadingAnimation();
 
@@ -1324,6 +1432,20 @@ ${JSON.stringify(stats, null, 2)}
     }
 
     async fetchLLMResponse(signal) {
+        if (this.reviewUseWebGPU) {
+            if (!this.webLlmService || !this.webLlmService.isReady) {
+                throw new Error("WebLLM engine is not ready. Please wait.");
+            }
+            console.log('[AI Summary WebGPU] Running chat Q&A inference...');
+            const response = await this.webLlmService.engine.chat.completions.create({
+                messages: this.chatHistory,
+                temperature: 0.8,
+                max_tokens: 4096,
+                stream: false
+            });
+            return response.choices?.[0]?.message?.content || '';
+        }
+
         const reqHeaders = { 'Content-Type': 'application/json' };
         if (this.apiKey) {
             reqHeaders['Authorization'] = `Bearer ${this.apiKey}`;

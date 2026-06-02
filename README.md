@@ -1,18 +1,18 @@
 # Taiwan Big2 AI (台灣大老二 AI 版)
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
-[![Version](https://img.shields.io/badge/Version-1.5.24-blue.svg)](./changelog.md)
+[![Version](https://img.shields.io/badge/Version-1.5.41-blue.svg)](./changelog.md)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Electron%20%7C%20Tauri%20%7C%20Android%20%7C%20Browser-brightgreen.svg)](https://capacitorjs.com/)
 [![Sponsor](https://img.shields.io/badge/Sponsor-GitHub%20Sponsors-ea4aaa?style=flat&logo=github-sponsors)](https://github.com/sponsors/mesmerli)
 
-A modernized **Taiwanese Big Two** card game built with Electron. This project integrates sophisticated heuristic algorithms with an advanced multi-persona research engine powered by **Large Language Models (LLM)**, designed for autonomous strategic gameplay analysis and evolutionary learning.
+A modernized **Taiwanese Big Two** card game built with Electron. This project integrates sophisticated heuristic algorithms with an advanced multi-persona research engine powered by **Large Language Models (LLM)**, designed for autonomous strategic gameplay analysis, local WebGPU execution, and evolutionary learning.
 
 ### 🌐 [Play Online Directly](https://mesmerli.github.io/taiwan-big-two-ai/) | 🖥️ [Download Windows MSI](./release/Windows/) | 🤖 [Download Android APK](./release/Android/)
 
 ### 💡 How to get this game:
 * **Support the Developer**: Purchase the official version on the **Microsoft Store** for automatic updates and easy installation.
-* **Windows Version**: Browse the **[Windows Release Folder](./release/Windows/)** to download and install the latest **`taiwan-big2-ai_1.5.24_x64_en-US.msi`** (built with Tauri).
-* **Android Version**: Browse the **[Android Release Folder](./release/Android/)** to download and install the latest **`twbig2ai-1.5.24.apk`** installation package.
+* **Windows Version**: Browse the **[Windows Release Folder](./release/Windows/)** to download and install the latest **`taiwan-big2-ai_1.5.41_x64_en-US.msi`** (built with Tauri).
+* **Android Version**: Browse the **[Android Release Folder](./release/Android/)** to download and install the latest **`twbig2ai-1.5.41.apk`** installation package.
 * **Open Source**: This game is licensed under **AGPLv3**. You are welcome to clone this repository and build it yourself for free. Check out our [Build & Run Guide](./Documents/BuildnRun.md) and [Architecture Overview](./Documents/architecture.md) for more details.
 * **Sponsor**: If you find my AI logic helpful for your own projects, please consider supporting the developer:
 
@@ -74,6 +74,7 @@ The engine is strictly aligned with traditional **Taiwanese Big Two** rules:
 For a more efficient and professional experience, use the following shortcuts:
 - **Arrow Left / Right**: Cycle through all **legal move combinations** currently in your hand.
 - **Arrow Up**: Play selected cards (automatically triggers "Shout LA!" if needed).
+- **Enter**: Play selected cards and shout "La" (active when shouting is possible).
 - **Arrow Down**: 
   - **In-Game**: Deselect all currently selected cards.
   - **Post-Game**: Rapidly press **three times** to immediately start a new match.
@@ -118,14 +119,22 @@ npm test
 
 ---
 
-## ⚙️ Using LLM with LM Studio
+## ⚙️ Running AI Models Locally (WebGPU / LM Studio)
 
-The "Deep Learning" AI characters (Diana & Ares) require an OpenAI-compatible API. [LM Studio](https://lmstudio.ai/) is the recommended tool for local execution.
+The "Deep Learning" AI characters (Diana & Ares) can run fully offline in the browser using WebGPU or connect to an OpenAI-compatible REST server (such as LM Studio).
 
+### Option A: Local WebGPU Mode (WebLLM) - Recommended 🚀
+This option utilizes WebGPU to load and run models directly in your browser's hardware-accelerated background worker.
+1. Make sure your browser/environment supports **WebGPU**.
+2. Open **AI Settings (⚙️)** in the game.
+3. Check the **"Enable Local WebGPU Mode (WebLLM)"** checkbox.
+4. Select a model (e.g. `Qwen2.5-1.5B-Instruct-q4f32_1-MLC`). The model will download directly to your browser's cache on the first launch, displaying a progress bar, and will run completely offline thereafter.
+
+### Option B: Remote / Local API Server (LM Studio)
 1. **Download LM Studio**: Visit [lmstudio.ai](https://lmstudio.ai/).
-2. **Download a Model**: Search for `google/gemma-4-e2b`.
-3. **Start Local Server**: Go to the **Local Server** tab and click **Start Server**.
-4. **Connect to Game**: Open **AI Settings (⚙️)**, paste the URL, and it will auto-detect the model.
+2. **Download a Model**: Search and download a GGUF model (e.g. `gemma-2-2b-it` or `Qwen2.5-1.5B-Instruct`).
+3. **Start Local Server**: Go to the **Local Server** tab and click **Start Server** on port `1234`.
+4. **Connect to Game**: In the game's **AI Settings (⚙️)**, uncheck the local WebGPU mode and input your local URL (`http://127.0.0.1:1234/v1/chat/completions`). It will auto-detect the active server model.
 
 ---
 

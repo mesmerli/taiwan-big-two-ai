@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.42] - 2026-06-02
+
+### Added
+- **Enter Key Shortcut for Shouting La**: Added a keyboard shortcut mapping the `Enter` key. When the human player has selected cards that allow them to shout "La" (leave exactly 1 remaining card/combination), pressing `Enter` will play the selected hand and declare "La".
+- **Keyboard Guide Update**: Added the new `Enter` key shortcut representation to the Keyboard Controls (按鍵操作) tab in the Game Rules modal. Used a custom-designed, thin inline SVG Carriage Return symbol (`↵`) with dedicated styling to ensure proper spacing and width.
+
+### Fixed
+- **Match Review WebGPU Connection Indicator**: Resolved a UI status message bug where the post-game review panel would display "LM Studio 連線正常" instead of showing local WebGPU status when `reviewUseWebGPU` was active. The indicator now correctly displays "WebLLM (WebGPU) 已啟用" (or "WebLLM (WebGPU) Active" in English).
+
+## [1.5.41] - 2026-06-02
+
+### Added
+- **Local WebGPU AI Service (WebLLM)**: Integrated `@mlc-ai/web-llm` via background Web Workers to support fully local, high-performance WebGPU-accelerated inference.
+- **AiServiceFactory & Singleton Caching**: Implemented a global service factory and caching layer (`AiServiceFactory.js`) to reuse the WebLLM engine singleton. This prevents reloading models across gameplay decisions, review summaries, and reflections.
+- **Offline Post-Game Reflection**: Refactored `BaseLLMAI.reflect()` to utilize the cached WebLLM instance for post-game reflections when local WebGPU is enabled.
+- **System Prompt KV Cache Optimization**: Restructured the system prompt in `ai.js` to place static rules, game mechanics, and schemas first, and dynamic/persona variables last, maximizing prefix cache hits and minimizing response latency.
+
+### Fixed
+- **Local Engine Verification and Abort Prevention**: Resolved TypeErrors (reading `chat` of null) during offline reflection by adding robust checks on `service.engine` existence, enabling safe runtime verification.
+- **Graceful Fallback Pipeline**: Established automatic fallback to remote API endpoints when the local WebGPU engine fails to initialize or load, ensuring game continuity.
+
 ## [1.5.30] - 2026-06-01
 
 ### Added
