@@ -86,6 +86,7 @@
                     <button class="tab-btn" data-tab="keyboard" data-i18n="tabKeyboard">Keyboard</button>
                     <button class="tab-btn" data-tab="license" data-i18n="tabLicense">License & Sponsor</button>
                     <button class="tab-btn" data-tab="ai-settings" data-i18n="tabAiSettings">Settings</button>
+                    <button class="tab-btn" data-tab="manage" data-i18n="tabManage">Manage</button>
                 </div>
 
                 <div id="tab-rules" class="tab-content active">
@@ -148,6 +149,7 @@
                                 <span class="slider"></span>
                             </label>
                         </div>
+                        
                         <div class="form-group">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
                                 <label for="review-llm-url" style="margin-bottom: 0;" data-i18n="reviewLlmUrlLabel">Review LLM URL</label>
@@ -168,6 +170,52 @@
                         </div>
                         <div class="form-group" style="margin-top: 15px;">
                             <button id="review-llm-guide-btn" class="premium-btn ghost mini w-full" style="width: 100%; justify-content: center; display: flex; font-size: 11px;" data-i18n="reviewLlmGuideBtn">Setup Guide</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-manage" class="tab-content">
+                    <div class="settings-form">
+                        <!-- Unified WebLLM Cache Management -->
+                        <div id="review-cache-container" class="form-group" style="background: rgba(15, 23, 42, 0.4); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                            <label style="margin-bottom: 8px; font-weight: 600; font-size: 13px;" data-i18n="webLlmCacheTitle">WebLLM Local Storage Management</label>
+                            <div id="review-cache-list" style="font-size: 11px; color: #94a3b8; display: flex; flex-direction: column; gap: 6px;">
+                                <!-- List of cached models will be loaded here -->
+                            </div>
+                        </div>
+
+                        <!-- NPC WebGPU Progress Bar (Unified) -->
+                        <div id="ai-webgpu-progress-container" class="form-group hidden" style="margin-top: 15px; background: rgba(15, 23, 42, 0.4); padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                            <div style="display: flex; justify-content: space-between; font-size: 11px; color: #94a3b8; margin-bottom: 4px;">
+                                <span style="font-weight: 600; color: #e2e8f0;" data-i18n="aiSettingsTitle">AI Settings</span>
+                                <span id="ai-webgpu-progress-percent">0%</span>
+                            </div>
+                            <div id="ai-webgpu-progress-text" style="font-size: 10px; color: #94a3b8; margin-bottom: 6px;">Loading Model...</div>
+                            <div style="width: 100%; height: 6px; border-radius: 3px; overflow: hidden; background: #334155; margin-bottom: 8px;">
+                                <div id="ai-webgpu-progress-bar" style="width: 0%; height: 100%; background: #8b5cf6; transition: width 0.2s ease;"></div>
+                            </div>
+                            <!-- Control buttons -->
+                            <div class="flex gap-2 justify-end" style="display: flex; gap: 8px; justify-content: flex-end;">
+                                <button id="ai-webgpu-btn-pause" class="premium-btn ghost mini" style="padding: 2px 8px; font-size: 10px;" data-i18n="pause">Pause</button>
+                                <button id="ai-webgpu-btn-stop" class="premium-btn ghost mini text-red-400 border-red-500/30" style="padding: 2px 8px; font-size: 10px;" data-i18n="stop">Stop</button>
+                            </div>
+                        </div>
+
+                        <!-- Review WebGPU Progress Bar (Unified) -->
+                        <div id="review-webgpu-progress-container" class="form-group hidden" style="margin-top: 15px; background: rgba(15, 23, 42, 0.4); padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                            <div style="display: flex; justify-content: space-between; font-size: 11px; color: #94a3b8; margin-bottom: 4px;">
+                                <span style="font-weight: 600; color: #e2e8f0;" data-i18n="reviewPanelEnabledLabel">Enable Match Review Panel</span>
+                                <span id="review-webgpu-progress-percent">0%</span>
+                            </div>
+                            <div id="review-webgpu-progress-text" style="font-size: 10px; color: #94a3b8; margin-bottom: 6px;">Loading Model...</div>
+                            <div style="width: 100%; height: 6px; border-radius: 3px; overflow: hidden; background: #334155; margin-bottom: 8px;">
+                                <div id="review-webgpu-progress-bar" style="width: 0%; height: 100%; background: #8b5cf6; transition: width 0.2s ease;"></div>
+                            </div>
+                            <!-- Control buttons -->
+                            <div class="flex gap-2 justify-end" style="display: flex; gap: 8px; justify-content: flex-end;">
+                                <button id="review-webgpu-btn-pause" class="premium-btn ghost mini" style="padding: 2px 8px; font-size: 10px;" data-i18n="pause">Pause</button>
+                                <button id="review-webgpu-btn-stop" class="premium-btn ghost mini text-red-400 border-red-500/30" style="padding: 2px 8px; font-size: 10px;" data-i18n="stop">Stop</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -193,16 +241,6 @@
                     </label>
                 </div>
 
-                <!-- WebGPU Progress Bar -->
-                <div id="ai-webgpu-progress-container" class="form-group hidden" style="margin-bottom: 15px; background: rgba(15, 23, 42, 0.4); padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
-                    <div style="display: flex; justify-content: space-between; font-size: 11px; color: #94a3b8; margin-bottom: 4px;">
-                        <span id="ai-webgpu-progress-text">Loading Model...</span>
-                        <span id="ai-webgpu-progress-percent">0%</span>
-                    </div>
-                    <div style="width: 100%; height: 6px; border-radius: 3px; overflow: hidden; background: #334155;">
-                        <div id="ai-webgpu-progress-bar" style="width: 0%; height: 100%; background: #8b5cf6; transition: width 0.2s ease;"></div>
-                    </div>
-                </div>
                 <div class="form-group">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
                         <label for="ai-api-url" style="margin-bottom: 0;">API URL</label>

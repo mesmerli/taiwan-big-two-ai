@@ -1,7 +1,7 @@
 # Taiwan Big2 AI (台灣大老二 AI 版)
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
-[![Version](https://img.shields.io/badge/Version-1.5.41-blue.svg)](./changelog.md)
+[![Version](https://img.shields.io/badge/Version-1.5.43-blue.svg)](./changelog.md)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Electron%20%7C%20Tauri%20%7C%20Android%20%7C%20Browser-brightgreen.svg)](https://capacitorjs.com/)
 [![Sponsor](https://img.shields.io/badge/Sponsor-GitHub%20Sponsors-ea4aaa?style=flat&logo=github-sponsors)](https://github.com/sponsors/mesmerli)
 
@@ -21,8 +21,8 @@
 
 ### 💡 如何取得此遊戲：
 * **支持開發者**：歡迎在 **[Microsoft Store](https://apps.microsoft.com/detail/9PM1S8GKBLK9)** 購買官方版本，享有自動更新與便捷安裝服務。
-* **Windows 版本**：請造訪 **[Windows 發佈資料夾](./release/Windows/)** 下載並安裝最新的 **`taiwan-big2-ai_1.5.41_x64_en-US.msi`** 安裝包（Tauri 版本）。
-* **安卓版本**：請造訪 **[Android 發佈資料夾](./release/Android/)** 下載並安裝最新的 **`twbig2ai-1.5.41.apk`** 安裝包。
+* **Windows 版本**：請造訪 **[Windows 發佈資料夾](./release/Windows/)** 下載並安裝最新的 **`taiwan-big2-ai_1.5.43_x64_en-US.msi`** 安裝包（Tauri 版本）。
+* **安卓版本**：請造訪 **[Android 發佈資料夾](./release/Android/)** 下載並安裝最新的 **`twbig2ai-1.5.43.apk`** 安裝包。
 * **開源社群**：本遊戲基於 **AGPLv3** 開源授權。歡迎自由克隆 (Clone) 此儲存庫，並免費自行編譯與建置。想了解更多可參閱我們的 [建置與執行指南](./Documents/BuildnRun.md) 及 [程式碼架構說明](./Documents/architecture.md)。
 * **小額贊助**：如果您覺得本專案的 AI 對抗邏輯對您的學習或專案有所幫助，歡迎透過以下方式進行贊助與支持：
 
@@ -139,6 +139,7 @@ npm test
 2. 開啟遊戲中的 **AI 設定 (⚙️)**。
 3. 勾選 **「啟用本地 WebGPU 模式 (WebLLM)」** 複選框。
 4. 選擇模型（例如 `Qwen2.5-1.5B-Instruct-q4f32_1-MLC`）。模型在首次啟動時會直接下載至瀏覽器快取中（介面會顯示下載進度條），此後即可在完全斷網的環境下流暢出牌。
+5. **管理快取與下載**：您可以開啟遊戲資訊/規則 (**"i"**) 視窗的 **「管理」** 頁籤，在此查看各個已下載模型的佔用空間、下載進度，並能一鍵刪除快取以釋放硬碟空間。
 
 ### 方案 B：使用遠端 / 本地 API 伺服器 (LM Studio)
 1. **下載 LM Studio**：造訪 [lmstudio.ai](https://lmstudio.ai/)。

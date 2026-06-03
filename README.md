@@ -1,7 +1,7 @@
 # Taiwan Big2 AI (台灣大老二 AI 版)
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
-[![Version](https://img.shields.io/badge/Version-1.5.41-blue.svg)](./changelog.md)
+[![Version](https://img.shields.io/badge/Version-1.5.43-blue.svg)](./changelog.md)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Electron%20%7C%20Tauri%20%7C%20Android%20%7C%20Browser-brightgreen.svg)](https://capacitorjs.com/)
 [![Sponsor](https://img.shields.io/badge/Sponsor-GitHub%20Sponsors-ea4aaa?style=flat&logo=github-sponsors)](https://github.com/sponsors/mesmerli)
 
@@ -21,8 +21,8 @@ A modernized **Taiwanese Big Two** card game built with Electron. This project i
 
 ### 💡 How to get this game:
 * **Support the Developer**: Purchase the official version on the **[Microsoft Store](https://apps.microsoft.com/detail/9PM1S8GKBLK9)** for automatic updates and easy installation.
-* **Windows Version**: Browse the **[Windows Release Folder](./release/Windows/)** to download and install the latest **`taiwan-big2-ai_1.5.41_x64_en-US.msi`** (built with Tauri).
-* **Android Version**: Browse the **[Android Release Folder](./release/Android/)** to download and install the latest **`twbig2ai-1.5.41.apk`** installation package.
+* **Windows Version**: Browse the **[Windows Release Folder](./release/Windows/)** to download and install the latest **`taiwan-big2-ai_1.5.43_x64_en-US.msi`** (built with Tauri).
+* **Android Version**: Browse the **[Android Release Folder](./release/Android/)** to download and install the latest **`twbig2ai-1.5.43.apk`** installation package.
 * **Open Source**: This game is licensed under **AGPLv3**. You are welcome to clone this repository and build it yourself for free. Check out our [Build & Run Guide](./Documents/BuildnRun.md) and [Architecture Overview](./Documents/architecture.md) for more details.
 * **Sponsor**: If you find my AI logic helpful for your own projects, please consider supporting the developer:
 
@@ -139,6 +139,7 @@ This option utilizes WebGPU to load and run models directly in your browser's ha
 2. Open **AI Settings (⚙️)** in the game.
 3. Check the **"Enable Local WebGPU Mode (WebLLM)"** checkbox.
 4. Select a model (e.g. `Qwen2.5-1.5B-Instruct-q4f32_1-MLC`). The model will download directly to your browser's cache on the first launch, displaying a progress bar, and will run completely offline thereafter.
+5. **Manage Cache & Downloads**: Open the Game Rules/Info (**"i"**) modal and navigate to the **"Manage" (管理)** tab to view downloaded model details, monitor progress, and free up disk space by deleting unwanted model weights.
 
 ### Option B: Remote / Local API Server (LM Studio)
 1. **Download LM Studio**: Visit [lmstudio.ai](https://lmstudio.ai/).

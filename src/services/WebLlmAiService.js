@@ -20,8 +20,10 @@ export class WebLlmAiService {
         this.temperature = config.temperature !== undefined ? config.temperature : 0.1;
         
         this.engine = null;
+        this.worker = null;
         this.isInitializing = false;
         this.isReady = false;
+        this.isPaused = false;
     }
 
     /**
@@ -29,8 +31,9 @@ export class WebLlmAiService {
      */
     async init() {
         if (this.isReady) return;
-        if (this.isInitializing) return;
+        if (this.isInitializing && !this.isPaused) return;
 
+        this.isPaused = false;
         this.isInitializing = true;
         try {
             // Check if f16 is supported, if not, automatically fallback to q4f32_1
@@ -49,16 +52,17 @@ export class WebLlmAiService {
             console.log(`[WebLlmAiService] 正在背景初始化模型: ${this.modelId}`);
             
             // 建立 Web Worker 實例 (使用 ESM 模組形式載入)
-            const worker = new Worker(new URL(this.workerPath, import.meta.url), {
+            this.worker = new Worker(new URL(this.workerPath, import.meta.url), {
                 type: 'module'
             });
 
             // 呼叫 WebLLM API 建立由 Web Worker 驅動的引擎
             this.engine = await CreateWebWorkerMLCEngine(
-                worker,
+                this.worker,
                 this.modelId,
                 {
                     initProgressCallback: (report) => {
+                        if (this.isPaused) return;
                         // 處理進度報告 (格式一般為 { progress: 0-1, text: "..." })
                         if (this.initProgressCallback) {
                             const percent = Math.round(report.progress * 100);
@@ -77,9 +81,43 @@ export class WebLlmAiService {
             console.log(`[WebLlmAiService] 模型 ${this.modelId} 初始化成功且準備就緒。`);
         } catch (error) {
             this.isInitializing = false;
-            console.error('[WebLlmAiService] 初始化失敗:', error);
-            throw error;
+            if (this.isPaused) {
+                console.log('[WebLlmAiService] 初始化中止：因為已被載入暫停。');
+            } else {
+                console.error('[WebLlmAiService] 初始化失敗:', error);
+                throw error;
+            }
         }
+    }
+
+    /**
+     * 暫停模型載入
+     */
+    pauseLoading() {
+        if (!this.isInitializing || this.isReady) return;
+        this.isPaused = true;
+        this.isInitializing = false;
+        if (this.worker) {
+            this.worker.terminate();
+            this.worker = null;
+        }
+        this.engine = null;
+        console.log('[WebLlmAiService] 模型載入已暫停。');
+    }
+
+    /**
+     * 停止並重設模型載入
+     */
+    stopLoading() {
+        this.isPaused = false;
+        this.isInitializing = false;
+        this.isReady = false;
+        if (this.worker) {
+            this.worker.terminate();
+            this.worker = null;
+        }
+        this.engine = null;
+        console.log('[WebLlmAiService] 模型載入已停止。');
     }
 
     /**

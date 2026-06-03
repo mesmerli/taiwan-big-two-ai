@@ -170,6 +170,8 @@ class AISummarySystem {
                     AppStorage.setItem('reviewUseWebGPU', checked.toString());
                 }
                 this.testConnectionAndPopulateModels();
+                this.handleReviewWebLlmPreload();
+                this.loadCacheList();
             };
         }
 
@@ -202,6 +204,11 @@ class AISummarySystem {
                 if (typeof AppStorage !== 'undefined') {
                     AppStorage.setItem('reviewLlmApiKey', val);
                 }
+
+                if (debounceTimeout) clearTimeout(debounceTimeout);
+                debounceTimeout = setTimeout(() => {
+                    this.testConnectionAndPopulateModels();
+                }, 800);
             };
         }
 
@@ -213,6 +220,8 @@ class AISummarySystem {
                 if (typeof AppStorage !== 'undefined') {
                     AppStorage.setItem('reviewLlmModel', val);
                 }
+                this.handleReviewWebLlmPreload();
+                this.loadCacheList();
             };
         }
 
@@ -221,6 +230,7 @@ class AISummarySystem {
         if (aiSettingsTabBtn) {
             aiSettingsTabBtn.addEventListener('click', () => {
                 this.testConnectionAndPopulateModels();
+                this.loadCacheList();
             });
         }
 
@@ -252,6 +262,10 @@ class AISummarySystem {
                 }
             }
         });
+
+        // Initial preload and cache check
+        this.handleReviewWebLlmPreload();
+        this.loadCacheList();
 
         console.log('[AI Summary] System initialized.');
     }
@@ -300,6 +314,7 @@ class AISummarySystem {
 
                 modelList.value = savedModelId || 'gemma-2-2b-it-q4f16_1-MLC';
             }
+            this.retrySummary();
             return;
         }
 
@@ -348,6 +363,8 @@ class AISummarySystem {
                     statusEl.style.color = '#10b981'; // emerald
                 }
 
+                this.retrySummary();
+
                 if (modelList) {
                     const seen = new Set();
                     let hasSavedModel = false;
@@ -387,6 +404,184 @@ class AISummarySystem {
                 modelList.appendChild(customOption);
                 modelList.value = savedModelId;
             }
+        }
+    }
+
+    async handleReviewWebLlmPreload() {
+        const enabled = this.reviewUseWebGPU;
+        const container = document.getElementById('review-webgpu-progress-container');
+        const modelList = document.getElementById('review-llm-model');
+        const modelId = modelList ? modelList.value : '';
+        const isEn = window.currentLang === 'en';
+
+        if (!enabled || !modelId) {
+            if (container) container.classList.add('hidden');
+            if (this.reviewPreloader) {
+                this.reviewPreloader.stopLoading();
+                this.reviewPreloader = null;
+            }
+            return;
+        }
+
+        const { WebLlmCacheManager } = await import('./services/WebLlmCacheManager.js');
+        const cached = await WebLlmCacheManager.listCachedModels();
+        const isCached = cached.some(name => name.includes(modelId));
+        
+        if (isCached) {
+            if (container) container.classList.add('hidden');
+            if (this.reviewPreloader) {
+                this.reviewPreloader.stopLoading();
+                this.reviewPreloader = null;
+            }
+            return;
+        }
+
+        if (typeof window.isNpcPreloaderActive === 'function' && window.isNpcPreloaderActive()) {
+            const alertMsg = isEn ? 'Another model (NPC Player) is downloading. Please wait or pause it first.' : '有其他模型（NPC 玩家）正在下載中，請先等待下載完成或暫停該下載。';
+            alert(alertMsg);
+            const reviewUseWebGpuCheckbox = document.getElementById('review-use-webgpu');
+            if (reviewUseWebGpuCheckbox) reviewUseWebGpuCheckbox.checked = false;
+            this.reviewUseWebGPU = false;
+            AppStorage.setItem('reviewUseWebGPU', 'false');
+            if (container) container.classList.add('hidden');
+            return;
+        }
+
+        // Open the rules-modal and select the Manage tab programmatically
+        const rModal = document.getElementById('rules-modal');
+        if (rModal) {
+            rModal.classList.remove('hidden');
+            const manageTabBtn = rModal.querySelector('.tab-btn[data-tab="manage"]');
+            if (manageTabBtn) {
+                manageTabBtn.click();
+            }
+        }
+
+        if (container) container.classList.remove('hidden');
+        const progressText = document.getElementById('review-webgpu-progress-text');
+        const progressPercent = document.getElementById('review-webgpu-progress-percent');
+        const progressBar = document.getElementById('review-webgpu-progress-bar');
+        const btnPause = document.getElementById('review-webgpu-btn-pause');
+        const btnStop = document.getElementById('review-webgpu-btn-stop');
+
+        if (progressText) progressText.textContent = isEn ? 'Preloading Model...' : '正在預載入模型...';
+        if (progressPercent) progressPercent.textContent = '0%';
+        if (progressBar) progressBar.style.width = '0%';
+
+        const { AiServiceFactory } = await import('./services/AiServiceFactory.js');
+        this.reviewPreloader = AiServiceFactory.createService({
+            useLocalWebGPU: true,
+            modelId: modelId,
+            workerPath: '../aiWorker.js',
+            initProgressCallback: (progress) => {
+                if (progressText) progressText.textContent = progress.text;
+                if (progressPercent) progressPercent.textContent = `${progress.percent}%`;
+                if (progressBar) progressBar.style.width = `${progress.percent}%`;
+
+                if (progress.percent === 100) {
+                    setTimeout(() => {
+                        if (container) container.classList.add('hidden');
+                        this.loadCacheList();
+                        if (typeof window.loadNpcCacheList === 'function') {
+                            window.loadNpcCacheList();
+                        }
+                    }, 1500);
+                }
+            }
+        });
+
+        const t = (key) => {
+            if (typeof window.t === 'function') return window.t(key);
+            return isEn ? key : (key === 'pause' ? '暫停' : (key === 'resume' ? '繼續' : '停止'));
+        };
+
+        if (btnPause) {
+            btnPause.textContent = t('pause');
+            btnPause.onclick = () => {
+                if (this.reviewPreloader.isPaused) {
+                    btnPause.textContent = t('pause');
+                    this.reviewPreloader.init();
+                } else {
+                    btnPause.textContent = t('resume');
+                    this.reviewPreloader.pauseLoading();
+                }
+            };
+        }
+
+        if (btnStop) {
+            btnStop.onclick = () => {
+                if (this.reviewPreloader) {
+                    this.reviewPreloader.stopLoading();
+                }
+                if (container) container.classList.add('hidden');
+            };
+        }
+
+        this.reviewPreloader.init();
+    }
+
+    async loadCacheList() {
+        const enabled = this.reviewUseWebGPU;
+        const container = document.getElementById('review-cache-container');
+        const listEl = document.getElementById('review-cache-list');
+        const isEn = window.currentLang === 'en';
+
+        if (!container || !listEl) return;
+
+        container.classList.remove('hidden');
+        listEl.innerHTML = `<div style="font-style: italic;">${isEn ? 'Loading cache list...' : '正在載入快取列表...'}</div>`;
+
+        const { WebLlmCacheManager } = await import('./services/WebLlmCacheManager.js');
+        const cachesList = await WebLlmCacheManager.listCachedModels();
+
+        if (cachesList.length === 0) {
+            listEl.textContent = isEn ? 'No models cached.' : '目前無快取的模型。';
+            return;
+        }
+
+        listEl.innerHTML = '';
+        for (const cacheName of cachesList) {
+            const itemDiv = document.createElement('div');
+            itemDiv.style.cssText = 'display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); padding: 6px 8px; border-radius: 4px;';
+
+            const nameSpan = document.createElement('span');
+            nameSpan.textContent = WebLlmCacheManager.getModelFriendlyName(cacheName);
+            nameSpan.style.cssText = 'font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 280px;';
+
+            const rightDiv = document.createElement('div');
+            rightDiv.style.cssText = 'display: flex; gap: 8px; align-items: center;';
+
+            const sizeSpan = document.createElement('span');
+            sizeSpan.style.cssText = 'color: #64748b; font-size: 10px;';
+            sizeSpan.textContent = '...';
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.textContent = '🗑️';
+            deleteBtn.style.cssText = 'background: none; border: none; cursor: pointer; font-size: 12px; padding: 2px;';
+            deleteBtn.onclick = async () => {
+                const confirmMsg = !isEn ? `確定要刪除 ${cacheName} 的快取以釋放空間嗎？` : `Are you sure you want to delete ${cacheName} to free up space?`;
+                if (confirm(confirmMsg)) {
+                    await WebLlmCacheManager.deleteCachedModel(cacheName);
+                    this.loadCacheList();
+                    if (typeof window.loadNpcCacheList === 'function') {
+                        window.loadNpcCacheList();
+                    }
+                }
+            };
+
+            rightDiv.appendChild(sizeSpan);
+            rightDiv.appendChild(deleteBtn);
+            itemDiv.appendChild(nameSpan);
+            itemDiv.appendChild(rightDiv);
+            listEl.appendChild(itemDiv);
+
+            Promise.all([
+                WebLlmCacheManager.getCacheCompletion(cacheName),
+                WebLlmCacheManager.getCacheSize(cacheName)
+            ]).then(([completion, size]) => {
+                const pctText = isEn ? `${completion}% downloaded` : `已下載 ${completion}%`;
+                sizeSpan.textContent = `${pctText} (${size})`;
+            });
         }
     }
 
@@ -760,6 +955,13 @@ class AISummarySystem {
         }
     }
 
+    retrySummary() {
+        if (this.lastGameState && this.lastConnectionStatus === 'failed') {
+            console.log('[AI Summary] Retrying failed summary...');
+            this.showSummary(this.lastGameState, this.lastWinnerIndex);
+        }
+    }
+
     // Verify if LM Studio is reachable
     async checkConnection() {
         try {
@@ -868,6 +1070,7 @@ class AISummarySystem {
             console.error('[AI Summary] Request failed:', err);
             const errTitle = isEn ? 'Analysis failed' : '分析發生錯誤';
             this.summaryContainer.innerHTML = `<div class="text-red-400 text-xs border border-red-950 bg-red-950/20 p-3 rounded-lg">❌ ${errTitle}：${err.message || err}</div>`;
+            this.updateConnectionStatus('failed');
         }
     }
 
@@ -1616,6 +1819,10 @@ ${JSON.stringify(stats, null, 2)}
                 behavior: 'smooth'
             });
         }
+    }
+
+    isReviewPreloaderActive() {
+        return this.reviewPreloader && this.reviewPreloader.isInitializing && !this.reviewPreloader.isPaused;
     }
 }
 

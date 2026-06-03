@@ -612,7 +612,9 @@ ${this.extraPrompt ? `Additional Custom Instructions:\n${this.extraPrompt}` : ''
 
             // Display trash talk if returned
             if (result.trashTalk && typeof window.triggerShoutEffect === 'function') {
-                window.triggerShoutEffect(context.playerIndex, result.trashTalk, false);
+                if (window.AI && window.AI.getCharacter(context.playerIndex) === this) {
+                    window.triggerShoutEffect(context.playerIndex, result.trashTalk, false);
+                }
             }
 
             if (result.actionType === "PASS" || !result.cardsPlayed || result.cardsPlayed.length === 0) {

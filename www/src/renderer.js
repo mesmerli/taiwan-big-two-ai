@@ -1120,7 +1120,10 @@ function updateShoutButton() {
     // Use shared visibility logic
     updatePlayButtonVisibility();
 
-    if (remainingCount > 0 && GameLogic.isLastHand(remaining)) {
+    const hasLead = (gameState.lastPlayerIndex === -1 || gameState.lastPlayerIndex === 0);
+    const canMove = hasLead || GameLogic.hasValidMoves(hand, gameState.lastPlay);
+
+    if (remainingCount > 0 && GameLogic.isLastHand(remaining) && canMove) {
         btnShout.classList.remove('hidden');
     } else {
         btnShout.classList.add('hidden');
@@ -1359,6 +1362,9 @@ function setupAvatarClickListeners() {
 
                     // Display learnings
                     updateLearningsUI(char);
+
+                    handleNpcWebLlmPreload();
+                    loadNpcCacheList();
                 }
             };
         }
@@ -1522,6 +1528,7 @@ function setupAvatarClickListeners() {
                     statusEl.textContent = isEn ? '● Connected' : '● 連線成功';
                     statusEl.style.color = '#10b981'; // emerald
                 }
+
                 if (modelList) {
                     const seen = new Set();
                     let hasSavedModel = false;
@@ -1598,7 +1605,11 @@ function setupAvatarClickListeners() {
         }, 800);
     };
 
-    modelIdInput.onchange = autoSave;
+    modelIdInput.onchange = () => {
+        autoSave();
+        handleNpcWebLlmPreload();
+        loadNpcCacheList();
+    };
     extraPromptInput.oninput = autoSave;
 
     const useWebGpuCheckbox = document.getElementById('ai-use-webgpu');
@@ -1607,10 +1618,10 @@ function setupAvatarClickListeners() {
             AppStorage.setItem('useLocalWebGPU', useWebGpuCheckbox.checked ? 'true' : 'false');
             fetchAvailableModels(apiUrlInput.value, apiKeyInput ? apiKeyInput.value.trim() : '', modelIdInput.value);
             autoSave();
+            handleNpcWebLlmPreload();
+            loadNpcCacheList();
         };
     }
-
-
 
     resetBtn.onclick = () => {
         const msg = currentLang === 'zh' ? '確定要重設為預設值嗎？' : 'Reset to defaults?';
@@ -1629,12 +1640,131 @@ function setupAvatarClickListeners() {
                         if (apiKeyInput) apiKeyInput.value = char.apiKey || '';
                         extraPromptInput.value = char.extraPrompt;
                         fetchAvailableModels(apiUrlInput.value, char.apiKey || '', char.modelId || '');
+                        handleNpcWebLlmPreload();
+                        loadNpcCacheList();
                     }
                 }
             }
         }
     };
 
+    let npcPreloader = null;
+
+    async function handleNpcWebLlmPreload() {
+        const enabled = AppStorage.getItem('useLocalWebGPU') === 'true';
+        const container = document.getElementById('ai-webgpu-progress-container');
+        const modelId = modelIdInput.value;
+
+        if (!enabled || !modelId) {
+            if (container) container.classList.add('hidden');
+            if (npcPreloader) {
+                npcPreloader.stopLoading();
+                npcPreloader = null;
+            }
+            return;
+        }
+
+        const { WebLlmCacheManager } = await import('./services/WebLlmCacheManager.js');
+        const cached = await WebLlmCacheManager.listCachedModels();
+        const isCached = cached.some(name => name.includes(modelId));
+        
+        if (isCached) {
+            if (container) container.classList.add('hidden');
+            if (npcPreloader) {
+                npcPreloader.stopLoading();
+                npcPreloader = null;
+            }
+            return;
+        }
+
+        if (window.AISummary && typeof window.AISummary.isReviewPreloaderActive === 'function' && window.AISummary.isReviewPreloaderActive()) {
+            const alertMsg = currentLang === 'zh' ? '有其他模型（復盤）正在下載中，請先等待下載完成或暫停該下載。' : 'Another model (Review) is downloading. Please wait or pause it first.';
+            alert(alertMsg);
+            useWebGpuCheckbox.checked = false;
+            AppStorage.setItem('useLocalWebGPU', 'false');
+            autoSave();
+            if (container) container.classList.add('hidden');
+            return;
+        }
+
+        // Open the rules-modal and select the Manage tab programmatically
+        const rModal = document.getElementById('rules-modal');
+        if (rModal) {
+            rModal.classList.remove('hidden');
+            const manageTabBtn = rModal.querySelector('.tab-btn[data-tab="manage"]');
+            if (manageTabBtn) {
+                manageTabBtn.click();
+            }
+        }
+
+        if (container) container.classList.remove('hidden');
+        const progressText = document.getElementById('ai-webgpu-progress-text');
+        const progressPercent = document.getElementById('ai-webgpu-progress-percent');
+        const progressBar = document.getElementById('ai-webgpu-progress-bar');
+        const btnPause = document.getElementById('ai-webgpu-btn-pause');
+        const btnStop = document.getElementById('ai-webgpu-btn-stop');
+
+        if (progressText) progressText.textContent = currentLang === 'en' ? 'Preloading Model...' : '正在預載入模型...';
+        if (progressPercent) progressPercent.textContent = '0%';
+        if (progressBar) progressBar.style.width = '0%';
+
+        const { AiServiceFactory } = await import('./services/AiServiceFactory.js');
+        npcPreloader = AiServiceFactory.createService({
+            useLocalWebGPU: true,
+            modelId: modelId,
+            workerPath: '../aiWorker.js',
+            initProgressCallback: (progress) => {
+                if (progressText) progressText.textContent = progress.text;
+                if (progressPercent) progressPercent.textContent = `${progress.percent}%`;
+                if (progressBar) progressBar.style.width = `${progress.percent}%`;
+
+                if (progress.percent === 100) {
+                    setTimeout(() => {
+                        if (container) container.classList.add('hidden');
+                        loadNpcCacheList();
+                        if (typeof window.AISummary !== 'undefined' && typeof window.AISummary.loadCacheList === 'function') {
+                            window.AISummary.loadCacheList();
+                        }
+                    }, 1500);
+                }
+            }
+        });
+
+        if (btnPause) {
+            btnPause.textContent = t('pause');
+            btnPause.onclick = () => {
+                if (npcPreloader.isPaused) {
+                    btnPause.textContent = t('pause');
+                    npcPreloader.init();
+                } else {
+                    btnPause.textContent = t('resume');
+                    npcPreloader.pauseLoading();
+                }
+            };
+        }
+
+        if (btnStop) {
+            btnStop.onclick = () => {
+                if (npcPreloader) {
+                    npcPreloader.stopLoading();
+                }
+                if (container) container.classList.add('hidden');
+            };
+        }
+
+        npcPreloader.init();
+    }
+
+    async function loadNpcCacheList() {
+        if (typeof window.AISummary !== 'undefined' && typeof window.AISummary.loadCacheList === 'function') {
+            window.AISummary.loadCacheList();
+        }
+    }
+
+    window.loadNpcCacheList = loadNpcCacheList;
+    window.isNpcPreloaderActive = () => {
+        return npcPreloader && npcPreloader.isInitializing && !npcPreloader.isPaused;
+    };
 }
 
 function updateMuteUI() {

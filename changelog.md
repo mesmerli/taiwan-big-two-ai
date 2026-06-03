@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.43] - 2026-06-03
+
+### Added
+- **Model-Specific Local Storage & Cache Resolution**: Re-architected `WebLlmCacheManager` to scan the shared `webllm/model` Cache Storage index and associate weight files dynamically with their matching Model IDs. Enabling precise model name rendering, accurate size calculations, and individual model deletion without affecting other cached models.
+- **Unified Settings Manage Tab**: Created a new `Manage` (管理) tab inside the Rules Info modal. Consolidated all WebLLM local storage lists and preloading progress bars into this tab for a clean and unified dashboard experience.
+- **Download Mutex Lock (下載互斥安全鎖)**: Integrated mutual exclusion checks when starting WebLLM preloading. Launching a new download (from NPC Settings or Review Panel Settings) while another download is already active will trigger a warning alert and block the new download, protecting memory and network bandwidth.
+
+### Fixed
+- **Enter Key Icon Height Alignment**: Adjusted SVG and container dimensions for the Enter key shortcut icon in the Keyboard tab to align perfectly in height (25px) and spacing with adjacent keys like the Space bar.
+
 ## [1.5.42] - 2026-06-02
 
 ### Added

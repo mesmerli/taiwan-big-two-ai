@@ -71,6 +71,7 @@ const I18N = {
         tabLicense: "License & Sponsor",
         tabLicenseStore: "License & Authorization",
         tabAiSettings: "Settings",
+        tabManage: "Manage",
         reviewLlmUrlLabel: "Review LLM URL",
         reviewPanelEnabledLabel: "Enable Match Review Panel",
         reviewLlmGuideBtn: "Connection Guide",
@@ -96,7 +97,11 @@ const I18N = {
         aiReviewNewGameBtn: "New Match",
         aiReviewQuestionPlaceholder: "Ask AI a question about this match...",
         aiReviewAskBtn: "Ask",
-        aiCorsTitle: "LLM Connection Guide"
+        aiCorsTitle: "LLM Connection Guide",
+        pause: "Pause",
+        resume: "Resume",
+        stop: "Stop",
+        webLlmCacheTitle: "WebLLM Local Storage Management"
     },
     'zh': {
         title: "台灣大老二 AI",
@@ -171,6 +176,7 @@ const I18N = {
         tabLicense: "版權與贊助",
         tabLicenseStore: "版權與授權",
         tabAiSettings: "設定",
+        tabManage: "管理",
         reviewLlmUrlLabel: "復盤 LLM URL",
         reviewPanelEnabledLabel: "啟用牌局復盤畫面",
         reviewLlmGuideBtn: "網路設定導覽",
@@ -195,7 +201,11 @@ const I18N = {
         aiReviewNewGameBtn: "新局開打",
         aiReviewQuestionPlaceholder: "輸入關於分析結果的疑問...",
         aiReviewAskBtn: "發問",
-        aiCorsTitle: "LLM 網路設定導覽"
+        aiCorsTitle: "LLM 網路設定導覽",
+        pause: "暫停",
+        resume: "繼續",
+        stop: "停止",
+        webLlmCacheTitle: "WebLLM 本地儲存管理"
     }
 
 };
