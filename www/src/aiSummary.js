@@ -612,6 +612,23 @@ class AISummarySystem {
                 ]).then(([completion, size]) => {
                     const pctText = isEn ? `${completion}% downloaded` : `已下載 ${completion}%`;
                     sizeSpan.textContent = `${pctText} (${size})`;
+
+                    // 若未下載完成 (小於 100%)，動態插入「繼續下載」按鈕
+                    if (completion < 100) {
+                        const resumeBtn = document.createElement('button');
+                        resumeBtn.textContent = isEn ? '📥 Resume' : '📥 繼續下載';
+                        resumeBtn.style.cssText = 'background: rgba(139, 92, 246, 0.2); border: 1px solid rgba(139, 92, 246, 0.4); border-radius: 4px; cursor: pointer; font-size: 10px; color: #a78bfa; padding: 2px 8px; transition: all 0.2s;';
+                        resumeBtn.onmouseover = () => {
+                            resumeBtn.style.background = 'rgba(139, 92, 246, 0.4)';
+                        };
+                        resumeBtn.onmouseout = () => {
+                            resumeBtn.style.background = 'rgba(139, 92, 246, 0.2)';
+                        };
+                        resumeBtn.onclick = () => {
+                            this.startDownload(model.id);
+                        };
+                        rightDiv.insertBefore(resumeBtn, deleteBtn);
+                    }
                 });
             } else {
                 const downloadBtn = document.createElement('button');
