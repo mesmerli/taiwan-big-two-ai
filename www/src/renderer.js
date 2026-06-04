@@ -1677,7 +1677,7 @@ function setupAvatarClickListeners() {
         
         if (isCached) {
             if (container) container.classList.add('hidden');
-            if (npcPreloader) {
+            if (npcPreloader && npcPreloader.isInitializing) {
                 npcPreloader.stopLoading();
                 npcPreloader = null;
             }

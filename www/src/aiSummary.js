@@ -435,7 +435,7 @@ class AISummarySystem {
         
         if (isCached) {
             if (container) container.classList.add('hidden');
-            if (this.reviewPreloader) {
+            if (this.reviewPreloader && this.reviewPreloader.isInitializing) {
                 this.reviewPreloader.stopLoading();
                 this.reviewPreloader = null;
             }
@@ -685,7 +685,7 @@ class AISummarySystem {
 
         const { AiServiceFactory } = await import('./services/AiServiceFactory.js');
         
-        if (this.reviewPreloader) {
+        if (this.reviewPreloader && this.reviewPreloader.isInitializing) {
             this.reviewPreloader.stopLoading();
         }
 

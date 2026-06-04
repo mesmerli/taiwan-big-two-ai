@@ -11,8 +11,8 @@ export class WebLlmCacheManager {
     static MODELS = [
         { id: 'gemma-2-2b-it-q4f16_1-MLC', name: 'Gemma 2 2B (f16 - High Performance)' },
         { id: 'gemma-2-2b-it-q4f32_1-MLC', name: 'Gemma 2 2B (f32 - High Compatibility)' },
-        { id: 'Qwen2.5-1.5B-Instruct-q4f32_1-MLC', name: 'Qwen 2.5 1.5B (f32 - High Compatibility)' },
         { id: 'Qwen2.5-1.5B-Instruct-q4f16_1-MLC', name: 'Qwen 2.5 1.5B (f16 - High Performance)' },
+        { id: 'Qwen2.5-1.5B-Instruct-q4f32_1-MLC', name: 'Qwen 2.5 1.5B (f32 - High Compatibility)' },
         { id: 'Llama-3.2-1B-Instruct-q4f16_1-MLC', name: 'Llama 3.2 1B (f16)' },
         { id: 'Llama-3.2-3B-Instruct-q4f16_1-MLC', name: 'Llama 3.2 3B (f16)' },
         { id: 'Phi-3.5-mini-instruct-q4f16_1-MLC', name: 'Phi 3.5 Mini 3.8B (f16)' }
@@ -28,7 +28,7 @@ export class WebLlmCacheManager {
             const cache = await caches.open('webllm/model');
             const keys = await cache.keys();
             const urls = keys.map(k => k.url.toLowerCase());
-            
+
             // Check which of our supported models have files in the cache
             const cachedModels = [];
             for (const model of this.MODELS) {
@@ -49,7 +49,7 @@ export class WebLlmCacheManager {
                     }
                 }
             }
-            
+
             // Fallback: If we have a generic custom/fallback model cache that is not in MODELS
             const keysRaw = await caches.keys();
             for (const key of keysRaw) {
@@ -87,7 +87,7 @@ export class WebLlmCacheManager {
             const keys = await cache.keys();
             let totalBytes = 0;
             const modelIdLower = modelId.toLowerCase();
-            
+
             for (const key of keys) {
                 const urlLower = key.url.toLowerCase();
                 if (urlLower.includes(modelIdLower)) {
@@ -113,7 +113,7 @@ export class WebLlmCacheManager {
                         }
                     }
                 }
-            } catch (_) {}
+            } catch (_) { }
 
             if (totalBytes === 0) return '0 MB';
             if (totalBytes < 1024 * 1024) {
@@ -140,13 +140,13 @@ export class WebLlmCacheManager {
             const cache = await caches.open('webllm/model');
             const keys = await cache.keys();
             const modelIdLower = modelId.toLowerCase();
-            
+
             // Find ndarray-cache.json for this specific model
             const configKey = keys.find(k => {
                 const urlLower = k.url.toLowerCase();
                 return urlLower.includes(modelIdLower) && urlLower.endsWith('ndarray-cache.json');
             });
-            
+
             let data = null;
             let keysToCount = keys;
 
@@ -173,7 +173,7 @@ export class WebLlmCacheManager {
                             }
                         }
                     }
-                } catch (_) {}
+                } catch (_) { }
             }
 
             if (!data || !Array.isArray(data.records)) {
@@ -194,7 +194,7 @@ export class WebLlmCacheManager {
 
             let cachedCount = 0;
             const cachedUrls = keysToCount.map(k => k.url);
-            
+
             expectedShards.forEach(shard => {
                 if (cachedUrls.some(url => url.toLowerCase().includes(modelIdLower) && url.endsWith(shard))) {
                     cachedCount++;
@@ -217,7 +217,7 @@ export class WebLlmCacheManager {
         if (typeof caches === 'undefined') return false;
         try {
             console.log(`[WebLlmCacheManager] Deleting model files for: ${modelId}`);
-            
+
             // Delete from the shared webllm/model cache
             const cache = await caches.open('webllm/model');
             const keys = await cache.keys();
@@ -234,7 +234,7 @@ export class WebLlmCacheManager {
 
             // Also delete legacy standalone cache if it exists
             const legacyDeleted = await caches.delete('webllm/' + modelId);
-            
+
             return deletedAny || legacyDeleted;
         } catch (e) {
             console.error(`[WebLlmCacheManager] Failed to delete cache for ${modelId}:`, e);
