@@ -5,6 +5,8 @@ const I18N = require('./src/i18n.js');
 // Enable WebGPU shader-f16 support by enabling experimental command line flags
 app.commandLine.appendSwitch('enable-unsafe-webgpu');
 app.commandLine.appendSwitch('enable-webgpu-developer-features');
+// Workaround for Windows DXC compiler race condition shader compilation errors (X3694)
+app.commandLine.appendSwitch('disable-dawn-features', 'use_dxc');
 
 // Set AppUserModelId for Windows Taskbar/JumpList consistency
 // For Store (MSIX) builds the AUMID must match the Package Family Name so
