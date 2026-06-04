@@ -234,6 +234,14 @@ class AISummarySystem {
             });
         }
 
+        // Refresh cache list when manage tab is clicked
+        const manageTabBtn = document.querySelector('.tab-btn[data-tab="manage"]');
+        if (manageTabBtn) {
+            manageTabBtn.addEventListener('click', () => {
+                this.loadCacheList();
+            });
+        }
+
         // Dynamically adjust collapse classes and icon on window resize
         window.addEventListener('resize', () => {
             if (!this.panel || this.panel.classList.contains('hidden')) return;
@@ -268,6 +276,11 @@ class AISummarySystem {
         this.loadCacheList();
 
         console.log('[AI Summary] System initialized.');
+    }
+
+    updateLanguage() {
+        this.testConnectionAndPopulateModels();
+        this.loadCacheList();
     }
 
     async testConnectionAndPopulateModels() {
@@ -524,65 +537,214 @@ class AISummarySystem {
         const enabled = this.reviewUseWebGPU;
         const container = document.getElementById('review-cache-container');
         const listEl = document.getElementById('review-cache-list');
-        const isEn = window.currentLang === 'en';
+        const isEn = window.currentLang === 'en' || (typeof currentLang !== 'undefined' && currentLang === 'en');
 
         if (!container || !listEl) return;
 
         container.classList.remove('hidden');
         listEl.innerHTML = `<div style="font-style: italic;">${isEn ? 'Loading cache list...' : '正在載入快取列表...'}</div>`;
 
+        // Check if f16 is supported on GPU
+        if (this.f16Supported === undefined) {
+            this.f16Supported = true;
+            if (typeof navigator !== 'undefined' && navigator.gpu) {
+                try {
+                    const adapter = await navigator.gpu.requestAdapter();
+                    this.f16Supported = adapter ? adapter.features.has('shader-f16') : false;
+                } catch (e) {
+                    this.f16Supported = false;
+                }
+            } else {
+                this.f16Supported = false;
+            }
+        }
+
         const { WebLlmCacheManager } = await import('./services/WebLlmCacheManager.js');
         const cachesList = await WebLlmCacheManager.listCachedModels();
 
-        if (cachesList.length === 0) {
-            listEl.textContent = isEn ? 'No models cached.' : '目前無快取的模型。';
-            return;
-        }
-
         listEl.innerHTML = '';
-        for (const cacheName of cachesList) {
+        for (const model of WebLlmCacheManager.MODELS) {
+            const isF16 = model.id.includes('q4f16_1');
+            const hasF32Fallback = isF16; // All f16 models in our list have a matching f32 equivalent in MLC
+            const isSupported = !isF16 || this.f16Supported;
+            
+            // If the GPU doesn't support f16, dynamically query the f32 variant cache instead
+            const queryModelId = (!isSupported && hasF32Fallback) ? model.id.replace('q4f16_1', 'q4f32_1') : model.id;
+            const isCached = cachesList.some(c => c.toLowerCase() === queryModelId.toLowerCase());
+
             const itemDiv = document.createElement('div');
             itemDiv.style.cssText = 'display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); padding: 6px 8px; border-radius: 4px;';
 
             const nameSpan = document.createElement('span');
-            nameSpan.textContent = WebLlmCacheManager.getModelFriendlyName(cacheName);
-            nameSpan.style.cssText = 'font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 280px;';
+            nameSpan.textContent = model.name;
+            if (!isSupported) {
+                if (hasF32Fallback) {
+                    nameSpan.textContent += isEn ? ' (Using f32 Compatibility)' : ' (自動轉為 f32 相容版)';
+                } else {
+                    nameSpan.textContent += isEn ? ' (Unsupported GPU)' : ' (顯卡不支援)';
+                    nameSpan.style.color = '#ef4444';
+                }
+            }
+            nameSpan.style.cssText += ' font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 250px;';
 
             const rightDiv = document.createElement('div');
             rightDiv.style.cssText = 'display: flex; gap: 8px; align-items: center;';
 
-            const sizeSpan = document.createElement('span');
-            sizeSpan.style.cssText = 'color: #64748b; font-size: 10px;';
-            sizeSpan.textContent = '...';
+            if (isCached) {
+                const sizeSpan = document.createElement('span');
+                sizeSpan.style.cssText = 'color: #64748b; font-size: 10px;';
+                sizeSpan.textContent = '...';
 
-            const deleteBtn = document.createElement('button');
-            deleteBtn.textContent = '🗑️';
-            deleteBtn.style.cssText = 'background: none; border: none; cursor: pointer; font-size: 12px; padding: 2px;';
-            deleteBtn.onclick = async () => {
-                const confirmMsg = !isEn ? `確定要刪除 ${cacheName} 的快取以釋放空間嗎？` : `Are you sure you want to delete ${cacheName} to free up space?`;
-                if (confirm(confirmMsg)) {
-                    await WebLlmCacheManager.deleteCachedModel(cacheName);
-                    this.loadCacheList();
-                    if (typeof window.loadNpcCacheList === 'function') {
-                        window.loadNpcCacheList();
+                const deleteBtn = document.createElement('button');
+                deleteBtn.textContent = '🗑️';
+                deleteBtn.style.cssText = 'background: none; border: none; cursor: pointer; font-size: 12px; padding: 2px;';
+                deleteBtn.onclick = async () => {
+                    const confirmMsg = !isEn ? `確定要刪除 ${model.name} 的快取以釋放空間嗎？` : `Are you sure you want to delete ${model.name} to free up space?`;
+                    if (confirm(confirmMsg)) {
+                        await WebLlmCacheManager.deleteCachedModel(queryModelId);
+                        this.loadCacheList();
+                        if (typeof window.loadNpcCacheList === 'function') {
+                            window.loadNpcCacheList();
+                        }
                     }
-                }
-            };
+                };
 
-            rightDiv.appendChild(sizeSpan);
-            rightDiv.appendChild(deleteBtn);
+                rightDiv.appendChild(sizeSpan);
+                rightDiv.appendChild(deleteBtn);
+
+                Promise.all([
+                    WebLlmCacheManager.getCacheCompletion(queryModelId),
+                    WebLlmCacheManager.getCacheSize(queryModelId)
+                ]).then(([completion, size]) => {
+                    const pctText = isEn ? `${completion}% downloaded` : `已下載 ${completion}%`;
+                    sizeSpan.textContent = `${pctText} (${size})`;
+                });
+            } else {
+                const downloadBtn = document.createElement('button');
+                if (!isSupported && !hasF32Fallback) {
+                    downloadBtn.textContent = isEn ? 'Unsupported' : '不支援';
+                    downloadBtn.disabled = true;
+                    downloadBtn.style.cssText = 'background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 4px; font-size: 10px; color: #f87171; padding: 2px 8px; cursor: not-allowed;';
+                } else {
+                    downloadBtn.textContent = isEn ? '📥 Download' : '📥 下載';
+                    if (!isSupported && hasF32Fallback) {
+                        downloadBtn.textContent = isEn ? '📥 Download f32' : '📥 下載 f32';
+                    }
+                    downloadBtn.style.cssText = 'background: rgba(139, 92, 246, 0.2); border: 1px solid rgba(139, 92, 246, 0.4); border-radius: 4px; cursor: pointer; font-size: 10px; color: #a78bfa; padding: 2px 8px; transition: all 0.2s;';
+                    downloadBtn.onmouseover = () => {
+                        downloadBtn.style.background = 'rgba(139, 92, 246, 0.4)';
+                    };
+                    downloadBtn.onmouseout = () => {
+                        downloadBtn.style.background = 'rgba(139, 92, 246, 0.2)';
+                    };
+                    downloadBtn.onclick = () => {
+                        this.startDownload(model.id);
+                    };
+                }
+                rightDiv.appendChild(downloadBtn);
+            }
+
             itemDiv.appendChild(nameSpan);
             itemDiv.appendChild(rightDiv);
             listEl.appendChild(itemDiv);
-
-            Promise.all([
-                WebLlmCacheManager.getCacheCompletion(cacheName),
-                WebLlmCacheManager.getCacheSize(cacheName)
-            ]).then(([completion, size]) => {
-                const pctText = isEn ? `${completion}% downloaded` : `已下載 ${completion}%`;
-                sizeSpan.textContent = `${pctText} (${size})`;
-            });
         }
+    }
+
+    async startDownload(modelId) {
+        const isEn = window.currentLang === 'en';
+        const container = document.getElementById('review-webgpu-progress-container');
+        
+        if (typeof window.isNpcPreloaderActive === 'function' && window.isNpcPreloaderActive()) {
+            const alertMsg = isEn ? 'Another model (NPC Player) is downloading. Please wait or pause it first.' : '有其他模型（NPC 玩家）正在下載中，請先等待下載完成或暫停該下載。';
+            alert(alertMsg);
+            return;
+        }
+
+        // Apply fallback redirection inside startDownload if GPU doesn't support shader-f16
+        let targetModelId = modelId;
+        if (modelId.includes('q4f16_1') && this.f16Supported === false) {
+            const hasF32Fallback = true; // All f16 models listed have f32 variants available
+            if (hasF32Fallback) {
+                const msg = isEn 
+                    ? "Your GPU/browser does not support f16 precision. The system will automatically download and register the compatible f32 version instead."
+                    : "您的顯卡或瀏覽器不支援 f16 精度。系統將自動改為下載並註冊相容的 f32 版本。";
+                alert(msg);
+                targetModelId = modelId.replace('q4f16_1', 'q4f32_1');
+            } else {
+                const msg = isEn
+                    ? "Your GPU/browser does not support f16 precision, and this model does not have an f32 fallback. It cannot be run on this device."
+                    : "您的顯卡或瀏覽器不支援 f16 精度，且此模型沒有 f32 版本，無法在您的裝置上運行。";
+                alert(msg);
+                return;
+            }
+        }
+
+        if (container) container.classList.remove('hidden');
+        const progressText = document.getElementById('review-webgpu-progress-text');
+        const progressPercent = document.getElementById('review-webgpu-progress-percent');
+        const progressBar = document.getElementById('review-webgpu-progress-bar');
+        const btnPause = document.getElementById('review-webgpu-btn-pause');
+        const btnStop = document.getElementById('review-webgpu-btn-stop');
+
+        if (progressText) progressText.textContent = isEn ? `Downloading Model...` : `正在下載模型...`;
+        if (progressPercent) progressPercent.textContent = '0%';
+        if (progressBar) progressBar.style.width = '0%';
+
+        const { AiServiceFactory } = await import('./services/AiServiceFactory.js');
+        
+        if (this.reviewPreloader) {
+            this.reviewPreloader.stopLoading();
+        }
+
+        this.reviewPreloader = AiServiceFactory.createService({
+            useLocalWebGPU: true,
+            modelId: targetModelId,
+            workerPath: '../aiWorker.js',
+            initProgressCallback: (progress) => {
+                if (progressText) progressText.textContent = progress.text;
+                if (progressPercent) progressPercent.textContent = `${progress.percent}%`;
+                if (progressBar) progressBar.style.width = `${progress.percent}%`;
+
+                if (progress.percent === 100) {
+                    setTimeout(() => {
+                        if (container) container.classList.add('hidden');
+                        this.loadCacheList();
+                        if (typeof window.loadNpcCacheList === 'function') {
+                            window.loadNpcCacheList();
+                        }
+                    }, 1500);
+                }
+            }
+        });
+
+        const t = (key) => {
+            if (typeof window.t === 'function') return window.t(key);
+            return isEn ? key : (key === 'pause' ? '暫停' : (key === 'resume' ? '繼續' : '停止'));
+        };
+
+        if (btnPause) {
+            btnPause.textContent = t('pause');
+            btnPause.onclick = () => {
+                if (this.reviewPreloader.isPaused) {
+                    btnPause.textContent = t('pause');
+                    this.reviewPreloader.init();
+                } else {
+                    btnPause.textContent = t('resume');
+                    this.reviewPreloader.pauseLoading();
+                }
+            };
+        }
+
+        if (btnStop) {
+            btnStop.onclick = () => {
+                if (this.reviewPreloader) {
+                    this.reviewPreloader.stopLoading();
+                }
+                if (container) container.classList.add('hidden');
+            };
+        }
+
+        this.reviewPreloader.init();
     }
 
     showPanel() {
@@ -1440,6 +1602,8 @@ ${JSON.stringify(stats, null, 2)}
                 messages: this.chatHistory,
                 temperature: 0.8,
                 max_tokens: 4096,
+                presence_penalty: 1.0,
+                frequency_penalty: 1.0,
                 stream: false
             });
 
@@ -1458,7 +1622,9 @@ ${JSON.stringify(stats, null, 2)}
                     model: activeModel,
                     messages: this.chatHistory,
                     temperature: 0.8,
-                    max_tokens: 4096
+                    max_tokens: 4096,
+                    presence_penalty: 1.0,
+                    frequency_penalty: 1.0
                 }),
                 signal
             });
@@ -1667,6 +1833,8 @@ ${JSON.stringify(stats, null, 2)}
                 messages: this.chatHistory,
                 temperature: 0.8,
                 max_tokens: 4096,
+                presence_penalty: 1.0,
+                frequency_penalty: 1.0,
                 stream: false
             });
             return response.choices?.[0]?.message?.content || '';
@@ -1684,7 +1852,9 @@ ${JSON.stringify(stats, null, 2)}
                 model: this.activeModel || 'local-model',
                 messages: this.chatHistory,
                 temperature: 0.8,
-                max_tokens: 4096
+                max_tokens: 4096,
+                presence_penalty: 1.0,
+                frequency_penalty: 1.0
             }),
             signal
         });

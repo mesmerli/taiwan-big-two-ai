@@ -2,6 +2,10 @@ const { app, BrowserWindow, Menu, dialog, ipcMain, shell } = require('electron')
 const path = require('path');
 const I18N = require('./src/i18n.js');
 
+// Enable WebGPU shader-f16 support by enabling experimental command line flags
+app.commandLine.appendSwitch('enable-unsafe-webgpu');
+app.commandLine.appendSwitch('enable-webgpu-developer-features');
+
 // Set AppUserModelId for Windows Taskbar/JumpList consistency
 // For Store (MSIX) builds the AUMID must match the Package Family Name so
 // that jump lists, notifications and the WinRT license API all bind correctly.

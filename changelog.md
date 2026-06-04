@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.45] - 2026-06-04
+
+### Added
+- **WebGPU shader-f16 Electron Support**: Added Chromium startup command line switches `enable-unsafe-webgpu` and `enable-webgpu-developer-features` to Electron's main process initialization.
+- **Automatic shader-f16 Device Request Interceptor**: Implemented a prototype patch on `GPUAdapter.prototype.requestDevice` in both the window environment module (`env.js`) and background worker context (`aiWorker.js`). If the hardware GPU adapter reports support for the `shader-f16` feature, the interceptor automatically appends `'shader-f16'` to the logical device's `requiredFeatures` list to enable FP16 execution in WGSL shaders.
+
+### Fixed
+- **Local Storage Management Localization Sync**: Implemented a robust `updateLanguage()` method in `AISummarySystem` to refresh dynamic model list labels when toggling between English and Chinese. Added dynamic triggers on tab button click and info modal open to ensure language variables are consistently checked, fixing the bug where WebLLM fallback messages and download buttons mistakenly displayed in Chinese when the app language was set to English.
+
 ## [1.5.44] - 2026-06-04
 
 ### Fixed

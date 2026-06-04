@@ -38,13 +38,33 @@ export class WebLlmCacheManager {
                 if (hasFiles) {
                     cachedModels.push(model.id);
                 }
+
+                // If the model is an f16 version, also check if its f32 variant is in the cache
+                if (model.id.includes('q4f16_1')) {
+                    const f32Id = model.id.replace('q4f16_1', 'q4f32_1');
+                    const f32IdLower = f32Id.toLowerCase();
+                    const hasF32Files = urls.some(url => url.includes(f32IdLower));
+                    if (hasF32Files) {
+                        cachedModels.push(f32Id);
+                    }
+                }
             }
             
             // Fallback: If we have a generic custom/fallback model cache that is not in MODELS
             const keysRaw = await caches.keys();
             for (const key of keysRaw) {
                 if (key.startsWith('webllm/') && key !== 'webllm/config' && key !== 'webllm/wasm' && key !== 'webllm/model') {
-                    cachedModels.push(key.replace('webllm/', ''));
+                    try {
+                        const legacyCache = await caches.open(key);
+                        const legacyKeys = await legacyCache.keys();
+                        if (legacyKeys.length === 0) {
+                            await caches.delete(key);
+                        } else {
+                            cachedModels.push(key.replace('webllm/', ''));
+                        }
+                    } catch (_) {
+                        cachedModels.push(key.replace('webllm/', ''));
+                    }
                 }
             }
 
@@ -81,13 +101,16 @@ export class WebLlmCacheManager {
 
             // Also check if there's a standalone cache just for this model ID
             try {
-                const legacyCache = await caches.open('webllm/' + modelId);
-                const legacyKeys = await legacyCache.keys();
-                for (const key of legacyKeys) {
-                    const response = await legacyCache.match(key);
-                    if (response) {
-                        const blob = await response.blob();
-                        totalBytes += blob.size;
+                const hasLegacy = await caches.has('webllm/' + modelId);
+                if (hasLegacy) {
+                    const legacyCache = await caches.open('webllm/' + modelId);
+                    const legacyKeys = await legacyCache.keys();
+                    for (const key of legacyKeys) {
+                        const response = await legacyCache.match(key);
+                        if (response) {
+                            const blob = await response.blob();
+                            totalBytes += blob.size;
+                        }
                     }
                 }
             } catch (_) {}
@@ -137,14 +160,17 @@ export class WebLlmCacheManager {
             // Legacy individual cache check
             if (!data) {
                 try {
-                    const legacyCache = await caches.open('webllm/' + modelId);
-                    const legacyKeys = await legacyCache.keys();
-                    const legacyConfigKey = legacyKeys.find(k => k.url.endsWith('ndarray-cache.json'));
-                    if (legacyConfigKey) {
-                        const response = await legacyCache.match(legacyConfigKey);
-                        if (response) {
-                            data = await response.json();
-                            keysToCount = legacyKeys;
+                    const hasLegacy = await caches.has('webllm/' + modelId);
+                    if (hasLegacy) {
+                        const legacyCache = await caches.open('webllm/' + modelId);
+                        const legacyKeys = await legacyCache.keys();
+                        const legacyConfigKey = legacyKeys.find(k => k.url.endsWith('ndarray-cache.json'));
+                        if (legacyConfigKey) {
+                            const response = await legacyCache.match(legacyConfigKey);
+                            if (response) {
+                                data = await response.json();
+                                keysToCount = legacyKeys;
+                            }
                         }
                     }
                 } catch (_) {}

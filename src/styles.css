@@ -729,6 +729,7 @@ body {
     white-space: normal;
     word-break: break-word;
     line-height: 1.4;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .speech-bubble.short-bubble {
@@ -736,6 +737,30 @@ body {
     max-width: unset;
     width: auto;
     white-space: nowrap;
+}
+
+.speech-bubble.shrunk-bubble {
+    min-width: unset;
+    max-width: unset;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: auto;
+    cursor: pointer;
+    font-size: 18px;
+}
+
+.speech-bubble.shrunk-bubble::after {
+    display: none !important;
+}
+
+.speech-bubble.hover-expanded {
+    pointer-events: auto;
+    cursor: pointer;
 }
 
 .speech-bubble::after {

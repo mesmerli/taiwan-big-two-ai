@@ -1171,6 +1171,8 @@ function triggerShoutEffect(playerIndex, message = "拉", shake = true) {
 
     const bubble = playerEl.querySelector('.speech-bubble');
     if (bubble) {
+        // Reset classes and states
+        bubble.classList.remove('shrunk-bubble', 'hover-expanded');
         bubble.textContent = message;
         
         // If message is short (e.g. "Pass", "拉", "過", length <= 4), use narrow layout and short delay (2s).
@@ -1178,8 +1180,10 @@ function triggerShoutEffect(playerIndex, message = "拉", shake = true) {
         const isShort = message.length <= 4;
         if (isShort) {
             bubble.classList.add('short-bubble');
+            delete bubble.dataset.originalText;
         } else {
             bubble.classList.remove('short-bubble');
+            bubble.dataset.originalText = message;
         }
 
         bubble.classList.remove('hidden');
@@ -1190,8 +1194,13 @@ function triggerShoutEffect(playerIndex, message = "拉", shake = true) {
             clearTimeout(bubble._hideTimeout);
         }
         bubble._hideTimeout = setTimeout(() => {
-            bubble.classList.add('hidden');
-            bubble.classList.remove('short-bubble');
+            if (isShort) {
+                bubble.classList.add('hidden');
+                bubble.classList.remove('short-bubble');
+            } else {
+                bubble.classList.add('shrunk-bubble');
+                bubble.textContent = "💬";
+            }
         }, isShort ? 2000 : 4500);
     }
 
@@ -1211,7 +1220,12 @@ function showAlert(msg) {
 
 
 
-infoIcon.onclick = () => rulesModal.classList.remove('hidden');
+infoIcon.onclick = () => {
+    rulesModal.classList.remove('hidden');
+    if (typeof window.AISummary !== 'undefined' && typeof window.AISummary.loadCacheList === 'function') {
+        window.AISummary.loadCacheList();
+    }
+};
 closeBtn.onclick = () => rulesModal.classList.add('hidden');
 window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
@@ -1918,6 +1932,35 @@ window.addEventListener('keydown', (e) => {
         } else {
             hideControls();
         }
+    }
+})();
+
+// Initialize speech bubble hover interactions
+(function setupSpeechBubbleHovers() {
+    const initHovers = () => {
+        document.querySelectorAll('.speech-bubble').forEach(bubble => {
+            bubble.addEventListener('mouseenter', () => {
+                if (bubble.classList.contains('shrunk-bubble')) {
+                    bubble.classList.remove('shrunk-bubble');
+                    bubble.classList.add('hover-expanded');
+                    if (bubble.dataset.originalText) {
+                        bubble.textContent = bubble.dataset.originalText;
+                    }
+                }
+            });
+            bubble.addEventListener('mouseleave', () => {
+                if (bubble.classList.contains('hover-expanded')) {
+                    bubble.classList.remove('hover-expanded');
+                    bubble.classList.add('shrunk-bubble');
+                    bubble.textContent = "💬";
+                }
+            });
+        });
+    };
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initHovers);
+    } else {
+        initHovers();
     }
 })();
 

@@ -4,6 +4,24 @@
  */
 
 (function (global) {
+    // Intercept GPUAdapter.requestDevice to automatically request shader-f16 feature if supported
+    if (typeof navigator !== 'undefined' && navigator.gpu) {
+        if (typeof GPUAdapter !== 'undefined' && GPUAdapter.prototype && GPUAdapter.prototype.requestDevice) {
+            const originalRequestDevice = GPUAdapter.prototype.requestDevice;
+            GPUAdapter.prototype.requestDevice = function (descriptor) {
+                if (this.features && this.features.has('shader-f16')) {
+                    descriptor = descriptor || {};
+                    const features = descriptor.requiredFeatures ? Array.from(descriptor.requiredFeatures) : [];
+                    if (!features.includes('shader-f16')) {
+                        features.push('shader-f16');
+                    }
+                    descriptor.requiredFeatures = features;
+                }
+                return originalRequestDevice.call(this, descriptor);
+            };
+        }
+    }
+
     // 1. Detect Platforms
     const isElectron = typeof window !== 'undefined' && 
                        ((window.process && window.process.versions && !!window.process.versions.electron) || 

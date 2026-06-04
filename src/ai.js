@@ -465,10 +465,22 @@ class BaseLLMAI extends AICharacter {
 
     async decide(context) {
         const Logic = this.getLogic();
-        const { hand, lastPlay, lastPlayerIndex } = context;
+        const { hand, lastPlay, lastPlayerIndex, shouted } = context;
 
         console.log(`%c[${this.name} Engine] Generating legal moves...`, 'color: #9b59b6;');
         const legalMoves = this.getAllLegalMoves(context);
+
+        // If the player has shouted "La", and has any option that is not PASS, play it immediately.
+        const isShouted = shouted && shouted[context.playerIndex];
+        if (isShouted) {
+            const nonPassMoves = legalMoves.filter(m => m.cards && m.cards.length > 0);
+            if (nonPassMoves.length > 0) {
+                const selectedMove = nonPassMoves[0];
+                console.log(`%c[${this.name} Engine] Shouted "La" and has playable cards. Skipping LLM.`, 'color: #16a085; font-style: italic;');
+                console.log(`%c${this.name} Plays (Bypass - Shouted La):`, 'color: #e74c3c; font-weight: bold;', selectedMove.cards.map(id => this.cardToString(id)));
+                return selectedMove.cards;
+            }
+        }
 
         if (legalMoves.length <= 1) {
             if (legalMoves.length === 1) {
