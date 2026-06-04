@@ -482,6 +482,51 @@ class BaseLLMAI extends AICharacter {
 
         console.log(`%c[${this.name} Engine] Requesting Strategic Selection...`, 'color: #9b59b6; font-weight: bold;');
 
+        const playerEl = context.playerIndex === 0 
+            ? document.getElementById('human-area') 
+            : document.getElementById(`player-${context.playerIndex + 1}`);
+
+        let progressContainer = null;
+        if (playerEl) {
+            progressContainer = playerEl.querySelector('.ai-thinking-progress');
+            if (!progressContainer) {
+                progressContainer = document.createElement('div');
+                progressContainer.className = 'ai-thinking-progress';
+                progressContainer.style.cssText = 'width: 100%; height: 6px; background: rgba(255, 255, 255, 0.1); border-radius: 3px; overflow: hidden; margin-top: 8px; display: none;';
+                
+                const progressBar = document.createElement('div');
+                progressBar.className = 'ai-thinking-progress-bar';
+                progressBar.style.cssText = 'width: 0%; height: 100%; background: linear-gradient(90deg, #a855f7, #c084fc); box-shadow: 0 0 8px rgba(168, 85, 247, 0.6);';
+                
+                progressContainer.appendChild(progressBar);
+                const infoEl = playerEl.querySelector('.info');
+                if (infoEl) {
+                    infoEl.after(progressContainer);
+                } else {
+                    playerEl.appendChild(progressContainer);
+                }
+            }
+        }
+
+        const storageKey = 'llm_thinking_time_' + (this.modelId || 'default');
+        const recordedTimeStr = typeof AppStorage !== 'undefined' ? AppStorage.getItem(storageKey) : null;
+        const hasRecordedTime = !!recordedTimeStr;
+        const recordedTime = hasRecordedTime ? parseInt(recordedTimeStr, 10) : 0;
+
+        if (hasRecordedTime && recordedTime > 0 && progressContainer) {
+            progressContainer.style.display = 'block';
+            const progressBar = progressContainer.querySelector('.ai-thinking-progress-bar');
+            if (progressBar) {
+                progressBar.style.transition = 'none';
+                progressBar.style.width = '0%';
+                progressBar.offsetHeight; // trigger reflow
+                progressBar.style.transition = `width ${recordedTime}ms linear`;
+                progressBar.style.width = '100%';
+            }
+        }
+
+        const startTime = Date.now();
+
         try {
             // Dynamic import of the factory
             const { AiServiceFactory } = await import('./services/AiServiceFactory.js');
@@ -489,10 +534,10 @@ class BaseLLMAI extends AICharacter {
 
 
             // Show loading progress on UI if using WebGPU
-            const progressContainer = document.getElementById('ai-webgpu-progress-container');
+            const progressContainerWebGpu = document.getElementById('ai-webgpu-progress-container');
             const progressText = document.getElementById('ai-webgpu-progress-text');
             const progressPercent = document.getElementById('ai-webgpu-progress-percent');
-            const progressBar = document.getElementById('ai-webgpu-progress-bar');
+            const progressBarWebGpu = document.getElementById('ai-webgpu-progress-bar');
 
             // Check if we can reuse the existing service
             const currentSettingsKey = `${useLocalWebGPU}_${this.modelId}_${this.apiUrl}_${this.apiKey}`;
@@ -518,10 +563,10 @@ class BaseLLMAI extends AICharacter {
                     workerPath: '../aiWorker.js',
                     initProgressCallback: (progress) => {
                         console.log(`[${this.name} WebLLM Load] ${progress.percent}% - ${progress.text}`);
-                        if (progressContainer) progressContainer.classList.remove('hidden');
+                        if (progressContainerWebGpu) progressContainerWebGpu.classList.remove('hidden');
                         if (progressText) progressText.textContent = progress.text;
                         if (progressPercent) progressPercent.textContent = `${progress.percent}%`;
-                        if (progressBar) progressBar.style.width = `${progress.percent}%`;
+                        if (progressBarWebGpu) progressBarWebGpu.style.width = `${progress.percent}%`;
                     }
                 });
                 this._lastServiceSettingsKey = currentSettingsKey;
@@ -530,10 +575,10 @@ class BaseLLMAI extends AICharacter {
                 if (this.activeService.constructor.name === 'WebLlmAiService') {
                     this.activeService.initProgressCallback = (progress) => {
                         console.log(`[${this.name} WebLLM Load] ${progress.percent}% - ${progress.text}`);
-                        if (progressContainer) progressContainer.classList.remove('hidden');
+                        if (progressContainerWebGpu) progressContainerWebGpu.classList.remove('hidden');
                         if (progressText) progressText.textContent = progress.text;
                         if (progressPercent) progressPercent.textContent = `${progress.percent}%`;
-                        if (progressBar) progressBar.style.width = `${progress.percent}%`;
+                        if (progressBarWebGpu) progressBarWebGpu.style.width = `${progress.percent}%`;
                     };
                 }
             }
@@ -541,9 +586,9 @@ class BaseLLMAI extends AICharacter {
             const service = this.activeService;
 
             if (service.constructor.name === 'WebLlmAiService' && !service.isReady) {
-                if (progressContainer) progressContainer.classList.remove('hidden');
+                if (progressContainerWebGpu) progressContainerWebGpu.classList.remove('hidden');
                 await service.init();
-                if (progressContainer) progressContainer.classList.add('hidden');
+                if (progressContainerWebGpu) progressContainerWebGpu.classList.add('hidden');
             }
 
             // Map game state to unified format
@@ -647,6 +692,22 @@ ${this.extraPrompt ? `Additional Custom Instructions:\n${this.extraPrompt}` : ''
             if (apiError) {
                 const msg = (typeof t === 'function') ? t('apiError') : 'Connection Failed';
                 apiError.textContent = `(${msg})`;
+            }
+        } finally {
+            if (progressContainer) {
+                progressContainer.style.display = 'none';
+                const progressBar = progressContainer.querySelector('.ai-thinking-progress-bar');
+                if (progressBar) {
+                    progressBar.style.transition = 'none';
+                    progressBar.style.width = '0%';
+                }
+            }
+            if (!hasRecordedTime) {
+                const elapsed = Date.now() - startTime;
+                if (elapsed > 100 && typeof AppStorage !== 'undefined') {
+                    AppStorage.setItem(storageKey, elapsed.toString());
+                    console.log(`[${this.name} Engine] Recorded first thinking time for ${storageKey}: ${elapsed}ms`);
+                }
             }
         }
 
