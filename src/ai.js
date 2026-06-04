@@ -124,7 +124,9 @@ class AICharacter {
 
     // To be implemented by subclasses
     async chooseLead(sorted, context) {
-        return [sorted[0]];
+        const { players } = context;
+        const anyOpponentHasOne = players && players.some((p, idx) => idx !== context.playerIndex && p && p.length === 1);
+        return anyOpponentHasOne ? [sorted[sorted.length - 1]] : [sorted[0]];
     }
 
     generatePrompt(context) {
@@ -179,7 +181,9 @@ Instruction: ${lastPlay && lastPlay.length > 0 ? 'You must beat the table play o
         if (!lastPlay || lastPlay.length === 0) {
             const five = Logic.findFiveCardHands(sorted);
             if (five.length > 0) return five[0];
-            return [sorted[0]];
+            const { players } = context;
+            const anyOpponentHasOne = players && players.some((p, idx) => idx !== playerIndex && p && p.length === 1);
+            return anyOpponentHasOne ? [sorted[sorted.length - 1]] : [sorted[0]];
         } else {
             return await this.chooseFollow(sorted, context);
         }
@@ -198,20 +202,23 @@ class AlexAI extends AICharacter {
     async chooseLead(sorted, context) {
         const Logic = this.getLogic();
         const { players } = context;
+        const anyOpponentHasOne = players && players.some((p, idx) => idx !== context.playerIndex && p && p.length === 1);
         const anyOpponentHasTwo = players.some((p, idx) => idx !== context.playerIndex && p && p.length === 2);
 
         if (anyOpponentHasTwo) {
             const five = Logic.findFiveCardHands(sorted);
             if (five.length > 0) return five[0];
             const nonTwos = sorted.filter(c => Logic.getRank(c) < 12);
-            if (nonTwos.length > 0) return [nonTwos[0]];
+            if (nonTwos.length > 0) {
+                return anyOpponentHasOne ? [nonTwos[nonTwos.length - 1]] : [nonTwos[0]];
+            }
         } else {
             const five = Logic.findFiveCardHands(sorted);
             if (five.length > 0) return five[0];
             const pairs = Logic.findPairs(sorted);
             if (pairs.length > 0) return pairs[0];
         }
-        return [sorted[0]];
+        return anyOpponentHasOne ? [sorted[sorted.length - 1]] : [sorted[0]];
     }
 }
 
@@ -226,13 +233,16 @@ class BellaAI extends AICharacter {
 
     async chooseLead(sorted, context) {
         const Logic = this.getLogic();
+        const { players } = context;
+        const anyOpponentHasOne = players && players.some((p, idx) => idx !== context.playerIndex && p && p.length === 1);
+
         const pairs = Logic.findPairs(sorted);
         if (pairs.length > 0) return pairs[0];
 
         const five = Logic.findFiveCardHands(sorted);
         if (five.length > 0) return five[0];
 
-        return [sorted[0]];
+        return anyOpponentHasOne ? [sorted[sorted.length - 1]] : [sorted[0]];
     }
 }
 
@@ -612,15 +622,18 @@ class BaseLLMAI extends AICharacter {
                 else if (winRate > 0.6) profile = "Defensive (Save big cards for the endgame)";
             }
 
+            const isEn = typeof window !== 'undefined' && window.currentLang === 'en';
             const outputSchema = `{
   "selected_index": number,
   "confidence_score": number, (1-10)
-  "strategy": "Brief explanation of your logic",
-  "trashTalk": "你的台味垃圾話或心理戰台詞"
+  "strategy": "${isEn ? 'Brief explanation of your logic in English' : '出牌邏輯簡短說明（使用繁體中文）'}",
+  "trashTalk": "${isEn ? 'English trash talk or psychological warfare line' : '台味或具角色個性的垃圾話與心理戰台詞（使用繁體中文）'}"
 }`;
 
             const systemPrompt = `Strategic Game Engine for Taiwanese Big Two. 
 Task: Evaluate each legal move from 1-10 based on how likely it leads to a win. Select the move index with the highest score.
+
+Strict Language Rule: You MUST output all text fields ("strategy" and "trashTalk") strictly in ${isEn ? 'ENGLISH' : 'Traditional Chinese (繁體中文)'}. ${isEn ? 'Do not output any Chinese characters in these fields.' : '請勿在這些欄位中使用英文或簡體中文。'}
 
 Game Logic (Taiwanese Rules):
 - Rank: 3 < 4 < 5 < 6 < 7 < 8 < 9 < 10 < J < Q < K < A < 2.

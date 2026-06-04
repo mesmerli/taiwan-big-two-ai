@@ -301,15 +301,8 @@ class AISummarySystem {
             }
 
             if (modelList) {
-                const localModels = [
-                    { id: 'gemma-2-2b-it-q4f16_1-MLC', name: 'Gemma 2 2B (f16 - High Performance)' },
-                    { id: 'gemma-2-2b-it-q4f32_1-MLC', name: 'Gemma 2 2B (f32 - High Compatibility)' },
-                    { id: 'Qwen2.5-1.5B-Instruct-q4f32_1-MLC', name: 'Qwen 2.5 1.5B (f32 - High Compatibility)' },
-                    { id: 'Qwen2.5-1.5B-Instruct-q4f16_1-MLC', name: 'Qwen 2.5 1.5B (f16 - High Performance)' },
-                    { id: 'Llama-3.2-1B-Instruct-q4f16_1-MLC', name: 'Llama 3.2 1B (f16)' },
-                    { id: 'Llama-3.2-3B-Instruct-q4f16_1-MLC', name: 'Llama 3.2 3B (f16)' },
-                    { id: 'Phi-3.5-mini-instruct-q4f16_1-MLC', name: 'Phi 3.5 Mini 3.8B (f16)' }
-                ];
+                const { WebLlmCacheManager } = await import('./services/WebLlmCacheManager.js');
+                const localModels = WebLlmCacheManager.MODELS;
 
                 localModels.forEach(m => {
                     const option = document.createElement('option');
@@ -1883,11 +1876,14 @@ ${JSON.stringify(stats, null, 2)}
         this.currentAbortController = new AbortController();
         const signal = this.currentAbortController.signal;
 
-        // Append user question to history
-        this.chatHistory.push({ role: 'user', content: question });
+        // Append user question with language guidelines to history
+        const isEn = window.currentLang === 'en';
+        const langGuideline = isEn 
+            ? "\n(Please reply to this question strictly in English. Do not use Chinese.)" 
+            : "\n（請嚴格使用繁體中文回答此問題，勿使用簡體中文或英文。）";
+        this.chatHistory.push({ role: 'user', content: question + langGuideline });
 
         // Add user question to the container visually
-        const isEn = window.currentLang === 'en';
         const escapedQuestion = question
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')

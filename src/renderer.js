@@ -1474,15 +1474,8 @@ function setupAvatarClickListeners() {
                 statusEl.style.color = '#10b981'; // emerald
             }
 
-            const localModels = [
-                { id: 'gemma-2-2b-it-q4f16_1-MLC', name: 'Gemma 2 2B (f16 - High Performance)' },
-                { id: 'gemma-2-2b-it-q4f32_1-MLC', name: 'Gemma 2 2B (f32 - High Compatibility)' },
-                { id: 'Qwen2.5-1.5B-Instruct-q4f32_1-MLC', name: 'Qwen 2.5 1.5B (f32 - High Compatibility)' },
-                { id: 'Qwen2.5-1.5B-Instruct-q4f16_1-MLC', name: 'Qwen 2.5 1.5B (f16 - High Performance)' },
-                { id: 'Llama-3.2-1B-Instruct-q4f16_1-MLC', name: 'Llama 3.2 1B (f16)' },
-                { id: 'Llama-3.2-3B-Instruct-q4f16_1-MLC', name: 'Llama 3.2 3B (f16)' },
-                { id: 'Phi-3.5-mini-instruct-q4f16_1-MLC', name: 'Phi 3.5 Mini 3.8B (f16)' }
-            ];
+            const { WebLlmCacheManager } = await import('./services/WebLlmCacheManager.js');
+            const localModels = WebLlmCacheManager.MODELS;
 
             localModels.forEach(m => {
                 const option = document.createElement('option');
