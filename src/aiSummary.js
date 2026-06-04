@@ -698,6 +698,13 @@ class AISummarySystem {
                 if (progressPercent) progressPercent.textContent = `${progress.percent}%`;
                 if (progressBar) progressBar.style.width = `${progress.percent}%`;
 
+                // 定期更新管理面板的模型下載進度與已下載位元組
+                const now = Date.now();
+                if (!this._lastDownloadRefresh || now - this._lastDownloadRefresh > 1000) {
+                    this.loadCacheList();
+                    this._lastDownloadRefresh = now;
+                }
+
                 if (progress.percent === 100) {
                     setTimeout(() => {
                         if (container) container.classList.add('hidden');

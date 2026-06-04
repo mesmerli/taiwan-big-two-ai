@@ -1656,6 +1656,7 @@ function setupAvatarClickListeners() {
     };
 
     let npcPreloader = null;
+    let lastNpcDownloadRefresh = 0;
 
     async function handleNpcWebLlmPreload() {
         const enabled = AppStorage.getItem('useLocalWebGPU') === 'true';
@@ -1724,6 +1725,13 @@ function setupAvatarClickListeners() {
                 if (progressText) progressText.textContent = progress.text;
                 if (progressPercent) progressPercent.textContent = `${progress.percent}%`;
                 if (progressBar) progressBar.style.width = `${progress.percent}%`;
+
+                // 定期更新管理面板的模型下載進度與已下載位元組
+                const now = Date.now();
+                if (now - lastNpcDownloadRefresh > 1000) {
+                    loadNpcCacheList();
+                    lastNpcDownloadRefresh = now;
+                }
 
                 if (progress.percent === 100) {
                     setTimeout(() => {

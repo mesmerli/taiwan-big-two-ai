@@ -147,7 +147,7 @@ export class WebLlmCacheManager {
                 const configKeys = await configCache.keys();
                 const configKey = configKeys.find(k => {
                     const urlLower = k.url.toLowerCase();
-                    return urlLower.includes(modelIdLower) && urlLower.endsWith('ndarray-cache.json');
+                    return urlLower.includes(modelIdLower) && urlLower.includes('ndarray-cache.json');
                 });
                 if (configKey) {
                     const response = await configCache.match(configKey);
@@ -165,7 +165,7 @@ export class WebLlmCacheManager {
             if (!data) {
                 const configKey = modelKeys.find(k => {
                     const urlLower = k.url.toLowerCase();
-                    return urlLower.includes(modelIdLower) && urlLower.endsWith('ndarray-cache.json');
+                    return urlLower.includes(modelIdLower) && urlLower.includes('ndarray-cache.json');
                 });
                 if (configKey) {
                     const response = await modelCache.match(configKey);
@@ -182,7 +182,7 @@ export class WebLlmCacheManager {
                     if (hasLegacy) {
                         const legacyCache = await caches.open('webllm/' + modelId);
                         const legacyKeys = await legacyCache.keys();
-                        const legacyConfigKey = legacyKeys.find(k => k.url.endsWith('ndarray-cache.json'));
+                        const legacyConfigKey = legacyKeys.find(k => k.url.includes('ndarray-cache.json'));
                         if (legacyConfigKey) {
                             const response = await legacyCache.match(legacyConfigKey);
                             if (response) {
