@@ -1401,6 +1401,29 @@ ${JSON.stringify(stats, null, 2)}
                     if (subEl) {
                         subEl.textContent = `${isEn ? 'Loading Model' : '模型載入中'}: ${progress.percent}% (${progress.text})`;
                     }
+
+                    // Sync to Manage tab progress bar
+                    const container = document.getElementById('review-webgpu-progress-container');
+                    const progressText = document.getElementById('review-webgpu-progress-text');
+                    const progressPercent = document.getElementById('review-webgpu-progress-percent');
+                    const progressBar = document.getElementById('review-webgpu-progress-bar');
+                    
+                    if (container && progress.percent < 100) {
+                        container.classList.remove('hidden');
+                    }
+                    if (progressText) progressText.textContent = progress.text;
+                    if (progressPercent) progressPercent.textContent = `${progress.percent}%`;
+                    if (progressBar) progressBar.style.width = `${progress.percent}%`;
+
+                    if (progress.percent === 100) {
+                        setTimeout(() => {
+                            if (container) container.classList.add('hidden');
+                            this.loadCacheList();
+                            if (typeof window.loadNpcCacheList === 'function') {
+                                window.loadNpcCacheList();
+                            }
+                        }, 1500);
+                    }
                 }
             });
 
