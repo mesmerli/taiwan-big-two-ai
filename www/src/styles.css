@@ -723,8 +723,8 @@ body {
     transform: translateX(var(--x-offset));
     animation: bubblePop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     border: 2px solid var(--primary-color);
-    min-width: 260px;
-    max-width: 400px;
+    min-width: 200px;
+    max-width: min(400px, 35vw);
     width: max-content;
     white-space: normal;
     word-break: break-word;
@@ -746,7 +746,7 @@ body {
 
 /* Positioning and Arrows for different players */
 .p1 .speech-bubble {
-    top: -45px;
+    bottom: calc(100% + 15px);
     left: 10px;
 }
 
@@ -759,7 +759,7 @@ body {
 
 .p2 .speech-bubble {
     top: 10px;
-    right: -70px;
+    left: calc(100% + 15px);
 }
 
 .p2 .speech-bubble::after {
@@ -770,7 +770,7 @@ body {
 }
 
 .p3 .speech-bubble {
-    bottom: -55px;
+    top: calc(100% + 15px);
     left: 50%;
     --x-offset: -50%;
 }
@@ -784,7 +784,7 @@ body {
 
 .p4 .speech-bubble {
     top: 10px;
-    left: -70px;
+    right: calc(100% + 15px);
 }
 
 .p4 .speech-bubble::after {

@@ -34,9 +34,7 @@ export class WebLlmCacheManager {
             for (const model of this.MODELS) {
                 // If there are files containing the model's ID in the cache, it exists
                 const modelIdLower = model.id.toLowerCase();
-                // Extract unique parts to be more tolerant (e.g., 'llama-3.2-1b-instruct', 'gemma-2-2b-it')
-                const uniquePart = modelIdLower.replace('-q4f16_1-mlc', '').replace('-q4f32_1-mlc', '').replace('-mlc', '');
-                const hasFiles = urls.some(url => url.includes(modelIdLower) || url.includes(uniquePart));
+                const hasFiles = urls.some(url => url.includes(modelIdLower));
                 if (hasFiles) {
                     cachedModels.push(model.id);
                 }
@@ -69,11 +67,10 @@ export class WebLlmCacheManager {
             const keys = await cache.keys();
             let totalBytes = 0;
             const modelIdLower = modelId.toLowerCase();
-            const uniquePart = modelIdLower.replace('-q4f16_1-mlc', '').replace('-q4f32_1-mlc', '').replace('-mlc', '');
             
             for (const key of keys) {
                 const urlLower = key.url.toLowerCase();
-                if (urlLower.includes(modelIdLower) || urlLower.includes(uniquePart)) {
+                if (urlLower.includes(modelIdLower)) {
                     const response = await cache.match(key);
                     if (response) {
                         const blob = await response.blob();
@@ -120,12 +117,11 @@ export class WebLlmCacheManager {
             const cache = await caches.open('webllm/model');
             const keys = await cache.keys();
             const modelIdLower = modelId.toLowerCase();
-            const uniquePart = modelIdLower.replace('-q4f16_1-mlc', '').replace('-q4f32_1-mlc', '').replace('-mlc', '');
             
             // Find ndarray-cache.json for this specific model
             const configKey = keys.find(k => {
                 const urlLower = k.url.toLowerCase();
-                return (urlLower.includes(modelIdLower) || urlLower.includes(uniquePart)) && urlLower.endsWith('ndarray-cache.json');
+                return urlLower.includes(modelIdLower) && urlLower.endsWith('ndarray-cache.json');
             });
             
             let data = null;
@@ -158,7 +154,7 @@ export class WebLlmCacheManager {
                 // Fallback: If we find files for this model but no config manifest, count files
                 const matchingFiles = keysToCount.filter(k => {
                     const urlLower = k.url.toLowerCase();
-                    return urlLower.includes(modelIdLower) || urlLower.includes(uniquePart);
+                    return urlLower.includes(modelIdLower);
                 });
                 return matchingFiles.length > 5 ? 100 : 0;
             }
@@ -200,12 +196,11 @@ export class WebLlmCacheManager {
             const cache = await caches.open('webllm/model');
             const keys = await cache.keys();
             const modelIdLower = modelId.toLowerCase();
-            const uniquePart = modelIdLower.replace('-q4f16_1-mlc', '').replace('-q4f32_1-mlc', '').replace('-mlc', '');
             let deletedAny = false;
 
             for (const key of keys) {
                 const urlLower = key.url.toLowerCase();
-                if (urlLower.includes(modelIdLower) || urlLower.includes(uniquePart)) {
+                if (urlLower.includes(modelIdLower)) {
                     await cache.delete(key);
                     deletedAny = true;
                 }

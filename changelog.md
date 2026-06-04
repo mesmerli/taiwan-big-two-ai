@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.44] - 2026-06-04
+
+### Fixed
+- **Speech Bubble Viewport Bounds**: Adjusted CSS positioning of speech bubbles for all players (P1–P4) and restricted their maximum width to prevent bubbles from overflowing screen/desktop boundaries.
+- **WebLLM Cache Isolation**: Swapped out fuzzy matching for exact Model ID matching in `WebLlmCacheManager` to ensure separate, accurate cache size rendering and safe deletion for models with similar prefixes (like Gemma f16 and f32).
+
 ## [1.5.43] - 2026-06-03
 
 ### Added
