@@ -19,11 +19,26 @@ export class WebLlmAiService {
         this.initProgressCallback = config.initProgressCallback || null;
         this.temperature = config.temperature !== undefined ? config.temperature : 0.1;
         
+        this.progressListeners = new Set();
+        if (config.initProgressCallback) {
+            this.progressListeners.add(config.initProgressCallback);
+        }
+
         this.engine = null;
         this.worker = null;
         this.isInitializing = false;
         this.isReady = false;
         this.isPaused = false;
+    }
+
+    addProgressListener(callback) {
+        if (callback) {
+            this.progressListeners.add(callback);
+        }
+    }
+
+    removeProgressListener(callback) {
+        this.progressListeners.delete(callback);
     }
 
     /**
@@ -63,14 +78,19 @@ export class WebLlmAiService {
                 {
                     initProgressCallback: (report) => {
                         if (this.isPaused) return;
-                        // 處理進度報告 (格式一般為 { progress: 0-1, text: "..." })
+                        const percent = Math.round(report.progress * 100);
+                        const progressData = {
+                            percent: percent,
+                            text: report.text,
+                            raw: report
+                        };
+                        
+                        this.progressListeners.forEach(listener => {
+                            try { listener(progressData); } catch (e) {}
+                        });
+
                         if (this.initProgressCallback) {
-                            const percent = Math.round(report.progress * 100);
-                            this.initProgressCallback({
-                                percent: percent,
-                                text: report.text,
-                                raw: report
-                            });
+                            try { this.initProgressCallback(progressData); } catch (e) {}
                         }
                     }
                 }

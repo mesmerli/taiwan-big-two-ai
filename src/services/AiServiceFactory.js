@@ -6,9 +6,8 @@ import { LmStudioAiService } from './LmStudioAiService.js';
 import { WebLlmAiService } from './WebLlmAiService.js';
 
 // 全域快取的服務實例
-let cachedWebLlmService = null;
+const cachedWebLlmServices = new Map();
 let cachedLmStudioService = null;
-let lastWebLlmSettingsKey = '';
 let lastLmStudioSettingsKey = '';
 
 export class AiServiceFactory {
@@ -46,29 +45,36 @@ export class AiServiceFactory {
                 const actualModelId = modelId || 'gemma-2-2b-it-q4f16_1-MLC';
                 const settingsKey = `${actualModelId}`;
 
-                if (cachedWebLlmService && lastWebLlmSettingsKey === settingsKey) {
-                    console.log('%c[AiServiceFactory] 複用快取的 WebLlmAiService 實例', 'color: #2ecc71; font-weight: bold;');
+                let serviceInstance = cachedWebLlmServices.get(settingsKey);
+
+                if (serviceInstance) {
+                    console.log(`%c[AiServiceFactory] 複用快取的 WebLlmAiService 實例: ${settingsKey}`, 'color: #2ecc71; font-weight: bold;');
                     if (initProgressCallback) {
-                        cachedWebLlmService.initProgressCallback = initProgressCallback;
+                        serviceInstance.addProgressListener(initProgressCallback);
                     }
-                    return cachedWebLlmService;
+                    return serviceInstance;
                 }
 
-                console.log('%c[AiServiceFactory] 偵測到設定變更或未載入，建立新的 WebLlmAiService...', 'color: #2ecc71; font-weight: bold;');
-                if (cachedWebLlmService && cachedWebLlmService.engine) {
-                    try {
-                        console.log('[AiServiceFactory] 卸載舊的 WebLLM 引擎...');
-                        cachedWebLlmService.engine.unload();
-                    } catch (e) {}
+                console.log(`%c[AiServiceFactory] 建立新的 WebLlmAiService: ${settingsKey}...`, 'color: #2ecc71; font-weight: bold;');
+                
+                // 釋放其他已載入至 GPU 的模型 VRAM，但「不要」影響正在下載的模型
+                for (const [key, svc] of cachedWebLlmServices.entries()) {
+                    if (svc.isReady && svc.engine) {
+                        try {
+                            console.log(`[AiServiceFactory] 釋放其他模型的 VRAM 以避免記憶體衝突: ${key}`);
+                            svc.engine.unload();
+                            svc.isReady = false;
+                        } catch (e) {}
+                    }
                 }
 
-                cachedWebLlmService = new WebLlmAiService({
+                serviceInstance = new WebLlmAiService({
                     modelId: actualModelId,
                     workerPath,
                     initProgressCallback
                 });
-                lastWebLlmSettingsKey = settingsKey;
-                return cachedWebLlmService;
+                cachedWebLlmServices.set(settingsKey, serviceInstance);
+                return serviceInstance;
             } else {
                 console.warn(
                     '[AiServiceFactory] 使用者要求使用本地 WebGPU，但此瀏覽器或系統不支援 WebGPU。\n' +
