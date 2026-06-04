@@ -137,27 +137,45 @@ export class WebLlmCacheManager {
     static async getCacheCompletion(modelId) {
         if (typeof caches === 'undefined') return 0;
         try {
-            const cache = await caches.open('webllm/model');
-            const keys = await cache.keys();
             const modelIdLower = modelId.toLowerCase();
-
-            // Find ndarray-cache.json for this specific model
-            const configKey = keys.find(k => {
-                const urlLower = k.url.toLowerCase();
-                return urlLower.includes(modelIdLower) && urlLower.endsWith('ndarray-cache.json');
-            });
-
             let data = null;
-            let keysToCount = keys;
+            let keysToCount = [];
 
-            if (configKey) {
-                const response = await cache.match(configKey);
-                if (response) {
-                    data = await response.json();
+            // 1. Try to find ndarray-cache.json in the webllm/config cache
+            if (await caches.has('webllm/config')) {
+                const configCache = await caches.open('webllm/config');
+                const configKeys = await configCache.keys();
+                const configKey = configKeys.find(k => {
+                    const urlLower = k.url.toLowerCase();
+                    return urlLower.includes(modelIdLower) && urlLower.endsWith('ndarray-cache.json');
+                });
+                if (configKey) {
+                    const response = await configCache.match(configKey);
+                    if (response) {
+                        data = await response.json();
+                    }
                 }
             }
 
-            // Legacy individual cache check
+            // 2. Try to find ndarray-cache.json in the webllm/model cache
+            const modelCache = await caches.open('webllm/model');
+            const modelKeys = await modelCache.keys();
+            keysToCount = modelKeys;
+
+            if (!data) {
+                const configKey = modelKeys.find(k => {
+                    const urlLower = k.url.toLowerCase();
+                    return urlLower.includes(modelIdLower) && urlLower.endsWith('ndarray-cache.json');
+                });
+                if (configKey) {
+                    const response = await modelCache.match(configKey);
+                    if (response) {
+                        data = await response.json();
+                    }
+                }
+            }
+
+            // 3. Legacy individual cache check
             if (!data) {
                 try {
                     const hasLegacy = await caches.has('webllm/' + modelId);
