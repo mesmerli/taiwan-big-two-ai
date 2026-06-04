@@ -170,7 +170,7 @@ export class WebLlmCacheManager {
             const cachedUrls = keysToCount.map(k => k.url);
             
             expectedShards.forEach(shard => {
-                if (cachedUrls.some(url => url.endsWith(shard))) {
+                if (cachedUrls.some(url => url.toLowerCase().includes(modelIdLower) && url.endsWith(shard))) {
                     cachedCount++;
                 }
             });
