@@ -147,12 +147,8 @@ export class LmStudioAiService {
             return parsedResult;
         } catch (error) {
             console.error('[LmStudioAiService] 決策請求失敗:', error);
-            // 發生錯誤時提供安全降級的預設回傳格式
-            return {
-                actionType: "PASS",
-                cardsPlayed: [],
-                trashTalk: "乾，伺服器卡住，這局先 Pass 啦！"
-            };
+            // 丟出錯誤交由呼叫端 (ai.js) 降級為電腦玩家決策方法處理，避免強制 Pass
+            throw error;
         }
     }
 }

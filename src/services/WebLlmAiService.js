@@ -195,12 +195,8 @@ export class WebLlmAiService {
             return parsedResult;
         } catch (error) {
             console.error('[WebLlmAiService] 本地 WebGPU 推理出錯:', error);
-            // 降級處理
-            return {
-                actionType: "PASS",
-                cardsPlayed: [],
-                trashTalk: "靠北，我的 WebGPU 腦袋好像抽筋了，這手先 Pass..."
-            };
+            // 丟出錯誤交由呼叫端 (ai.js) 降級為電腦玩家決策方法處理，避免強制 Pass
+            throw error;
         }
     }
 }
