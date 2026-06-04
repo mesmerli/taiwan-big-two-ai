@@ -1748,7 +1748,8 @@ function setupAvatarClickListeners() {
         if (btnPause) {
             btnPause.textContent = t('pause');
             btnPause.onclick = () => {
-                if (npcPreloader.isPaused) {
+                const isCurrentlyPaused = btnPause.textContent === t('resume') || npcPreloader.isPaused;
+                if (isCurrentlyPaused) {
                     btnPause.textContent = t('pause');
                     npcPreloader.init();
                 } else {

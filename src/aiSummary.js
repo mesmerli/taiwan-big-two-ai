@@ -504,7 +504,8 @@ class AISummarySystem {
         if (btnPause) {
             btnPause.textContent = t('pause');
             btnPause.onclick = () => {
-                if (this.reviewPreloader.isPaused) {
+                const isCurrentlyPaused = btnPause.textContent === t('resume') || this.reviewPreloader.isPaused;
+                if (isCurrentlyPaused) {
                     btnPause.textContent = t('pause');
                     this.reviewPreloader.init();
                 } else {
@@ -725,7 +726,8 @@ class AISummarySystem {
         if (btnPause) {
             btnPause.textContent = t('pause');
             btnPause.onclick = () => {
-                if (this.reviewPreloader.isPaused) {
+                const isCurrentlyPaused = btnPause.textContent === t('resume') || this.reviewPreloader.isPaused;
+                if (isCurrentlyPaused) {
                     btnPause.textContent = t('pause');
                     this.reviewPreloader.init();
                 } else {
