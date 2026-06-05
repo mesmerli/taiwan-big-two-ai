@@ -6,7 +6,7 @@ const I18N = require('./src/i18n.js');
 app.commandLine.appendSwitch('enable-unsafe-webgpu');
 app.commandLine.appendSwitch('enable-webgpu-developer-features');
 // Workaround for Windows DXC compiler race condition shader compilation errors (X3694)
-app.commandLine.appendSwitch('disable-dawn-features', 'use_dxc');
+// app.commandLine.appendSwitch('disable-dawn-features', 'use_dxc');
 
 // Set AppUserModelId for Windows Taskbar/JumpList consistency
 // For Store (MSIX) builds the AUMID must match the Package Family Name so
@@ -45,7 +45,7 @@ function createWindow() {
 
   win.setMenu(null);
   win.loadFile('index.html');
-  
+
   // Microsoft Store Trial Support Integration
   // Use did-finish-load to ensure the renderer's ipcRenderer listeners are ready
   win.webContents.once('did-finish-load', () => {
@@ -77,7 +77,7 @@ if (!gotTheLock) {
     if (win) {
       if (win.isMinimized()) win.restore();
       win.focus();
-      
+
       // Check if --about was passed from Jump List
       if (commandLine.includes('--about')) {
         showAboutDialog();
@@ -140,7 +140,7 @@ if (!gotTheLock) {
 ipcMain.on('open-store', async () => {
   const storeUrl = `ms-windows-store://pdp/?ProductId=${STORE_PRODUCT_ID}`;
   const webUrl = `https://apps.microsoft.com/store/detail/${STORE_PRODUCT_ID}`;
-  
+
   try {
     await shell.openExternal(storeUrl);
   } catch (err) {
@@ -188,7 +188,7 @@ function showAboutDialog() {
 
   aboutWin.loadURL(`file://${__dirname}/about.html?lang=${currentLang}`);
   aboutWin.once('ready-to-show', () => aboutWin.show());
-  
+
   // Close when clicking outside (losing focus)
   aboutWin.on('blur', () => {
     aboutWin.close();
@@ -223,7 +223,7 @@ async function checkStoreLicense() {
 
     const hwnd = win.getNativeWindowHandle().readBigInt64LE();
     const license = await storeBridge.getLicenseStatus(hwnd);
-    
+
     console.log('[Store] 取得授權狀態:', license);
     await processLicense(license);
 
@@ -286,6 +286,6 @@ function handleTrialExpired() {
   if (result === 0) {
     shell.openExternal(`ms-windows-store://pdp/?ProductId=${STORE_PRODUCT_ID}`);
   }
-  
+
   app.quit();
 }

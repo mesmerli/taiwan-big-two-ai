@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.47] - 2026-06-05
+
+### Added
+- **LLM Progress Localization**: Implemented dynamic text localization for WebLLM initialization and file-fetching progress reports. Raw English parameters and Cache API writing statuses are parsed via regular expressions and instantly translated to Traditional Chinese based on the active game locale.
+- **Top Player Speech Bubble Relocation**: Relocated player 3's (P3/top player) dialog bubble to the right side of the panel. Ensuring both expanded and shrunken dialog bubbles never vertically overlap with played cards.
+- **Topmost Dialog Bubble Rendering**: Applied `z-index: 500` to `.speech-bubble` and integrated a CSS `:has()` selector to raise the parent `.player` panel's z-index to `150` when a bubble is visible. This guarantees speaking overlays sit above cards and the table center.
+- **Avatar-Aligned Progress Bar**: Refactored the thinking progress bar to render within a newly introduced `.avatar-container` block directly below each player's avatar, enforcing a strict width of 60px matching the avatar width.
+
+### Fixed
+- **Bypassed WebLLM JSON Schema Generation Loop**: Completely removed schema-guided JSON options from WebLLM parameters to stop generation loops and fff/uFFFF character repetition bugs.
+- **Resolved WebLLM WASM BindingError**: Removed the `response_format` configuration to prevent WebAssembly Emscripten `std::string` type crashes, and added a robust brace-matching parser (`{` to `}`) to extract valid JSON blocks from raw LLM responses.
+
 ## [1.5.46] - 2026-06-05
 
 ### Added

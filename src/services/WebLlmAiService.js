@@ -124,9 +124,31 @@ export class WebLlmAiService {
                     initProgressCallback: (report) => {
                         if (this.isPaused) return;
                         const percent = Math.round(report.progress * 100);
+                        
+                        // 根據語系動態翻譯進度文字
+                        const isEn = (typeof window !== 'undefined' && window.currentLang === 'en') || (typeof currentLang !== 'undefined' && currentLang === 'en');
+                        let translatedText = report.text;
+                        if (!isEn) {
+                            if (report.text.includes('Fetching param cache')) {
+                                const match = report.text.match(/Fetching param cache\[(\d+)\/(\d+)\]:\s*([\d\.]+\s*[a-zA-Z]+)\s*fetched\.\s*(\d+)%\s*completed,\s*(\d+)\s*secs\s*elapsed/);
+                                if (match) {
+                                    const [_, current, total, size, pct, secs] = match;
+                                    translatedText = `正在下載並建立模型快取 [${current}/${total}]: 已載入 ${size} (${pct}%)，已耗時 ${secs} 秒。首次載入時間較長，之後載入將會加快。`;
+                                } else {
+                                    translatedText = report.text.replace('Fetching param cache', '正在下載模型快取');
+                                }
+                            } else if (report.text.includes('Loading model from cache')) {
+                                translatedText = '正在從快取中載入模型...';
+                            } else if (report.text.includes('Start to fetch')) {
+                                translatedText = '開始獲取模型資訊...';
+                            } else if (report.text.includes('Finish loading on WebGPU')) {
+                                translatedText = '模型已成功載入至 WebGPU 顯示卡！';
+                            }
+                        }
+
                         const progressData = {
                             percent: percent,
-                            text: report.text,
+                            text: translatedText,
                             raw: report
                         };
                         
@@ -207,17 +229,6 @@ export class WebLlmAiService {
                 finalUserPrompt = gameState.userPrompt;
             }
 
-            const schemaObj = {
-                type: "object",
-                properties: {
-                    selected_index: { type: "number" },
-                    confidence_score: { type: "number" },
-                    strategy: { type: "string" },
-                    trashTalk: { type: "string" }
-                },
-                required: ["selected_index", "confidence_score", "strategy", "trashTalk"]
-            };
-
             const response = await this.engine.chat.completions.create({
                 messages: [
                     { role: 'system', content: finalSystemPrompt },
@@ -228,14 +239,18 @@ export class WebLlmAiService {
                 frequency_penalty: 1.0,
                 presence_penalty: 0.5,
                 max_tokens: 3000,
-                stream: false,
-                response_format: { 
-                    type: "json_object",
-                    schema: JSON.stringify(schemaObj)
-                }
+                stream: false
             });
 
-            const content = response.choices[0].message.content.trim();
+            let content = response.choices[0].message.content.trim();
+            
+            // 尋找第一個 '{' 與最後一個 '}' 以提取出 JSON 內容（可防禦性地剥離 Markdown、前後贅字與額外文字等非 JSON 字元）
+            const firstBrace = content.indexOf('{');
+            const lastBrace = content.lastIndexOf('}');
+            if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+                content = content.substring(firstBrace, lastBrace + 1);
+            }
+
             let parsedResult;
             try {
                 parsedResult = JSON.parse(content);

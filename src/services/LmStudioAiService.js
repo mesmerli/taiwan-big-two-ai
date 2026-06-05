@@ -118,9 +118,11 @@ export class LmStudioAiService {
             const result = await response.json();
             let content = result.choices[0].message.content.trim();
             
-            // 當未使用 response_format 時，AI 有可能回傳包含 ```json 的 Markdown 標記，在此進行清理與兼容解析
-            if (content.startsWith('```')) {
-                content = content.replace(/```json/g, '').replace(/```/g, '').trim();
+            // 尋找第一個 '{' 與最後一個 '}' 以提取出 JSON 內容（可防禦性地剥離 Markdown、前後贅字與額外文字等非 JSON 字元）
+            const firstBrace = content.indexOf('{');
+            const lastBrace = content.lastIndexOf('}');
+            if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+                content = content.substring(firstBrace, lastBrace + 1);
             }
 
             let parsedResult;

@@ -98,7 +98,7 @@
 </head>
 
 <body>
-    <span class="close-btn" onclick="window.close()">&times;</span>
+    <span class="close-btn" onclick="closeAboutWindow()">&times;</span>
     <div class="logo">
         <img src="src/assets/logo.png" alt="Taiwan Big2 AI Logo">
     </div>
@@ -116,6 +116,69 @@
 
     <script src="src/i18n.js"></script>
     <script>
+        function closeAboutWindow() {
+            if (window.__TAURI__) {
+                try {
+                    if (window.__TAURI__.window && typeof window.__TAURI__.window.getCurrentWindow === 'function') {
+                        window.__TAURI__.window.getCurrentWindow().close();
+                    } else if (window.__TAURI__.webviewWindow && typeof window.__TAURI__.webviewWindow.getCurrentWebviewWindow === 'function') {
+                        window.__TAURI__.webviewWindow.getCurrentWebviewWindow().close();
+                    } else {
+                        window.close();
+                    }
+                } catch (e) {
+                    console.error("Failed to close window via Tauri API, falling back:", e);
+                    window.close();
+                }
+            } else if (window.aboutAPI && typeof window.aboutAPI.closeWindow === 'function' && !window.aboutAPI._isTauriFallback) {
+                window.aboutAPI.closeWindow();
+            } else {
+                window.close();
+            }
+        }
+
+        // Setup Tauri fallback for aboutAPI to prevent JS crash
+        if (typeof window.aboutAPI === 'undefined') {
+            window.aboutAPI = {
+                _isTauriFallback: true,
+                getBuildTarget: () => {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    return urlParams.get('buildTarget') || 'GITHUB';
+                },
+                getAppInfo: () => {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    return {
+                        version: urlParams.get('version') || '1.5.44',
+                        author: urlParams.get('author') || 'mesmerli'
+                    };
+                },
+                getLicenseStatus: () => {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const isTrial = urlParams.get('isTrial') === 'true';
+                    const isActive = urlParams.get('isActive') === 'true';
+                    const trialDaysRemaining = parseInt(urlParams.get('trialDaysRemaining') || '0', 10);
+                    return {
+                        isActive,
+                        isTrial,
+                        trialDaysRemaining
+                    };
+                },
+                openExternal: (url) => {
+                    if (window.__TAURI__) {
+                        const invoke = window.__TAURI__.core ? window.__TAURI__.core.invoke : window.__TAURI__.invoke;
+                        if (invoke) {
+                            invoke('open_external_url', { url });
+                        }
+                    } else {
+                        window.open(url, '_blank');
+                    }
+                },
+                closeWindow: () => {
+                    closeAboutWindow();
+                }
+            };
+        }
+
         const buildTarget = window.aboutAPI.getBuildTarget();
         const appInfo = window.aboutAPI.getAppInfo();
         const licenseStatus = window.aboutAPI.getLicenseStatus();
@@ -182,6 +245,23 @@
         window.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') window.aboutAPI.closeWindow();
         });
+
+        // Show window after it is fully configured and ready to be displayed
+        if (window.__TAURI__) {
+            try {
+                if (window.__TAURI__.window && typeof window.__TAURI__.window.getCurrentWindow === 'function') {
+                    window.__TAURI__.window.getCurrentWindow().show().then(() => {
+                        window.__TAURI__.window.getCurrentWindow().setFocus();
+                    });
+                } else if (window.__TAURI__.webviewWindow && typeof window.__TAURI__.webviewWindow.getCurrentWebviewWindow === 'function') {
+                    window.__TAURI__.webviewWindow.getCurrentWebviewWindow().show().then(() => {
+                        window.__TAURI__.webviewWindow.getCurrentWebviewWindow().setFocus();
+                    });
+                }
+            } catch (e) {
+                console.error("Failed to show window via Tauri API:", e);
+            }
+        }
     </script>
 </body>
 </html>

@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "taiwan-big-two-ai",
-  "version": "1.5.44",
+  "version": "1.5.47",
   "identifier": "com.mesmerli.taiwanbig2ai",
   "build": {
     "frontendDist": "../www"
@@ -14,7 +14,8 @@
         "width": 1024,
         "height": 768,
         "resizable": true,
-        "fullscreen": false
+        "fullscreen": false,
+        "visible": false
       }
     ],
     "security": {

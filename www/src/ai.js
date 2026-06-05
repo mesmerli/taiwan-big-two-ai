@@ -514,18 +514,29 @@ class BaseLLMAI extends AICharacter {
             if (!progressContainer) {
                 progressContainer = document.createElement('div');
                 progressContainer.className = 'ai-thinking-progress';
-                progressContainer.style.cssText = 'width: 100%; height: 6px; background: rgba(255, 255, 255, 0.1); border-radius: 3px; overflow: hidden; margin-top: 8px; display: none;';
+                
+                const avatarContainer = playerEl.querySelector('.avatar-container');
+                if (avatarContainer) {
+                    progressContainer.style.cssText = 'width: 60px; height: 6px; background: rgba(255, 255, 255, 0.1); border-radius: 3px; overflow: hidden; display: none; margin-top: 0px;';
+                } else {
+                    progressContainer.style.cssText = 'width: 100%; height: 6px; background: rgba(255, 255, 255, 0.1); border-radius: 3px; overflow: hidden; margin-top: 8px; display: none;';
+                }
                 
                 const progressBar = document.createElement('div');
                 progressBar.className = 'ai-thinking-progress-bar';
                 progressBar.style.cssText = 'width: 0%; height: 100%; background: linear-gradient(90deg, #a855f7, #c084fc); box-shadow: 0 0 8px rgba(168, 85, 247, 0.6);';
                 
                 progressContainer.appendChild(progressBar);
-                const infoEl = playerEl.querySelector('.info');
-                if (infoEl) {
-                    infoEl.after(progressContainer);
+                
+                if (avatarContainer) {
+                    avatarContainer.appendChild(progressContainer);
                 } else {
-                    playerEl.appendChild(progressContainer);
+                    const infoEl = playerEl.querySelector('.info');
+                    if (infoEl) {
+                        infoEl.after(progressContainer);
+                    } else {
+                        playerEl.appendChild(progressContainer);
+                    }
                 }
             }
         }

@@ -266,6 +266,22 @@ function updateLanguage() {
     if (ipcRenderer) {
         ipcRenderer.send('update-lang', currentLang);
     }
+    
+    // 同步更新 Tauri Windows Jump List (工作列右鍵選單) 語系
+    const isTauriEnv = typeof AppEnv !== 'undefined' ? AppEnv.isTauri : 
+                         (typeof window !== 'undefined' && 
+                          (window.__TAURI_METADATA__ !== undefined || 
+                           window.__TAURI__ !== undefined || 
+                           window.__TAURI_INTERNALS__ !== undefined));
+    if (isTauriEnv && typeof window !== 'undefined' && window.__TAURI__) {
+        const invoke = window.__TAURI__.core ? window.__TAURI__.core.invoke : window.__TAURI__.invoke;
+        if (typeof invoke === 'function') {
+            invoke('update_jump_list', { lang: currentLang }).catch(err => {
+                console.error("[Tauri] Failed to update jump list:", err);
+            });
+        }
+    }
+
     updateMuteUI();
     updateTrialStatusUI();
     window.PLAYER_NAMES = PLAYER_NAMES;
