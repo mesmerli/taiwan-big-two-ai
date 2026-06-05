@@ -170,8 +170,6 @@ class AISummarySystem {
                     AppStorage.setItem('reviewUseWebGPU', checked.toString());
                 }
                 this.testConnectionAndPopulateModels();
-                this.handleReviewWebLlmPreload();
-                this.loadCacheList();
             };
         }
 
@@ -220,8 +218,6 @@ class AISummarySystem {
                 if (typeof AppStorage !== 'undefined') {
                     AppStorage.setItem('reviewLlmModel', val);
                 }
-                this.handleReviewWebLlmPreload();
-                this.loadCacheList();
             };
         }
 
@@ -230,15 +226,15 @@ class AISummarySystem {
         if (aiSettingsTabBtn) {
             aiSettingsTabBtn.addEventListener('click', () => {
                 this.testConnectionAndPopulateModels();
-                this.loadCacheList();
             });
         }
 
         // Refresh cache list when manage tab is clicked
         const manageTabBtn = document.querySelector('.tab-btn[data-tab="manage"]');
         if (manageTabBtn) {
-            manageTabBtn.addEventListener('click', () => {
-                this.loadCacheList();
+            manageTabBtn.addEventListener('click', async () => {
+                const { WebLlmCacheManager } = await import('./services/WebLlmCacheManager.js');
+                await WebLlmCacheManager.renderCacheList();
             });
         }
 
@@ -271,16 +267,16 @@ class AISummarySystem {
             }
         });
 
-        // Initial preload and cache check
-        this.handleReviewWebLlmPreload();
-        this.loadCacheList();
-
         console.log('[AI Summary] System initialized.');
     }
 
-    updateLanguage() {
+    async updateLanguage() {
         this.testConnectionAndPopulateModels();
-        this.loadCacheList();
+        const tabManage = document.getElementById('tab-manage');
+        if (tabManage && tabManage.classList.contains('active')) {
+            const { WebLlmCacheManager } = await import('./services/WebLlmCacheManager.js');
+            await WebLlmCacheManager.renderCacheList();
+        }
     }
 
     async testConnectionAndPopulateModels() {
@@ -295,30 +291,58 @@ class AISummarySystem {
         }
 
         if (this.reviewUseWebGPU) {
-            if (statusEl) {
-                statusEl.textContent = isEn ? '● Local WebGPU Active' : '● 本地 WebGPU 已啟用';
-                statusEl.style.color = '#10b981'; // emerald
+            const { WebLlmCacheManager } = await import('./services/WebLlmCacheManager.js');
+            const localModels = await WebLlmCacheManager.getFullyCachedStandardModels();
+
+            if (localModels.length === 0) {
+                if (statusEl) {
+                    statusEl.textContent = isEn 
+                        ? '● Local WebGPU Active (Model needs to be downloaded first)' 
+                        : '● 本地 WebGPU 已啟用 (需要先下載模型)';
+                    statusEl.style.color = '#ef4444'; // Red
+                }
+                if (modelList) {
+                    const placeholder = document.createElement('option');
+                    placeholder.value = '';
+                    placeholder.textContent = isEn ? 'No models downloaded' : '無已下載之模型';
+                    modelList.appendChild(placeholder);
+                }
+            } else {
+                if (statusEl) {
+                    statusEl.textContent = isEn ? '● Local WebGPU Active' : '● 本地 WebGPU 已啟用';
+                    statusEl.style.color = '#10b981'; // emerald
+                }
+                if (modelList) {
+                    localModels.forEach(m => {
+                        const option = document.createElement('option');
+                        option.value = m.id;
+                        option.textContent = m.name;
+                        modelList.appendChild(option);
+                    });
+                }
             }
 
             if (modelList) {
-                const { WebLlmCacheManager } = await import('./services/WebLlmCacheManager.js');
-                const localModels = WebLlmCacheManager.MODELS;
-
-                localModels.forEach(m => {
-                    const option = document.createElement('option');
-                    option.value = m.id;
-                    option.textContent = m.name;
-                    modelList.appendChild(option);
-                });
-
                 if (savedModelId && !localModels.some(m => m.id === savedModelId)) {
-                    const customOption = document.createElement('option');
-                    customOption.value = savedModelId;
-                    customOption.textContent = savedModelId;
-                    modelList.appendChild(customOption);
+                    const cachedList = await WebLlmCacheManager.listCachedModels();
+                    const isSavedCached = cachedList.some(c => c.toLowerCase() === savedModelId.toLowerCase());
+                    if (isSavedCached) {
+                        const completion = await WebLlmCacheManager.getCacheCompletion(savedModelId);
+                        if (completion === 100) {
+                            const customOption = document.createElement('option');
+                            customOption.value = savedModelId;
+                            customOption.textContent = savedModelId;
+                            modelList.appendChild(customOption);
+                        }
+                    }
                 }
 
-                modelList.value = savedModelId || 'gemma-2-2b-it-q4f16_1-MLC';
+                modelList.value = savedModelId || (localModels.length > 0 ? localModels[0].id : '');
+                if (modelList.value !== savedModelId) {
+                    if (typeof AppStorage !== 'undefined') {
+                        AppStorage.setItem('reviewLlmModel', modelList.value);
+                    }
+                }
             }
             this.retrySummary();
             return;
@@ -413,362 +437,18 @@ class AISummarySystem {
         }
     }
 
-    async handleReviewWebLlmPreload() {
-        const enabled = this.reviewUseWebGPU;
-        const container = document.getElementById('review-webgpu-progress-container');
-        const modelList = document.getElementById('review-llm-model');
-        const modelId = modelList ? modelList.value : '';
-        const isEn = window.currentLang === 'en';
 
-        if (!enabled || !modelId) {
-            if (container) container.classList.add('hidden');
-            if (this.reviewPreloader) {
-                this.reviewPreloader.stopLoading();
-                this.reviewPreloader = null;
-            }
-            return;
-        }
 
-        const { WebLlmCacheManager } = await import('./services/WebLlmCacheManager.js');
-        const cached = await WebLlmCacheManager.listCachedModels();
-        const isCached = cached.some(name => name.includes(modelId));
-        
-        if (isCached) {
-            if (container) container.classList.add('hidden');
-            if (this.reviewPreloader && this.reviewPreloader.isInitializing) {
-                this.reviewPreloader.stopLoading();
-                this.reviewPreloader = null;
-            }
-            return;
-        }
 
-        if (typeof window.isNpcPreloaderActive === 'function' && window.isNpcPreloaderActive()) {
-            const alertMsg = isEn ? 'Another model (NPC Player) is downloading. Please wait or pause it first.' : '有其他模型（NPC 玩家）正在下載中，請先等待下載完成或暫停該下載。';
-            alert(alertMsg);
-            const reviewUseWebGpuCheckbox = document.getElementById('review-use-webgpu');
-            if (reviewUseWebGpuCheckbox) reviewUseWebGpuCheckbox.checked = false;
-            this.reviewUseWebGPU = false;
-            AppStorage.setItem('reviewUseWebGPU', 'false');
-            if (container) container.classList.add('hidden');
-            return;
-        }
 
-        // Open the rules-modal and select the Manage tab programmatically
-        const rModal = document.getElementById('rules-modal');
-        if (rModal) {
-            rModal.classList.remove('hidden');
-            const manageTabBtn = rModal.querySelector('.tab-btn[data-tab="manage"]');
-            if (manageTabBtn) {
-                manageTabBtn.click();
-            }
-        }
 
-        if (container) container.classList.remove('hidden');
-        const progressText = document.getElementById('review-webgpu-progress-text');
-        const progressPercent = document.getElementById('review-webgpu-progress-percent');
-        const progressBar = document.getElementById('review-webgpu-progress-bar');
-        const btnPause = document.getElementById('review-webgpu-btn-pause');
-        const btnStop = document.getElementById('review-webgpu-btn-stop');
-
-        if (progressText) progressText.textContent = isEn ? 'Preloading Model...' : '正在預載入模型...';
-        if (progressPercent) progressPercent.textContent = '0%';
-        if (progressBar) progressBar.style.width = '0%';
-
-        const { AiServiceFactory } = await import('./services/AiServiceFactory.js');
-        this.reviewPreloader = AiServiceFactory.createService({
-            useLocalWebGPU: true,
-            modelId: modelId,
-            workerPath: '../aiWorker.js',
-            initProgressCallback: (progress) => {
-                if (progressText) progressText.textContent = progress.text;
-                if (progressPercent) progressPercent.textContent = `${progress.percent}%`;
-                if (progressBar) progressBar.style.width = `${progress.percent}%`;
-
-                if (progress.percent === 100) {
-                    setTimeout(() => {
-                        if (container) container.classList.add('hidden');
-                        this.loadCacheList();
-                        if (typeof window.loadNpcCacheList === 'function') {
-                            window.loadNpcCacheList();
-                        }
-                    }, 1500);
-                }
-            }
-        });
-
-        const t = (key) => {
-            if (typeof window.t === 'function') return window.t(key);
-            return isEn ? key : (key === 'pause' ? '暫停' : (key === 'resume' ? '繼續' : '停止'));
-        };
-
-        if (btnPause) {
-            btnPause.textContent = t('pause');
-            btnPause.onclick = () => {
-                const isCurrentlyPaused = btnPause.textContent === t('resume') || this.reviewPreloader.isPaused;
-                if (isCurrentlyPaused) {
-                    btnPause.textContent = t('pause');
-                    this.reviewPreloader.init();
-                } else {
-                    btnPause.textContent = t('resume');
-                    this.reviewPreloader.pauseLoading();
-                }
-            };
-        }
-
-        if (btnStop) {
-            btnStop.onclick = () => {
-                if (this.reviewPreloader) {
-                    this.reviewPreloader.stopLoading();
-                }
-                if (container) container.classList.add('hidden');
-            };
-        }
-
-        this.reviewPreloader.init();
-    }
-
-    async loadCacheList() {
-        const enabled = this.reviewUseWebGPU;
-        const container = document.getElementById('review-cache-container');
-        const listEl = document.getElementById('review-cache-list');
-        const isEn = window.currentLang === 'en' || (typeof currentLang !== 'undefined' && currentLang === 'en');
-
-        if (!container || !listEl) return;
-
-        container.classList.remove('hidden');
-        listEl.innerHTML = `<div style="font-style: italic;">${isEn ? 'Loading cache list...' : '正在載入快取列表...'}</div>`;
-
-        // Check if f16 is supported on GPU
-        if (this.f16Supported === undefined) {
-            this.f16Supported = true;
-            if (typeof navigator !== 'undefined' && navigator.gpu) {
-                try {
-                    const adapter = await navigator.gpu.requestAdapter();
-                    this.f16Supported = adapter ? adapter.features.has('shader-f16') : false;
-                } catch (e) {
-                    this.f16Supported = false;
-                }
-            } else {
-                this.f16Supported = false;
-            }
-        }
-
-        const { WebLlmCacheManager } = await import('./services/WebLlmCacheManager.js');
-        const cachesList = await WebLlmCacheManager.listCachedModels();
-
-        listEl.innerHTML = '';
-        for (const model of WebLlmCacheManager.MODELS) {
-            const isF16 = model.id.includes('q4f16_1');
-            const hasF32Fallback = isF16; // All f16 models in our list have a matching f32 equivalent in MLC
-            const isSupported = !isF16 || this.f16Supported;
-            
-            // If the GPU doesn't support f16, dynamically query the f32 variant cache instead
-            const queryModelId = (!isSupported && hasF32Fallback) ? model.id.replace('q4f16_1', 'q4f32_1') : model.id;
-            const isCached = cachesList.some(c => c.toLowerCase() === queryModelId.toLowerCase());
-
-            const itemDiv = document.createElement('div');
-            itemDiv.style.cssText = 'display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); padding: 6px 8px; border-radius: 4px;';
-
-            const nameSpan = document.createElement('span');
-            nameSpan.textContent = model.name;
-            if (!isSupported) {
-                if (hasF32Fallback) {
-                    nameSpan.textContent += isEn ? ' (Using f32 Compatibility)' : ' (自動轉為 f32 相容版)';
-                } else {
-                    nameSpan.textContent += isEn ? ' (Unsupported GPU)' : ' (顯卡不支援)';
-                    nameSpan.style.color = '#ef4444';
-                }
-            }
-            nameSpan.style.cssText += ' font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 250px;';
-
-            const rightDiv = document.createElement('div');
-            rightDiv.style.cssText = 'display: flex; gap: 8px; align-items: center;';
-
-            if (isCached) {
-                const sizeSpan = document.createElement('span');
-                sizeSpan.style.cssText = 'color: #64748b; font-size: 10px;';
-                sizeSpan.textContent = '...';
-
-                const deleteBtn = document.createElement('button');
-                deleteBtn.textContent = '🗑️';
-                deleteBtn.style.cssText = 'background: none; border: none; cursor: pointer; font-size: 12px; padding: 2px;';
-                deleteBtn.onclick = async () => {
-                    const confirmMsg = !isEn ? `確定要刪除 ${model.name} 的快取以釋放空間嗎？` : `Are you sure you want to delete ${model.name} to free up space?`;
-                    if (confirm(confirmMsg)) {
-                        await WebLlmCacheManager.deleteCachedModel(queryModelId);
-                        this.loadCacheList();
-                        if (typeof window.loadNpcCacheList === 'function') {
-                            window.loadNpcCacheList();
-                        }
-                    }
-                };
-
-                rightDiv.appendChild(sizeSpan);
-                rightDiv.appendChild(deleteBtn);
-
-                Promise.all([
-                    WebLlmCacheManager.getCacheCompletion(queryModelId),
-                    WebLlmCacheManager.getCacheSize(queryModelId)
-                ]).then(([completion, size]) => {
-                    const pctText = isEn ? `${completion}% downloaded` : `已下載 ${completion}%`;
-                    sizeSpan.textContent = `${pctText} (${size})`;
-
-                    // 若未下載完成 (小於 100%)，動態插入「繼續下載」按鈕
-                    if (completion < 100) {
-                        const resumeBtn = document.createElement('button');
-                        resumeBtn.textContent = isEn ? '📥 Resume' : '📥 繼續下載';
-                        resumeBtn.style.cssText = 'background: rgba(139, 92, 246, 0.2); border: 1px solid rgba(139, 92, 246, 0.4); border-radius: 4px; cursor: pointer; font-size: 10px; color: #a78bfa; padding: 2px 8px; transition: all 0.2s;';
-                        resumeBtn.onmouseover = () => {
-                            resumeBtn.style.background = 'rgba(139, 92, 246, 0.4)';
-                        };
-                        resumeBtn.onmouseout = () => {
-                            resumeBtn.style.background = 'rgba(139, 92, 246, 0.2)';
-                        };
-                        resumeBtn.onclick = () => {
-                            this.startDownload(model.id);
-                        };
-                        rightDiv.insertBefore(resumeBtn, deleteBtn);
-                    }
-                });
-            } else {
-                const downloadBtn = document.createElement('button');
-                if (!isSupported && !hasF32Fallback) {
-                    downloadBtn.textContent = isEn ? 'Unsupported' : '不支援';
-                    downloadBtn.disabled = true;
-                    downloadBtn.style.cssText = 'background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 4px; font-size: 10px; color: #f87171; padding: 2px 8px; cursor: not-allowed;';
-                } else {
-                    downloadBtn.textContent = isEn ? '📥 Download' : '📥 下載';
-                    if (!isSupported && hasF32Fallback) {
-                        downloadBtn.textContent = isEn ? '📥 Download f32' : '📥 下載 f32';
-                    }
-                    downloadBtn.style.cssText = 'background: rgba(139, 92, 246, 0.2); border: 1px solid rgba(139, 92, 246, 0.4); border-radius: 4px; cursor: pointer; font-size: 10px; color: #a78bfa; padding: 2px 8px; transition: all 0.2s;';
-                    downloadBtn.onmouseover = () => {
-                        downloadBtn.style.background = 'rgba(139, 92, 246, 0.4)';
-                    };
-                    downloadBtn.onmouseout = () => {
-                        downloadBtn.style.background = 'rgba(139, 92, 246, 0.2)';
-                    };
-                    downloadBtn.onclick = () => {
-                        this.startDownload(model.id);
-                    };
-                }
-                rightDiv.appendChild(downloadBtn);
-            }
-
-            itemDiv.appendChild(nameSpan);
-            itemDiv.appendChild(rightDiv);
-            listEl.appendChild(itemDiv);
-        }
-    }
-
-    async startDownload(modelId) {
-        const isEn = window.currentLang === 'en';
-        const container = document.getElementById('review-webgpu-progress-container');
-        
-        if (typeof window.isNpcPreloaderActive === 'function' && window.isNpcPreloaderActive()) {
-            const alertMsg = isEn ? 'Another model (NPC Player) is downloading. Please wait or pause it first.' : '有其他模型（NPC 玩家）正在下載中，請先等待下載完成或暫停該下載。';
-            alert(alertMsg);
-            return;
-        }
-
-        // Apply fallback redirection inside startDownload if GPU doesn't support shader-f16
-        let targetModelId = modelId;
-        if (modelId.includes('q4f16_1') && this.f16Supported === false) {
-            const hasF32Fallback = true; // All f16 models listed have f32 variants available
-            if (hasF32Fallback) {
-                const msg = isEn 
-                    ? "Your GPU/browser does not support f16 precision. The system will automatically download and register the compatible f32 version instead."
-                    : "您的顯卡或瀏覽器不支援 f16 精度。系統將自動改為下載並註冊相容的 f32 版本。";
-                alert(msg);
-                targetModelId = modelId.replace('q4f16_1', 'q4f32_1');
-            } else {
-                const msg = isEn
-                    ? "Your GPU/browser does not support f16 precision, and this model does not have an f32 fallback. It cannot be run on this device."
-                    : "您的顯卡或瀏覽器不支援 f16 精度，且此模型沒有 f32 版本，無法在您的裝置上運行。";
-                alert(msg);
-                return;
-            }
-        }
-
-        if (container) container.classList.remove('hidden');
-        const progressText = document.getElementById('review-webgpu-progress-text');
-        const progressPercent = document.getElementById('review-webgpu-progress-percent');
-        const progressBar = document.getElementById('review-webgpu-progress-bar');
-        const btnPause = document.getElementById('review-webgpu-btn-pause');
-        const btnStop = document.getElementById('review-webgpu-btn-stop');
-
-        if (progressText) progressText.textContent = isEn ? `Downloading Model...` : `正在下載模型...`;
-        if (progressPercent) progressPercent.textContent = '0%';
-        if (progressBar) progressBar.style.width = '0%';
-
-        const { AiServiceFactory } = await import('./services/AiServiceFactory.js');
-        
-        if (this.reviewPreloader && this.reviewPreloader.isInitializing) {
-            this.reviewPreloader.stopLoading();
-        }
-
-        this.reviewPreloader = AiServiceFactory.createService({
-            useLocalWebGPU: true,
-            modelId: targetModelId,
-            workerPath: '../aiWorker.js',
-            initProgressCallback: (progress) => {
-                if (progressText) progressText.textContent = progress.text;
-                if (progressPercent) progressPercent.textContent = `${progress.percent}%`;
-                if (progressBar) progressBar.style.width = `${progress.percent}%`;
-
-                // 定期更新管理面板的模型下載進度與已下載位元組
-                const now = Date.now();
-                if (!this._lastDownloadRefresh || now - this._lastDownloadRefresh > 1000) {
-                    this.loadCacheList();
-                    this._lastDownloadRefresh = now;
-                }
-
-                if (progress.percent === 100) {
-                    setTimeout(() => {
-                        if (container) container.classList.add('hidden');
-                        this.loadCacheList();
-                        if (typeof window.loadNpcCacheList === 'function') {
-                            window.loadNpcCacheList();
-                        }
-                    }, 1500);
-                }
-            }
-        });
-
-        const t = (key) => {
-            if (typeof window.t === 'function') return window.t(key);
-            return isEn ? key : (key === 'pause' ? '暫停' : (key === 'resume' ? '繼續' : '停止'));
-        };
-
-        if (btnPause) {
-            btnPause.textContent = t('pause');
-            btnPause.onclick = () => {
-                const isCurrentlyPaused = btnPause.textContent === t('resume') || this.reviewPreloader.isPaused;
-                if (isCurrentlyPaused) {
-                    btnPause.textContent = t('pause');
-                    this.reviewPreloader.init();
-                } else {
-                    btnPause.textContent = t('resume');
-                    this.reviewPreloader.pauseLoading();
-                }
-            };
-        }
-
-        if (btnStop) {
-            btnStop.onclick = () => {
-                if (this.reviewPreloader) {
-                    this.reviewPreloader.stopLoading();
-                }
-                if (container) container.classList.add('hidden');
-            };
-        }
-
-        this.reviewPreloader.init();
-    }
 
     showPanel() {
         if (!this.panel) return;
         this.panel.classList.remove('hidden');
+        
+        // Defer loading/caching check until the panel is opened
+        this.testConnectionAndPopulateModels();
         
         // Trigger reflow for transition
         void this.panel.offsetWidth;
@@ -1568,9 +1248,42 @@ ${JSON.stringify(stats, null, 2)}
 
         let content = '';
 
-        if (this.reviewUseWebGPU) {
+        let useWebGPU = this.reviewUseWebGPU;
+        let actualModel = activeModel && activeModel !== 'local-model' ? activeModel : '';
+        if (useWebGPU) {
+            try {
+                const { WebLlmCacheManager } = await import('./services/WebLlmCacheManager.js');
+                if (!actualModel) {
+                    const fullyCached = await WebLlmCacheManager.getFullyCachedStandardModels();
+                    if (fullyCached.length > 0) {
+                        actualModel = fullyCached[0].id;
+                        this.activeModel = actualModel;
+                        if (typeof AppStorage !== 'undefined') {
+                            AppStorage.setItem('reviewLlmModel', actualModel);
+                        }
+                    } else {
+                        actualModel = 'gemma-2-2b-it-q4f16_1-MLC';
+                    }
+                }
+                const f16Supported = await WebLlmCacheManager.checkF16Supported();
+                let checkModelId = actualModel;
+                if (!f16Supported && actualModel.includes('q4f16_1')) {
+                    checkModelId = actualModel.replace('q4f16_1', 'q4f32_1');
+                    console.log(`[AI Summary] GPU does not support f16, checking f32 fallback model completion: ${checkModelId}`);
+                }
+                const completion = await WebLlmCacheManager.getCacheCompletion(checkModelId);
+                if (completion < 100) {
+                    console.warn(`[AI Summary] WebGPU model ${checkModelId} is not fully cached (${completion}%). Falling back to remote/local API mode.`);
+                    useWebGPU = false;
+                }
+            } catch (e) {
+                console.warn("[AI Summary] Failed to check WebGPU cache completion, falling back to API mode:", e);
+                useWebGPU = false;
+            }
+        }
+
+        if (useWebGPU) {
             const { AiServiceFactory } = await import('./services/AiServiceFactory.js');
-            const actualModel = activeModel && activeModel !== 'local-model' ? activeModel : 'gemma-2-2b-it-q4f16_1-MLC';
             
             this.webLlmService = AiServiceFactory.createService({
                 useLocalWebGPU: true,
@@ -1580,30 +1293,11 @@ ${JSON.stringify(stats, null, 2)}
                     console.log(`[Review WebLLM Load] ${progress.percent}% - ${progress.text}`);
                     const subEl = document.getElementById('ai-loading-submessage');
                     if (subEl) {
-                        subEl.textContent = `${isEn ? 'Loading Model' : '模型載入中'}: ${progress.percent}% (${progress.text})`;
+                        subEl.textContent = `${isEn ? 'Loading to GPU VRAM' : '載入顯示記憶體中'}: ${progress.percent}% (${progress.text})`;
                     }
-
-                    // Sync to Manage tab progress bar
-                    const container = document.getElementById('review-webgpu-progress-container');
-                    const progressText = document.getElementById('review-webgpu-progress-text');
-                    const progressPercent = document.getElementById('review-webgpu-progress-percent');
-                    const progressBar = document.getElementById('review-webgpu-progress-bar');
-                    
-                    if (container && progress.percent < 100) {
-                        container.classList.remove('hidden');
-                    }
-                    if (progressText) progressText.textContent = progress.text;
-                    if (progressPercent) progressPercent.textContent = `${progress.percent}%`;
-                    if (progressBar) progressBar.style.width = `${progress.percent}%`;
-
-                    if (progress.percent === 100) {
-                        setTimeout(() => {
-                            if (container) container.classList.add('hidden');
-                            this.loadCacheList();
-                            if (typeof window.loadNpcCacheList === 'function') {
-                                window.loadNpcCacheList();
-                            }
-                        }, 1500);
+                    const gpuProgressBar = document.getElementById('ai-loading-progress-bar');
+                    if (gpuProgressBar) {
+                        gpuProgressBar.style.width = `${progress.percent}%`;
                     }
                 }
             });
@@ -1722,9 +1416,12 @@ ${JSON.stringify(stats, null, 2)}
         const progressSub = getNextMessage();
 
         this.summaryContainer.innerHTML = `
-            <div class="space-y-1.5 py-2 px-3 text-center">
-                <div class="text-xs font-bold text-violet-400 animate-pulse" id="ai-loading-message">${progressTitle}</div>
-                <div class="text-xs text-slate-500" id="ai-loading-submessage" style="opacity: 1">${progressSub}</div>
+            <div class="space-y-2 py-3 px-3 text-center flex flex-col items-center justify-center">
+                <div class="text-xs font-bold text-violet-400 animate-pulse mb-1" id="ai-loading-message">${progressTitle}</div>
+                <div id="ai-loading-progress-container" class="w-full max-w-[200px]" style="height: 4px; border-radius: 2px; overflow: hidden; background: #334155; margin: 4px auto;">
+                    <div id="ai-loading-progress-bar" style="width: 0%; height: 100%; background: #8b5cf6; transition: width 0.2s ease;"></div>
+                </div>
+                <div class="text-xs text-slate-500 mt-1" id="ai-loading-submessage" style="opacity: 1">${progressSub}</div>
             </div>
         `;
 

@@ -64,6 +64,51 @@ export class WebLlmAiService {
                 }
             }
 
+            // --- 防禦性程式設計：提前抓取驗證 ndarray-cache.json ---
+            try {
+                const { prebuiltAppConfig } = await import("https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm/+esm");
+                const modelInfo = prebuiltAppConfig.model_list.find(m => m.model_id === this.modelId);
+                if (modelInfo) {
+                    let rawUrl = modelInfo.model || modelInfo.model_url;
+                    if (rawUrl) {
+                        // If it's a Hugging Face repo URL without '/resolve/main/', append it
+                        if (rawUrl.includes('huggingface.co') && !rawUrl.includes('/resolve/')) {
+                            rawUrl = rawUrl.endsWith('/') ? rawUrl + 'resolve/main/' : rawUrl + '/resolve/main/';
+                        }
+                        const baseUrl = rawUrl.endsWith('/') ? rawUrl : rawUrl + '/';
+                        const jsonUrl = `${baseUrl}ndarray-cache.json`;
+                        console.log(`[WebLlmAiService] 正在進行防禦性驗證，抓取：${jsonUrl}`);
+                        
+                        const response = await fetch(jsonUrl);
+                        if (!response.ok) {
+                            throw new Error(`無法取得 ndarray-cache.json (HTTP 狀態碼: ${response.status})`);
+                        }
+                        
+                        const responseToCache = response.clone();
+                        const ndarrayCache = await response.json();
+                        console.log("✅ [WebLlmAiService] 提前驗證 ndarray-cache.json 成功：", ndarrayCache);
+
+                        // 將 ndarray-cache.json 寫入 webllm/config 快取以供 getCacheCompletion() 查詢
+                        if (typeof caches !== 'undefined') {
+                            try {
+                                const configCache = await caches.open('webllm/config');
+                                await configCache.put(jsonUrl, responseToCache);
+                                console.log(`[WebLlmAiService] 成功將 ndarray-cache.json 快取至 webllm/config (URL: ${jsonUrl})`);
+                            } catch (cacheErr) {
+                                console.warn("[WebLlmAiService] 寫入 webllm/config 快取失敗:", cacheErr);
+                            }
+                        }
+                    } else {
+                        console.warn(`[WebLlmAiService] 模型 ${this.modelId} 的配置中缺少下載網址，跳過防禦性抓取驗證。`);
+                    }
+                } else {
+                    console.warn(`[WebLlmAiService] 在 prebuiltAppConfig 中找不到模型配置: ${this.modelId}，跳過防禦性抓取驗證。`);
+                }
+            } catch (error) {
+                throw new Error(`模型初始化前防禦驗證失敗，無法連接到下載伺服器或索引檔損毀: ${error.message || error}`);
+            }
+            // --------------------------------------------------------
+
             console.log(`[WebLlmAiService] 正在背景初始化模型: ${this.modelId}`);
             
             // 建立 Web Worker 實例 (使用 ESM 模組形式載入)

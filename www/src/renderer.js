@@ -1222,9 +1222,6 @@ function showAlert(msg) {
 
 infoIcon.onclick = () => {
     rulesModal.classList.remove('hidden');
-    if (typeof window.AISummary !== 'undefined' && typeof window.AISummary.loadCacheList === 'function') {
-        window.AISummary.loadCacheList();
-    }
 };
 closeBtn.onclick = () => rulesModal.classList.add('hidden');
 window.addEventListener('keydown', (e) => {
@@ -1377,7 +1374,6 @@ function setupAvatarClickListeners() {
                     // Display learnings
                     updateLearningsUI(char);
 
-                    handleNpcWebLlmPreload();
                     loadNpcCacheList();
                 }
             };
@@ -1469,29 +1465,51 @@ function setupAvatarClickListeners() {
         const isEn = currentLang === 'en';
 
         if (useLocalWebGPU) {
-            if (statusEl) {
-                statusEl.textContent = isEn ? '● Local WebGPU Active' : '● 本地 WebGPU 已啟用';
-                statusEl.style.color = '#10b981'; // emerald
-            }
-
             const { WebLlmCacheManager } = await import('./services/WebLlmCacheManager.js');
-            const localModels = WebLlmCacheManager.MODELS;
+            const localModels = await WebLlmCacheManager.getFullyCachedStandardModels();
 
-            localModels.forEach(m => {
-                const option = document.createElement('option');
-                option.value = m.id;
-                option.textContent = m.name;
-                modelList.appendChild(option);
-            });
+            if (localModels.length === 0) {
+                if (statusEl) {
+                    statusEl.textContent = isEn 
+                        ? '● Local WebGPU Active (Model needs to be downloaded first)' 
+                        : '● 本地 WebGPU 已啟用 (需要先下載模型)';
+                    statusEl.style.color = '#ef4444'; // Red
+                }
+                const placeholder = document.createElement('option');
+                placeholder.value = '';
+                placeholder.textContent = isEn ? 'No models downloaded' : '無已下載之模型';
+                modelList.appendChild(placeholder);
+            } else {
+                if (statusEl) {
+                    statusEl.textContent = isEn ? '● Local WebGPU Active' : '● 本地 WebGPU 已啟用';
+                    statusEl.style.color = '#10b981'; // emerald
+                }
+                localModels.forEach(m => {
+                    const option = document.createElement('option');
+                    option.value = m.id;
+                    option.textContent = m.name;
+                    modelList.appendChild(option);
+                });
+            }
 
             if (savedModelId && !localModels.some(m => m.id === savedModelId)) {
-                const customOption = document.createElement('option');
-                customOption.value = savedModelId;
-                customOption.textContent = savedModelId;
-                modelList.appendChild(customOption);
+                const cachedList = await WebLlmCacheManager.listCachedModels();
+                const isSavedCached = cachedList.some(c => c.toLowerCase() === savedModelId.toLowerCase());
+                if (isSavedCached) {
+                    const completion = await WebLlmCacheManager.getCacheCompletion(savedModelId);
+                    if (completion === 100) {
+                        const customOption = document.createElement('option');
+                        customOption.value = savedModelId;
+                        customOption.textContent = savedModelId;
+                        modelList.appendChild(customOption);
+                    }
+                }
             }
 
-            modelList.value = savedModelId || 'gemma-2-2b-it-q4f16_1-MLC';
+            modelList.value = savedModelId || (localModels.length > 0 ? localModels[0].id : '');
+            if (modelList.value !== savedModelId && modelList.value) {
+                autoSave();
+            }
             return;
         }
 
@@ -1614,8 +1632,6 @@ function setupAvatarClickListeners() {
 
     modelIdInput.onchange = () => {
         autoSave();
-        handleNpcWebLlmPreload();
-        loadNpcCacheList();
     };
     extraPromptInput.oninput = autoSave;
 
@@ -1625,8 +1641,6 @@ function setupAvatarClickListeners() {
             AppStorage.setItem('useLocalWebGPU', useWebGpuCheckbox.checked ? 'true' : 'false');
             fetchAvailableModels(apiUrlInput.value, apiKeyInput ? apiKeyInput.value.trim() : '', modelIdInput.value);
             autoSave();
-            handleNpcWebLlmPreload();
-            loadNpcCacheList();
         };
     }
 
@@ -1647,140 +1661,38 @@ function setupAvatarClickListeners() {
                         if (apiKeyInput) apiKeyInput.value = char.apiKey || '';
                         extraPromptInput.value = char.extraPrompt;
                         fetchAvailableModels(apiUrlInput.value, char.apiKey || '', char.modelId || '');
-                        handleNpcWebLlmPreload();
-                        loadNpcCacheList();
                     }
                 }
             }
         }
     };
 
-    let npcPreloader = null;
     let lastNpcDownloadRefresh = 0;
 
-    async function handleNpcWebLlmPreload() {
-        const enabled = AppStorage.getItem('useLocalWebGPU') === 'true';
-        const container = document.getElementById('ai-webgpu-progress-container');
-        const modelId = modelIdInput.value;
-
-        if (!enabled || !modelId) {
-            if (container) container.classList.add('hidden');
-            if (npcPreloader) {
-                npcPreloader.stopLoading();
-                npcPreloader = null;
-            }
-            return;
-        }
-
-        const { WebLlmCacheManager } = await import('./services/WebLlmCacheManager.js');
-        const cached = await WebLlmCacheManager.listCachedModels();
-        const isCached = cached.some(name => name.includes(modelId));
-        
-        if (isCached) {
-            if (container) container.classList.add('hidden');
-            if (npcPreloader && npcPreloader.isInitializing) {
-                npcPreloader.stopLoading();
-                npcPreloader = null;
-            }
-            return;
-        }
-
-        if (window.AISummary && typeof window.AISummary.isReviewPreloaderActive === 'function' && window.AISummary.isReviewPreloaderActive()) {
-            const alertMsg = currentLang === 'zh' ? '有其他模型（復盤）正在下載中，請先等待下載完成或暫停該下載。' : 'Another model (Review) is downloading. Please wait or pause it first.';
-            alert(alertMsg);
-            useWebGpuCheckbox.checked = false;
-            AppStorage.setItem('useLocalWebGPU', 'false');
-            autoSave();
-            if (container) container.classList.add('hidden');
-            return;
-        }
-
-        // Open the rules-modal and select the Manage tab programmatically
-        const rModal = document.getElementById('rules-modal');
-        if (rModal) {
-            rModal.classList.remove('hidden');
-            const manageTabBtn = rModal.querySelector('.tab-btn[data-tab="manage"]');
-            if (manageTabBtn) {
-                manageTabBtn.click();
-            }
-        }
-
-        if (container) container.classList.remove('hidden');
-        const progressText = document.getElementById('ai-webgpu-progress-text');
-        const progressPercent = document.getElementById('ai-webgpu-progress-percent');
-        const progressBar = document.getElementById('ai-webgpu-progress-bar');
-        const btnPause = document.getElementById('ai-webgpu-btn-pause');
-        const btnStop = document.getElementById('ai-webgpu-btn-stop');
-
-        if (progressText) progressText.textContent = currentLang === 'en' ? 'Preloading Model...' : '正在預載入模型...';
-        if (progressPercent) progressPercent.textContent = '0%';
-        if (progressBar) progressBar.style.width = '0%';
-
-        const { AiServiceFactory } = await import('./services/AiServiceFactory.js');
-        npcPreloader = AiServiceFactory.createService({
-            useLocalWebGPU: true,
-            modelId: modelId,
-            workerPath: '../aiWorker.js',
-            initProgressCallback: (progress) => {
-                if (progressText) progressText.textContent = progress.text;
-                if (progressPercent) progressPercent.textContent = `${progress.percent}%`;
-                if (progressBar) progressBar.style.width = `${progress.percent}%`;
-
-                // 定期更新管理面板的模型下載進度與已下載位元組
-                const now = Date.now();
-                if (now - lastNpcDownloadRefresh > 1000) {
-                    loadNpcCacheList();
-                    lastNpcDownloadRefresh = now;
-                }
-
-                if (progress.percent === 100) {
-                    setTimeout(() => {
-                        if (container) container.classList.add('hidden');
-                        loadNpcCacheList();
-                        if (typeof window.AISummary !== 'undefined' && typeof window.AISummary.loadCacheList === 'function') {
-                            window.AISummary.loadCacheList();
-                        }
-                    }, 1500);
-                }
-            }
-        });
-
-        if (btnPause) {
-            btnPause.textContent = t('pause');
-            btnPause.onclick = () => {
-                const isCurrentlyPaused = btnPause.textContent === t('resume') || npcPreloader.isPaused;
-                if (isCurrentlyPaused) {
-                    btnPause.textContent = t('pause');
-                    npcPreloader.init();
-                } else {
-                    btnPause.textContent = t('resume');
-                    npcPreloader.pauseLoading();
-                }
-            };
-        }
-
-        if (btnStop) {
-            btnStop.onclick = () => {
-                if (npcPreloader) {
-                    npcPreloader.stopLoading();
-                }
-                if (container) container.classList.add('hidden');
-            };
-        }
-
-        npcPreloader.init();
-    }
-
     async function loadNpcCacheList() {
-        if (typeof window.AISummary !== 'undefined' && typeof window.AISummary.loadCacheList === 'function') {
-            window.AISummary.loadCacheList();
+        const tabManage = document.getElementById('tab-manage');
+        if (!tabManage || !tabManage.classList.contains('active')) {
+            return;
+        }
+        if (typeof WebLlmCacheManager !== 'undefined') {
+            WebLlmCacheManager.renderCacheList();
+        } else {
+            try {
+                const { WebLlmCacheManager: Mgr } = await import('./services/WebLlmCacheManager.js');
+                if (Mgr) {
+                    Mgr.renderCacheList();
+                }
+            } catch (err) {
+                console.error('[Renderer] Failed to load WebLlmCacheManager:', err);
+            }
         }
     }
 
     window.loadNpcCacheList = loadNpcCacheList;
     window.isNpcPreloaderActive = () => {
-        return npcPreloader && npcPreloader.isInitializing && !npcPreloader.isPaused;
+        return typeof WebLlmCacheManager !== 'undefined' && WebLlmCacheManager.isDownloading() && !WebLlmCacheManager.isPaused();
     };
+
 }
 
 function updateMuteUI() {

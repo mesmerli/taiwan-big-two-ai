@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.46] - 2026-06-05
+
+### Added
+- **WebLLM Thinking Time Rolling Average (EMA)**: Re-engineered the LLM thinking progress bar time estimation to use an Exponential Moving Average (EMA) with $\alpha = 0.25$. The progress bar now dynamically adapts and matches the actual recent inference speed of the AI model.
+
+### Fixed
+- **WebGPU Model Selection Fallback**: Resolved a bug where having an empty or `local-model` model ID with WebGPU active would cause a silent fallback to LM Studio and trigger a 400 Bad Request error. The system now automatically scans and resolves the ID to the first fully cached WebGPU model.
+- **WebGPU f16/f32 Cache Completion Detection**: Fixed compatibility checks where devices without `shader-f16` support would fail the cache check and fall back to LM Studio. The completion check now correctly intercepts and checks the `q4f32_1` fallback variant matching the actually cached f32 files.
+
 ## [1.5.45] - 2026-06-04
 
 ### Added

@@ -552,7 +552,43 @@ class BaseLLMAI extends AICharacter {
         try {
             // Dynamic import of the factory
             const { AiServiceFactory } = await import('./services/AiServiceFactory.js');
-            const useLocalWebGPU = AppStorage.getItem('useLocalWebGPU') === 'true';
+            let useLocalWebGPU = AppStorage.getItem('useLocalWebGPU') === 'true';
+            if (useLocalWebGPU) {
+                try {
+                    const { WebLlmCacheManager } = await import('./services/WebLlmCacheManager.js');
+                    let activeModelId = this.modelId;
+                    if (!activeModelId || activeModelId === 'local-model') {
+                        const fullyCached = await WebLlmCacheManager.getFullyCachedStandardModels();
+                        if (fullyCached.length > 0) {
+                            activeModelId = fullyCached[0].id;
+                            this.modelId = activeModelId;
+                            this.setSettings({
+                                apiUrl: this.apiUrl,
+                                modelId: this.modelId,
+                                apiKey: this.apiKey,
+                                extraPrompt: this.extraPrompt
+                            });
+                        } else {
+                            activeModelId = 'gemma-2-2b-it-q4f16_1-MLC';
+                        }
+                    }
+                    const completionModelId = activeModelId;
+                    const f16Supported = await WebLlmCacheManager.checkF16Supported();
+                    let checkModelId = activeModelId;
+                    if (!f16Supported && activeModelId.includes('q4f16_1')) {
+                        checkModelId = activeModelId.replace('q4f16_1', 'q4f32_1');
+                        console.log(`[${this.name} Engine] GPU does not support f16, checking f32 fallback model completion: ${checkModelId}`);
+                    }
+                    const completion = await WebLlmCacheManager.getCacheCompletion(checkModelId);
+                    if (completion < 100) {
+                        console.warn(`[${this.name} Engine] WebGPU model ${checkModelId} is not fully cached (${completion}%). Falling back to remote/local API mode.`);
+                        useLocalWebGPU = false;
+                    }
+                } catch (e) {
+                    console.warn(`[${this.name} Engine] Failed to check WebGPU cache completion, falling back to API mode:`, e);
+                    useLocalWebGPU = false;
+                }
+            }
 
 
             // Show loading progress on UI if using WebGPU
@@ -727,11 +763,16 @@ ${this.extraPrompt ? `Additional Custom Instructions:\n${this.extraPrompt}` : ''
                     progressBar.style.width = '0%';
                 }
             }
-            if (!hasRecordedTime) {
+            if (typeof AppStorage !== 'undefined') {
                 const elapsed = Date.now() - startTime;
-                if (elapsed > 100 && typeof AppStorage !== 'undefined') {
-                    AppStorage.setItem(storageKey, elapsed.toString());
-                    console.log(`[${this.name} Engine] Recorded first thinking time for ${storageKey}: ${elapsed}ms`);
+                if (elapsed > 100) {
+                    let updatedTime = elapsed;
+                    if (hasRecordedTime && recordedTime > 0) {
+                        // Exponential Moving Average (EMA) with alpha = 0.25
+                        updatedTime = Math.round(recordedTime * 0.75 + elapsed * 0.25);
+                    }
+                    AppStorage.setItem(storageKey, updatedTime.toString());
+                    console.log(`[${this.name} Engine] Updated thinking time for ${storageKey}: elapsed=${elapsed}ms, average=${updatedTime}ms`);
                 }
             }
         }
@@ -1097,7 +1138,43 @@ ${logStr}
 
         // Auto-detect or run reflection locally via WebGPU/LM Studio
         let rawContent = "";
-        const useLocalWebGPU = AppStorage.getItem('useLocalWebGPU') === 'true';
+        let useLocalWebGPU = AppStorage.getItem('useLocalWebGPU') === 'true';
+        if (useLocalWebGPU) {
+            try {
+                const { WebLlmCacheManager } = await import('./services/WebLlmCacheManager.js');
+                let activeModelId = this.modelId;
+                if (!activeModelId || activeModelId === 'local-model') {
+                    const fullyCached = await WebLlmCacheManager.getFullyCachedStandardModels();
+                    if (fullyCached.length > 0) {
+                        activeModelId = fullyCached[0].id;
+                        this.modelId = activeModelId;
+                        this.setSettings({
+                            apiUrl: this.apiUrl,
+                            modelId: this.modelId,
+                            apiKey: this.apiKey,
+                            extraPrompt: this.extraPrompt
+                        });
+                    } else {
+                        activeModelId = 'gemma-2-2b-it-q4f16_1-MLC';
+                    }
+                }
+                const completionModelId = activeModelId;
+                const f16Supported = await WebLlmCacheManager.checkF16Supported();
+                let checkModelId = activeModelId;
+                if (!f16Supported && activeModelId.includes('q4f16_1')) {
+                    checkModelId = activeModelId.replace('q4f16_1', 'q4f32_1');
+                    console.log(`[${this.name} Reflection] GPU does not support f16, checking f32 fallback model completion: ${checkModelId}`);
+                }
+                const completion = await WebLlmCacheManager.getCacheCompletion(checkModelId);
+                if (completion < 100) {
+                    console.warn(`[${this.name} Reflection] WebGPU model ${checkModelId} is not fully cached (${completion}%). Falling back to remote/local API mode.`);
+                    useLocalWebGPU = false;
+                }
+            } catch (e) {
+                console.warn(`[${this.name} Reflection] Failed to check WebGPU cache completion, falling back to API mode:`, e);
+                useLocalWebGPU = false;
+            }
+        }
         let succeeded = false;
 
         if (useLocalWebGPU) {
