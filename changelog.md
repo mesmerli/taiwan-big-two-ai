@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.49] - 2026-06-07
+
+### Added
+- **Dynamic Rules Mode Selection**: Integrated dynamic switching between Taiwanese and Hong Kong game rules within Settings. Configures starting card rules, scoring structures, and hand combinations (supporting stand-alone Triples and Flushes under Hong Kong rules).
+
+### Fixed
+- **Score Calculation Reference Error**: Fixed a runtime `ReferenceError: ruleMode is not defined` in `GameController.js` when calculating game-over scores.
+
 ## [1.5.48] - 2026-06-06
 
 ### Added

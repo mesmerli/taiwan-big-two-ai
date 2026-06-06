@@ -379,6 +379,7 @@ async function aiTurn() {
 window.aiTurn = aiTurn;
 
 function calculateScores(winnerIndex) {
+    const ruleMode = AppStorage.getItem('ruleMode') || 'taiwan';
     const winnerHand = gameState.lastPlay;
     const info = GameLogic.getHandInfo(winnerHand);
     let winnerMult = 1;
