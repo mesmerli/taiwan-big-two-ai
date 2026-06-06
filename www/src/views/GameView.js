@@ -51,6 +51,9 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
         // Update content
         modal.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
         modal.querySelector(`#tab-${tabId}`).classList.add('active');
+        if (tabId === 'manage' && typeof window.loadNpcCacheList === 'function') {
+            window.loadNpcCacheList();
+        }
     };
 });
 
