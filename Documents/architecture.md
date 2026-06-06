@@ -114,9 +114,59 @@ TwBig2/
     *   **合法出牌選單計算**：提供 `getLegalMoves()` 計算當前合法出牌組合，並處理「喊拉（Shout LA）」玩家一次出完最後一手或被迫過牌之限制。
     *   **自動過牌判定**：提供 `hasValidMoves()` 檢查玩家是否可接牌，以便輔助 UI 自動 Pass。
     *   *獨立設計使其可由單一腳本獨立進行單元測試 (`logic.test.js`)。*
-*   `src/ai/`: 處理電腦玩家 (NPC/LLM) 的出牌策略。專案主打「LLM-powered AI integration」，此目錄拆分為基礎類別 (`AICharacter`)、傳統規則 NPC (`HeuristicAI`)、大模型 AI 基礎 (`BaseLLMAI`)、具體大模型角色 (`LLMCharacters`) 以及引擎管理器 (`BigTwoAI`)。
+*   `src/ai/`：電腦玩家與大模型 AI 的決策引擎核心。
+    *   `src/ai/AICharacter.js`：
+        *   **職責**：定義電腦玩家角色的基礎屬性與個性配置（包括頭像、大頭貼、開局招呼語、勝利與失敗宣示、及專屬 Prompt 指引）。
+        *   **關鍵功能**：內建多個不同性格的電腦對手（例如 Heuristic 陣營的艾力克斯、貝拉，以及 LLM 陣營的戴安娜與阿瑞斯），提供不同難度與台味垃圾話風格的對話指令。
+    *   `src/ai/HeuristicAI.js`：
+        *   **職責**：基於傳統啟發式規則的出牌決策器。
+        *   **關鍵功能**：實作快速判定出牌策略的演算法。當需要跟牌時，會從當前合法牌組中挑選最小且合適的牌組出牌；當主動出牌時，會優先出最小的單張、對子或五張牌型，以實現經典的快速電腦玩家。
+    *   `src/ai/BaseLLMAI.js`：
+        *   **職責**：連接大語言模型的基礎類別，負責遊戲局勢編碼與 Prompt 模組建構。
+        *   **關鍵功能**：
+            *   狀態序列化：將目前的手牌、桌面上一手牌、所有玩家的剩餘張數、歷史出牌紀錄（`gameLog`）編碼成結構化且易於模型理解的 JSON Prompt。
+            *   記憶管理：維護一定的對局記憶視窗，以實現模型在垃圾話中展現「記仇」或「挑釁」等動態反應。
+            *   降級機制：當模型輸出格式錯誤、逾時或無法給出合法出牌時，自動調用 `HeuristicAI` 進行安全出牌。
+    *   `src/ai/LLMCharacters.js`：
+        *   **職責**：客製化大型語言模型電腦角色的細部 Prompt 指引與決策參數。
+    *   `src/ai/BigTwoAI.js`：
+        *   **職責**：AI 決策的統一協調器與管理器（註冊於全域 `window.AI`）。
+        *   **關鍵功能**：
+            *   `findPlay(playerIndex, context)`：根據玩家索引判斷該玩家是使用傳統規則（Heuristic）還是大模型（LLM），並調用對應的決策模組。
+            *   `postGameReflection()`：在牌局結束時，發送整局的歷史紀錄給 LLM 進行戰術自我檢討與反思。
 
-### 4. 原生互動模組 (Native Addon)
+### 4. 服務與基礎設施層 (Services & Infrastructure)
+此層面集中管理專案所依賴的外部 API、本地 AI 推理、硬體加速快取及跨平台系統底層 API 橋接：
+
+*   `src/services/AiServiceFactory.js`：
+    *   **職責**：AI 服務實例的工廠類別。
+    *   **關鍵功能**：依據設定參數（如 `useLocalWebGPU`）與系統硬體相容性，動態實例化並返回 `WebLlmAiService` (本地 WebGPU) 或 `LmStudioAiService` (相容 OpenAI 接口的本地/雲端 API 服務)。
+*   `src/services/WebLlmAiService.js`：
+    *   **職責**：基於 WebLLM 框架，利用 WebGPU 在網頁瀏覽器內實現純本地的 AI 推理服務。
+    *   **關鍵功能**：
+        *   `init()`：啟動並載入大語言模型，並透過 Web Worker (`aiWorker.js`) 將高負載的推理運算移出主要渲染線程，確保遊戲畫面流暢不卡頓。
+        *   出牌決策與戰術分析：向模型發送結構化 System Prompt，獲取 JSON 格式的出牌判定與語意垃圾話。
+*   `src/services/LmStudioAiService.js`：
+    *   **職責**：負責對接外部 OpenAI 相容介面（如本地運行的 LM Studio、Ollama，或雲端 OpenAI 服務）。
+    *   **關鍵功能**：將對局狀態包裝成 Chat Completion 請求，處理遠端串流（Streaming）回應或結構化輸出 JSON 回傳。
+*   `src/services/WebLlmCacheManager.js`：
+    *   **職責**：管理本地 WebGPU 模型的快取檔案。
+    *   **關鍵功能**：透過瀏覽器的 Cache Storage API 查詢已下載的模型檔案清單、估算所佔用的硬碟容量，並提供一鍵刪除與清空快取的清理工具，防止瀏覽器快取爆滿。
+*   `src/services/aiWorker.js`：
+    *   **職責**：WebLLM 的背景工作線程（Web Worker）。
+    *   **關鍵功能**：接收來自主線程的載入與推理請求，在背景獨立執行重度 WebGPU 計算，完成後將結果回傳主線程。
+*   `src/services/licenseService.js`：
+    *   **職責**：處理 Electron 版本之軟體授權、試用期管理與付費升級驗證。
+    *   **關鍵功能**：讀寫加密的本地授權資訊，計算 15 天試用期剩餘天數，並與原生 Windows Store Bridge 模組交互驗證應用程式之真實購買狀態。
+*   `src/services/systemService.js`：
+    *   **職責**：封裝底層平台（Electron、Tauri、Android Capacitor、網頁版）的系統級 API 差異。
+    *   **關鍵功能**：封裝視窗關閉、跳轉、關於視窗開啟、跳轉外部瀏覽器、檔案目錄存取等原生指令，確保上層代碼無需關心運行於何種封裝容器中。
+*   `src/services/sharedPrompt.js`：
+    *   **職責**：存放所有 AI 角色共用的系統 Prompt 樣板、賽後復盤分析引導語以及 API 模型對局資料規範。
+*   `src/services/example.js`：
+    *   **職責**：整合範例代碼，展示如何獨立初始化 `AiServiceFactory`、綁定載入進度回呼，並向 AI 發送模擬對局資料進行決策。
+
+### 5. 原生互動模組 (Native Addon)
 *   `StoreBridge`: 使用 C++ 開發並透過 `node-addon-api` 包裝成 Node.js 模組。主要用途是在 Electron 版上架到 Windows Store 時，可以直接與 Windows 原生 API 溝通，判斷玩家目前使用的是「試用版」還是已經購買的「正式版」，並可以觸發內購 (In-App Purchase) 的對話框。
 
 ## 運行流程概述
