@@ -133,11 +133,11 @@ npm test
 
 The "Deep Learning" AI characters (Diana & Ares) can run fully offline in the browser using WebGPU or connect to an OpenAI-compatible REST server (such as LM Studio).
 
-### Option A: Local WebGPU Mode (WebLLM) - Recommended 🚀
+### Option A: Built-in AI Engine Mode - Recommended 🚀
 This option utilizes WebGPU to load and run models directly in your browser's hardware-accelerated background worker.
 1. Make sure your browser/environment supports **WebGPU**.
 2. Open **AI Settings (⚙️)** in the game.
-3. Check the **"Enable Local WebGPU Mode (WebLLM)"** checkbox.
+3. Check the **"Enable Built-in AI Engine"** checkbox.
 4. Select a model (e.g. `Qwen2.5-1.5B-Instruct-q4f32_1-MLC` or an f16 performance version). The model will download directly to your browser's cache on the first launch, displaying a progress bar, and will run completely offline thereafter.
 5. **FP16 / shader-f16 Acceleration**: Electron builds automatically enable WebGPU experimental command line switches (`enable-unsafe-webgpu` and `enable-webgpu-developer-features`). Combined with a prototype hook on device creation, this allows compatible hardware GPUs (such as AMD Radeon 780M / 8945HS) to perform high-performance FP16 execution in WGSL shaders.
 6. **Manage Cache & Downloads**: Open the Game Rules/Info (**"i"**) modal and navigate to the **"Manage" (管理)** tab to view downloaded model details, monitor progress, and free up disk space by deleting unwanted model weights.

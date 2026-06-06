@@ -133,11 +133,11 @@ npm test
 
 專案中的「深度學習」AI 角色 (Diana & Ares) 可以透過 WebGPU 直接在瀏覽器完全離線執行，或者連接至相容於 OpenAI 的 API 伺服器 (如 LM Studio)。
 
-### 方案 A：本地 WebGPU 模式 (WebLLM) - 推薦使用 🚀
+### 方案 A：啟用內建 AI 引擎 - 推薦使用 🚀
 此方案利用 WebGPU 技術，直接在您瀏覽器的硬體加速背景執行緒 (Web Worker) 中載入並執行 AI 模型，完全不需架設伺服器。
 1. 確保您的瀏覽器與硬體環境支援 **WebGPU**（如最新版 Chrome 或 Edge）。
 2. 開啟遊戲中的 **AI 設定 (⚙️)**。
-3. 勾選 **「啟用本地 WebGPU 模式 (WebLLM)」** 複選框。
+3. 勾選 **「啟用內建 AI 引擎」** 複選框。
 4. 選擇模型（例如 `Qwen2.5-1.5B-Instruct-q4f32_1-MLC` 或支援 f16 的高效能版本）。模型在首次啟動時會直接下載至瀏覽器快取中（介面會顯示下載進度條），此後即可在完全斷網的環境下流暢出牌。
 5. **FP16 / shader-f16 加速支援**：Electron 版本已自動啟用 WebGPU 實驗性啟動參數 (`enable-unsafe-webgpu` 與 `enable-webgpu-developer-features`)。配合對 Device 建立的攔截鉤子，當您的顯示卡硬體（如 AMD Radeon 780M / 8945HS）支援 `shader-f16` 時，系統會自動在 WGSL 中啟用 FP16 運算以達到更高推論效能。
 6. **管理快取與下載**：您可以開啟遊戲資訊/規則 (**"i"**) 視窗的 **「管理」** 頁籤，在此查看各個已下載模型的佔用空間、下載進度，並能一鍵刪除快取以釋放硬碟空間。

@@ -1,6 +1,6 @@
-# WebLLM (WebGPU Local Inference) Implementation Guide
+# 內建 AI 引擎 (Built-in AI Engine) 實作指南
 
-本文件詳細說明本專案中 WebLLM（基於 WebGPU 的本地大型語言模型離線推論）的架構設計、執行機制與最佳化實作。
+本文件詳細說明本專案中內建 AI 引擎（基於 WebGPU 的本地大型語言模型離線推論）的架構設計、執行機制與最佳化實作。
 
 ---
 
@@ -51,19 +51,19 @@ graph TD
       return originalRequestDevice.call(this, descriptor);
   };
   ```
-  這確保了當硬體支援時，WebLLM 內部建立的邏輯設備會強制宣告支援 `'shader-f16'` 特徵，避免 WGSL Shader 中因 `enable f16;` 宣告而編譯出錯。
+  這確保了當硬體支援時，內建 AI 引擎內部建立的邏輯設備會強制宣告支援 `'shader-f16'` 特徵，避免 WGSL Shader 中因 `enable f16;` 宣告而編譯出錯。
 
 ### 2. 背景工作執行緒 (`aiWorker.js`)
-專案使用標準的 Web Worker 載入 WebLLM ESM 模組，並透過 `WebWorkerMLCEngineHandler` 處理所有來自 UI 執行緒的 RPC 請求：
+專案使用標準的 Web Worker 載入內建 AI 引擎 (WebLLM) ESM 模組，並透過 `WebWorkerMLCEngineHandler` 處理所有來自 UI 執行緒的 RPC 請求：
 * **原始碼**：[aiWorker.js](file:///c:/Users/julia/workspace/TwBig2/src/aiWorker.js)
-* **特點**：在 Worker 內部建立單一 Handler，接聽事件並無缝橋接至 MLC WebLLM 的核心運算。
+* **特點**：在 Worker 內部建立單一 Handler，接聽事件並無缝橋接至內建 AI 引擎的核心運算。
 
 ### 3. 本地 AI 服務類別 (`WebLlmAiService.js`)
 * **路徑**：[WebLlmAiService.js](file:///c:/Users/julia/workspace/TwBig2/src/services/WebLlmAiService.js)
 * **自動降級機制 (Automatic Fallback)**：
   當模型識別碼包含 `q4f16_1` 且經由 `navigator.gpu.requestAdapter()` 偵測到硬體不支援 `shader-f16` 時，服務會自動將載入的 Model ID 替換為 `q4f32_1` 版本，確保在舊款顯示卡或 macOS/Intel 內顯上依然能正常運作。
 * **引擎單例快取 (`AiServiceFactory.js`)**：
-  為避免在同一場對局的各個決策階段、賽後復盤分析以及自我反思 (Reflection) 中重複下載或載入模型，專案實作了單例工廠，確保全域重複使用同一個已初始化成功的 `WebLlmAiService` 實例。
+  為避免在同一場對局的各個決策階段、賽後復盤分析以及自我反思 (Reflection) 中重複下載或載入模型，專案實作了單例工廠，確保全域重複使用同一個已初始化成功的內建 AI 引擎實例。
 
 ### 4. 本地快取儲存管理器 (`WebLlmCacheManager.js`)
 * **路徑**：[WebLlmCacheManager.js](file:///c:/Users/julia/workspace/TwBig2/src/services/WebLlmCacheManager.js)

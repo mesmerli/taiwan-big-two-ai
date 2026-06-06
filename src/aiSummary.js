@@ -1,7 +1,14 @@
-/**
- * Gemma-4-2b Streaming Post-game Review System
- * Native JavaScript (ES6+), framework-free, highly modular.
- */
+if (typeof window.t === 'undefined') {
+    window.t = (key, params = {}) => {
+        const lang = (typeof window !== 'undefined' && window.currentLang) || 'zh';
+        const dict = (typeof I18N !== 'undefined' && I18N[lang]) || {};
+        let str = dict[key] || key;
+        for (const [k, v] of Object.entries(params)) {
+            str = str.replace(`{${k}}`, v);
+        }
+        return str;
+    };
+}
 
 class AISummarySystem {
     constructor() {
@@ -296,20 +303,18 @@ class AISummarySystem {
 
             if (localModels.length === 0) {
                 if (statusEl) {
-                    statusEl.textContent = isEn 
-                        ? '● Local WebGPU Active (Model needs to be downloaded first)' 
-                        : '● 本地 WebGPU 已啟用 (需要先下載模型)';
+                    statusEl.textContent = t('builtInAiEngineActiveNeedsDownload');
                     statusEl.style.color = '#ef4444'; // Red
                 }
                 if (modelList) {
                     const placeholder = document.createElement('option');
                     placeholder.value = '';
-                    placeholder.textContent = isEn ? 'No models downloaded' : '無已下載之模型';
+                    placeholder.textContent = t('noModelsDownloaded');
                     modelList.appendChild(placeholder);
                 }
             } else {
                 if (statusEl) {
-                    statusEl.textContent = isEn ? '● Local WebGPU Active' : '● 本地 WebGPU 已啟用';
+                    statusEl.textContent = t('builtInAiEngineActive');
                     statusEl.style.color = '#10b981'; // emerald
                 }
                 if (modelList) {
@@ -358,12 +363,12 @@ class AISummarySystem {
         if (modelList) {
             const defaultOption = document.createElement('option');
             defaultOption.value = '';
-            defaultOption.textContent = isEn ? 'Auto-detect' : '自動選擇';
+            defaultOption.textContent = t('autoDetect');
             modelList.appendChild(defaultOption);
         }
 
         if (statusEl) {
-            statusEl.textContent = isEn ? '● Testing...' : '● 正在測試連線...';
+            statusEl.textContent = t('connectionTesting');
             statusEl.style.color = '#f59e0b'; // amber
         }
 
@@ -389,7 +394,7 @@ class AISummarySystem {
             if (response.ok) {
                 const data = await response.json();
                 if (statusEl) {
-                    statusEl.textContent = isEn ? '● Connected' : '● 連線成功';
+                    statusEl.textContent = t('connectionSuccess');
                     statusEl.style.color = '#10b981'; // emerald
                 }
 
@@ -424,7 +429,7 @@ class AISummarySystem {
         } catch (e) {
             console.warn('[AI Summary] Settings connection check failed:', e);
             if (statusEl) {
-                statusEl.textContent = isEn ? '● Connection Failed' : '● 連線失敗';
+                statusEl.textContent = t('connectionFailed');
                 statusEl.style.color = '#ef4444'; // red
             }
             if (modelList && savedModelId) {
@@ -695,7 +700,7 @@ class AISummarySystem {
 
         // Translate modal buttons
         if (this.corsRetryBtn) {
-            this.corsRetryBtn.textContent = isEn ? 'Retry Connection' : '重新連線';
+            this.corsRetryBtn.textContent = t('retryConnection');
         }
 
         this.corsModal.classList.remove('hidden');
@@ -738,9 +743,7 @@ class AISummarySystem {
         const titleEl = document.getElementById('ai-review-title');
         if (titleEl) {
             const displayName = this.activeModel || 'AI';
-            titleEl.textContent = isEn
-                ? `${displayName} Match Review`
-                : `${displayName} 牌局復盤`;
+            titleEl.textContent = t('aiReviewTitleParam', { model: displayName });
         }
 
         // Re-render player stats cards if we have round data
@@ -758,7 +761,7 @@ class AISummarySystem {
         if (connectingEl) {
             const provider = this.getProviderName();
             connectingEl.innerHTML = `
-                <span class="animate-spin text-sm">⌛</span> ${isEn ? `Connecting to local ${provider}...` : `連線本地 ${provider} 中...`}
+                <span class="animate-spin text-sm">⌛</span> ${t('connectingLocalProvider', { provider })}
             `;
         }
 
@@ -767,9 +770,7 @@ class AISummarySystem {
         if (loadingMessageEl) {
             let activeModel = typeof AppStorage !== 'undefined' ? (AppStorage.getItem('reviewLlmModel') || '').trim() : '';
             if (!activeModel) activeModel = this.activeModel || 'AI';
-            loadingMessageEl.textContent = isEn
-                ? `${activeModel} is analyzing the match...`
-                : `${activeModel} 正在分析牌局中...`;
+            loadingMessageEl.textContent = t('modelAnalyzingMatch', { model: activeModel });
         }
 
         const loadingSubEl = document.getElementById('ai-loading-submessage');
@@ -783,9 +784,7 @@ class AISummarySystem {
         const reviewLlmModelInput = document.getElementById('review-llm-model');
         if (reviewLlmModelInput && !reviewLlmModelInput.value.trim()) {
             const activeModel = this.activeModel || 'AI';
-            reviewLlmModelInput.placeholder = isEn
-                ? `Auto-detected: ${activeModel}`
-                : `自動選擇：${activeModel}`;
+            reviewLlmModelInput.placeholder = t('autoDetectedModel', { model: activeModel });
         }
     }
 
@@ -799,19 +798,19 @@ class AISummarySystem {
 
         if (status === 'checking') {
             this.indicator.className = 'w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse';
-            this.indicatorText.textContent = isEn ? 'Testing connection...' : '正在測試連線...';
+            this.indicatorText.textContent = t('testingConnection');
             this.indicatorText.className = 'text-xs text-amber-400 font-medium';
         } else if (status === 'connected') {
             this.indicator.className = 'w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-md shadow-emerald-500/50';
             if (provider === 'WebLLM') {
-                this.indicatorText.textContent = isEn ? 'WebLLM (WebGPU) Active' : 'WebLLM (WebGPU) 已啟用';
+                this.indicatorText.textContent = t('builtInAiEngineEnabled');
             } else {
-                this.indicatorText.textContent = isEn ? `${provider} connected` : `${provider} 連線正常`;
+                this.indicatorText.textContent = t('providerConnected', { provider });
             }
             this.indicatorText.className = 'text-xs text-emerald-400 font-medium';
         } else {
             this.indicator.className = 'w-2.5 h-2.5 rounded-full bg-red-500 shadow-md shadow-red-500/50';
-            this.indicatorText.textContent = isEn ? 'Connection failed' : '連線失敗';
+            this.indicatorText.textContent = t('connectionFailedLabel');
             this.indicatorText.className = 'text-xs text-red-400 font-medium';
         }
     }
@@ -877,9 +876,7 @@ class AISummarySystem {
 
         const titleEl = document.getElementById('ai-review-title');
         if (titleEl) {
-            titleEl.textContent = isEn
-                ? `${displayName} Match Review`
-                : `${displayName} 牌局復盤`;
+            titleEl.textContent = t('aiReviewTitleParam', { model: displayName });
         }
 
         const provider = this.getProviderName();
@@ -887,7 +884,7 @@ class AISummarySystem {
         // Reset summary box and show status
         this.summaryContainer.innerHTML = `
             <div id="ai-connecting-message" class="flex items-center gap-2 text-slate-400 text-xs">
-                <span class="animate-spin text-sm">⌛</span> ${isEn ? `Connecting to local ${provider}...` : `連線本地 ${provider} 中...`}
+                <span class="animate-spin text-sm">⌛</span> ${t('connectingLocalProvider', { provider })}
             </div>
         `;
 
@@ -896,7 +893,7 @@ class AISummarySystem {
             this.startLoadingAnimation();
             const subEl = document.getElementById('ai-loading-submessage');
             if (subEl) {
-                subEl.textContent = isEn ? 'Preparing WebGPU Model...' : '準備 WebGPU 模型中...';
+                subEl.textContent = t('preparingWebgpuModel');
             }
         } else {
             this.updateConnectionStatus('checking');
@@ -905,13 +902,9 @@ class AISummarySystem {
             if (!isConnected) {
                 this.updateConnectionStatus('failed');
                 if (provider === 'LM Studio') {
-                    this.summaryContainer.innerHTML = isEn
-                        ? '<div class="text-red-400 text-xs border border-red-950 bg-red-950/20 p-3 rounded-lg flex flex-col gap-2"><span>❌ Connection to local LM Studio failed.</span><span class="text-[11px] text-slate-400">Please enable CORS rules in LM Studio and try again.</span></div>'
-                        : '<div class="text-red-400 text-xs border border-red-950 bg-red-950/20 p-3 rounded-lg flex flex-col gap-2"><span>❌ 無法連線至本地 LM Studio 服務。</span><span class="text-[11px] text-slate-400">請啟用 LM Studio 的 CORS 原則後重試。</span></div>';
+                    this.summaryContainer.innerHTML = `<div class="text-red-400 text-xs border border-red-950 bg-red-950/20 p-3 rounded-lg flex flex-col gap-2"><span>${t('connectionLmstFailed')}</span><span class="text-[11px] text-slate-400">${t('connectionLmstFailedTip')}</span></div>`;
                 } else {
-                    this.summaryContainer.innerHTML = isEn
-                        ? `<div class="text-red-400 text-xs border border-red-950 bg-red-950/20 p-3 rounded-lg flex flex-col gap-2"><span>❌ Connection to local ${provider} failed.</span><span class="text-[11px] text-slate-400">Please check if the service is running at ${this.apiUrl} and allows CORS.</span></div>`
-                        : `<div class="text-red-400 text-xs border border-red-950 bg-red-950/20 p-3 rounded-lg flex flex-col gap-2"><span>❌ 無法連線至本地 ${provider} 服務。</span><span class="text-[11px] text-slate-400">請檢查該服務是否已在 ${this.apiUrl} 啟動，且已開放 CORS 連線。</span></div>`;
+                    this.summaryContainer.innerHTML = `<div class="text-red-400 text-xs border border-red-950 bg-red-950/20 p-3 rounded-lg flex flex-col gap-2"><span>${t('connectionProviderFailed', { provider })}</span><span class="text-[11px] text-slate-400">${t('connectionProviderFailedTip', { url: this.apiUrl })}</span></div>`;
                 }
                 return;
             }
@@ -929,8 +922,7 @@ class AISummarySystem {
                 return;
             }
             console.error('[AI Summary] Request failed:', err);
-            const errTitle = isEn ? 'Analysis failed' : '分析發生錯誤';
-            this.summaryContainer.innerHTML = `<div class="text-red-400 text-xs border border-red-950 bg-red-950/20 p-3 rounded-lg">❌ ${errTitle}：${err.message || err}</div>`;
+            this.summaryContainer.innerHTML = `<div class="text-red-400 text-xs border border-red-950 bg-red-950/20 p-3 rounded-lg">❌ ${t('analysisFailed')}：${err.message || err}</div>`;
             this.updateConnectionStatus('failed');
         }
     }
@@ -1032,9 +1024,9 @@ class AISummarySystem {
                 avatarImgSrc = p4Img ? p4Img.getAttribute('src') : 'src/assets/avatars/avatar_diana.png';
             }
 
-            const winText = isEn ? 'Winner' : '贏家';
-            const leftText = isEn ? `${remainingCount} cards left` : `剩餘 ${remainingCount} 張`;
-            const hrBadge = isEn ? 'Home Run 😱' : '全壘打 😱';
+            const winText = t('winnerLabel');
+            const leftText = t('cardsLeft', { count: remainingCount });
+            const hrBadge = t('homeRunLabel');
 
             let cardsHtml = '';
             if (!isWinner && remainingCount > 0) {
@@ -1079,7 +1071,7 @@ class AISummarySystem {
                     </div>
                 </div>
                 <div class="mt-2 flex items-center justify-between">
-                    ${isWinner ? `<span class="px-1.5 py-0.5 rounded bg-emerald-950 border border-emerald-500/40 text-emerald-400 text-[9px] font-extrabold">${isEn ? 'WINNER' : '贏家'}</span>` : ''}
+                    ${isWinner ? `<span class="px-1.5 py-0.5 rounded bg-emerald-950 border border-emerald-500/40 text-emerald-400 text-[9px] font-extrabold">${t('winnerBadge')}</span>` : ''}
                     ${isHomeRun ? `<span class="px-1.5 py-0.5 rounded bg-rose-950 border border-rose-500/40 text-rose-400 text-[9px] font-extrabold animate-pulse">${hrBadge}</span>` : ''}
                 </div>
                 ${cardsHtml}
@@ -1412,7 +1404,7 @@ ${JSON.stringify(stats, null, 2)}
 
         let activeModel = typeof AppStorage !== 'undefined' ? (AppStorage.getItem('reviewLlmModel') || '').trim() : '';
         const modelName = activeModel || 'AI';
-        const progressTitle = isEn ? `${modelName} is analyzing the match...` : `${modelName} 正在分析牌局中...`;
+        const progressTitle = t('modelAnalyzingMatch', { model: modelName });
         const progressSub = getNextMessage();
 
         this.summaryContainer.innerHTML = `
@@ -1615,7 +1607,7 @@ ${JSON.stringify(stats, null, 2)}
         const userMsgHtml = `
             <div class="my-4 flex justify-end animate-fade-in">
                 <div class="max-w-[85%] bg-violet-600/30 border border-violet-500/40 rounded-2xl rounded-tr-none px-3.5 py-2 text-slate-100 text-xs lg-game:text-sm shadow-sm flex flex-col gap-1">
-                    <div class="text-[10px] text-violet-400 font-bold">${isEn ? 'You' : '你'}</div>
+                    <div class="text-[10px] text-violet-400 font-bold">${t('youName')}</div>
                     <div class="whitespace-pre-wrap">${escapedQuestion}</div>
                 </div>
             </div>
@@ -1634,7 +1626,7 @@ ${JSON.stringify(stats, null, 2)}
                 <div id="ai-response-loading" class="my-4 flex justify-start animate-fade-in">
                     <div class="max-w-[85%] bg-slate-950/40 border border-slate-800 rounded-2xl rounded-tl-none px-3.5 py-2 text-slate-400 text-xs lg-game:text-sm flex items-center gap-2 shadow-sm">
                         <span class="animate-spin text-sm">⌛</span>
-                        <span>${isEn ? 'AI is thinking...' : 'AI 正在思考中...'}</span>
+                        <span>${t('aiThinking')}</span>
                     </div>
                 </div>
             `;

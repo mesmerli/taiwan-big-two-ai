@@ -223,9 +223,9 @@ function updateLanguage() {
                 const data = aiData[i];
                 let suffix = '';
                 if (data.isLLM) {
-                    suffix = currentLang === 'zh' ? ' (AI)' : ' (AI)';
+                    suffix = ' (AI)';
                 } else {
-                    suffix = currentLang === 'zh' ? ' (電腦)' : ' (NPC)';
+                    suffix = t('npcSuffix');
                 }
 
                 PLAYER_NAMES[i] = data.name + suffix;
@@ -249,7 +249,7 @@ function updateLanguage() {
                 }
             } else {
                 // It's a human (either slot 0 or an AI slot swapped to human)
-                PLAYER_NAMES[i] = currentLang === 'zh' ? '你' : 'You';
+                PLAYER_NAMES[i] = t('youName');
                 const avatarEl = playerEl.querySelector('.avatar');
                 if (avatarEl) {
                     avatarEl.innerHTML = `<img src="src/assets/avatars/avatar_you.png" alt="You">`;
@@ -1316,7 +1316,7 @@ function setupAvatarClickListeners() {
         } else {
             const div = document.createElement('div');
             div.className = 'learning-empty';
-            div.textContent = currentLang === 'zh' ? '尚無學習紀錄' : 'No learnings yet';
+            div.textContent = t('noLearningsYet');
             learningsContainer.appendChild(div);
         }
     }
@@ -1400,7 +1400,7 @@ function setupAvatarClickListeners() {
         if (currentEditingIndex !== -1 && window.AI) {
             const char = window.AI.getCharacter(currentEditingIndex);
             if (char && char.isLLM) {
-                const msg = currentLang === 'zh' ? '確定要清除所有學習到的經驗嗎？' : 'Clear all learned strategic rules?';
+                const msg = t('clearMemoryPrompt');
                 if (confirm(msg)) {
                     char.learnings = [];
                     if (typeof char.saveMemory === 'function') char.saveMemory();
@@ -1432,7 +1432,7 @@ function setupAvatarClickListeners() {
                         console.log("[Export] Saved to: ", result.path || 'Web Download');
                     }
                 } catch (err) {
-                    showAlert(currentLang === 'zh' ? '匯出失敗' : 'Export failed');
+                    showAlert(t('exportFailed'));
                     console.error(err);
                 }
             }
@@ -1456,14 +1456,14 @@ function setupAvatarClickListeners() {
                             if (typeof char.saveMemory === 'function') char.saveMemory();
                             
                             updateLearningsUI(char);
-                            showAlert(currentLang === 'zh' ? '記憶匯入成功！' : 'Memory imported successfully!');
+                            showAlert(t('importSuccess'));
                             AudioPlayer.playCardSelect();
                         } else {
                             throw new Error("Invalid format");
                         }
                     }
                 } catch (err) {
-                    showAlert(currentLang === 'zh' ? '匯入失敗：格式不正確' : 'Import failed: Invalid format');
+                    showAlert(t('importFailedFormat'));
                     console.error(err);
                 }
             }
@@ -1486,18 +1486,16 @@ function setupAvatarClickListeners() {
 
             if (localModels.length === 0) {
                 if (statusEl) {
-                    statusEl.textContent = isEn 
-                        ? '● Local WebGPU Active (Model needs to be downloaded first)' 
-                        : '● 本地 WebGPU 已啟用 (需要先下載模型)';
+                    statusEl.textContent = t('builtInAiEngineActiveNeedsDownload');
                     statusEl.style.color = '#ef4444'; // Red
                 }
                 const placeholder = document.createElement('option');
                 placeholder.value = '';
-                placeholder.textContent = isEn ? 'No models downloaded' : '無已下載之模型';
+                placeholder.textContent = t('noModelsDownloaded');
                 modelList.appendChild(placeholder);
             } else {
                 if (statusEl) {
-                    statusEl.textContent = isEn ? '● Local WebGPU Active' : '● 本地 WebGPU 已啟用';
+                    statusEl.textContent = t('builtInAiEngineActive');
                     statusEl.style.color = '#10b981'; // emerald
                 }
                 localModels.forEach(m => {
@@ -1539,7 +1537,7 @@ function setupAvatarClickListeners() {
         // Add default auto-detect option
         const defaultOption = document.createElement('option');
         defaultOption.value = '';
-        defaultOption.textContent = isEn ? 'Auto-detect' : '自動選擇';
+        defaultOption.textContent = t('autoDetect');
         modelList.appendChild(defaultOption);
 
         if (!apiUrl) {
@@ -1548,7 +1546,7 @@ function setupAvatarClickListeners() {
         }
 
         if (statusEl) {
-            statusEl.textContent = isEn ? '● Testing...' : '● 正在測試連線...';
+            statusEl.textContent = t('connectionTesting');
             statusEl.style.color = '#f59e0b'; // amber
         }
 
@@ -1566,7 +1564,7 @@ function setupAvatarClickListeners() {
             if (response.ok) {
                 const data = await response.json();
                 if (statusEl) {
-                    statusEl.textContent = isEn ? '● Connected' : '● 連線成功';
+                    statusEl.textContent = t('connectionSuccess');
                     statusEl.style.color = '#10b981'; // emerald
                 }
 
@@ -1599,7 +1597,7 @@ function setupAvatarClickListeners() {
         } catch (e) {
             console.warn("[UI] Failed to fetch models for dropdown:", e);
             if (statusEl) {
-                statusEl.textContent = isEn ? '● Connection Failed' : '● 連線失敗';
+                statusEl.textContent = t('connectionFailed');
                 statusEl.style.color = '#ef4444'; // red
             }
             if (modelList && savedModelId) {
@@ -1661,7 +1659,7 @@ function setupAvatarClickListeners() {
     }
 
     resetBtn.onclick = () => {
-        const msg = currentLang === 'zh' ? '確定要重設為預設值嗎？' : 'Reset to defaults?';
+        const msg = t('resetDefaultsPrompt');
         if (confirm(msg)) {
             if (currentEditingIndex !== -1 && window.AI) {
                 const char = window.AI.getCharacter(currentEditingIndex);
