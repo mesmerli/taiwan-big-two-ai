@@ -1,11 +1,11 @@
 # Taiwan Big2 AI (台灣大老二 AI 版)
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
-[![Version](https://img.shields.io/badge/Version-1.5.47-blue.svg)](./changelog.md)
+[![Version](https://img.shields.io/badge/Version-1.5.49-blue.svg)](./changelog.md)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Electron%20%7C%20Tauri%20%7C%20Android%20%7C%20Browser-brightgreen.svg)](https://capacitorjs.com/)
 [![Sponsor](https://img.shields.io/badge/Sponsor-GitHub%20Sponsors-ea4aaa?style=flat&logo=github-sponsors)](https://github.com/sponsors/mesmerli)
 
-本專案打造了一個現代化的大老二遊戲，基於 Electron 桌面應用框架。它結合了高效的啟發式算法與進階的多人格大型語言模型 (LLM) 研究引擎，專為自動化戰略對弈、本地 WebGPU 執行與進化學習分析而設計。
+本專案基於 Tauri 打造（同時支援 Electron、Android 與網頁端），是一個現代化的**台灣與香港版大老二**遊戲。它結合了高效的啟發式算法與進階的多人格大型語言模型 (LLM) 研究引擎，專為自動化戰略對弈、本地 WebGPU 執行與進化學習分析而設計。
 
 <p align="center">
   <a href="https://mesmerli.github.io/taiwan-big-two-ai/">🌐 <b>線上直接玩 (Play Online)</b></a> &nbsp;|&nbsp;
@@ -21,8 +21,8 @@
 
 ### 💡 如何取得此遊戲：
 * **支持開發者**：歡迎在 **[Microsoft Store](https://apps.microsoft.com/detail/9PM1S8GKBLK9)** 購買官方版本，享有自動更新與便捷安裝服務。
-* **Windows 版本**：請造訪 **[Windows 發佈資料夾](./release/Windows/)** 下載並安裝最新的 **`taiwan-big2-ai_1.5.47_x64_en-US.msi`** 安裝包（Tauri 版本）。
-* **安卓版本**：請造訪 **[Android 發佈資料夾](./release/Android/)** 下載並安裝最新的 **`twbig2ai-1.5.47.apk`** 安裝包。
+* **Windows 版本**：請造訪 **[Windows 發佈資料夾](./release/Windows/)** 下載並安裝最新的 **`taiwan-big2-ai_1.5.49_x64_en-US.msi`** 安裝包（Tauri 版本）。
+* **安卓版本**：請造訪 **[Android 發佈資料夾](./release/Android/)** 下載並安裝最新的 **`twbig2ai-1.5.49.apk`** 安裝包。
 * **開源社群**：本遊戲基於 **AGPLv3** 開源授權。歡迎自由克隆 (Clone) 此儲存庫，並免費自行編譯與建置。想了解更多可參閱我們的 [建置與執行指南](./Documents/BuildnRun.md) 及 [程式碼架構說明](./Documents/architecture.md)。
 * **小額贊助**：如果您覺得本專案的 AI 對抗邏輯對您的學習或專案有所幫助，歡迎透過以下方式進行贊助與支持：
 
@@ -56,17 +56,25 @@
 - **記憶進化**：AI 會在敗北後提煉結構化的**「學習筆記」**（戰略規則），儲存至持久化 JSON 記憶庫。
 - **關鍵字匹配**：精煉的關鍵字相似度引擎，確保戰略規則能在不重複的情況下持續累積。
 
-### 3. 嚴謹的台灣版規則
-核心邏輯嚴格遵循傳統的**台灣大老二**玩法：
-- **不含同花 (No Flush)**：五張同色牌但非順子者為無效牌型（與港版規則不同）。
-- **不含單獨三條 (No Standalone Triple)**：三張一組的牌不能單獨打出，僅限於組成葫蘆或鐵支。
-- **牌型等級**：同花順 > 鐵支 > 葫蘆 > 順子。
-- **花色強度**：黑桃 ♠ > 紅心 ♥ > 方塊 ♦ > 梅花 ♣。
-- **一條龍**：13 張連號 (3-2) 即刻獲勝。
+### 3. 動態規則引擎 (台灣版 vs. 香港版)
+引擎採用策略模式 (Strategy Pattern)，可在設定中動態切換不同的規則集：
+- **台灣版規則**：
+  - **不含同花**：五張同花色但非順子的牌不能單獨打出。
+  - **不含單獨三條**：三張一組的牌不能單獨打出，僅限於組成葫蘆。
+  - **怪物牌型 (鐵支/同花順)**：可隨時壓制單張或對子。
+  - **花色強度**：黑桃 ♠ > 紅心 ♥ > 方塊 ♦ > 梅花 ♣。
+  - **起手牌**：梅花 3 ♣。
+  - **順子大小**：台灣特有順子順序（例如 2-3-4-5-6 最大，A-2-3-4-5 最小）。
+- **香港版規則**：
+  - **可打同花**：允許單獨打出 5 張同花的牌型。
+  - **可打單獨三條**：允許單獨打出三張相同數字的牌型。
+  - **怪物牌型**：不能用來壓制單張或對子。
+  - **花色強度**：黑桃 ♠ > 紅心 ♥ > 梅花 ♣ > 方塊 ♦。
+  - **起手牌**：方塊 3 ♦。
 
 ### 4. 智慧自適應響應式介面 (Mobile Layout)
 - **自動排版切換**：動態檢測視窗寬度，當視窗寬度窄於 `900px` 時自動在寬螢幕桌面版格狀佈局與手機版垂直堆疊佈局之間進行流暢切換。
-- **跨平台體驗一致性**：同步 Electron (桌面端) 與 Capacitor (Android 行動端) 的前端資源與樣式，保證所有螢幕尺寸與螢幕旋轉下的極佳流暢遊戲體驗。
+- **跨平台體驗一致性**：同步 Tauri / Electron (桌面端) 與 Capacitor (Android 行動端) 的前端資源與樣式，保證所有螢幕尺寸與螢幕旋轉下的極佳流暢遊戲體驗。
 - **精美品牌識別整合**：在規則說明與設定視窗的抬頭左側放上專案高解析度 Logo，並加上紫色氛圍的霓虹發光濾鏡特效。
 
 ---

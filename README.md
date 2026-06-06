@@ -1,11 +1,11 @@
 # Taiwan Big2 AI (台灣大老二 AI 版)
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
-[![Version](https://img.shields.io/badge/Version-1.5.47-blue.svg)](./changelog.md)
+[![Version](https://img.shields.io/badge/Version-1.5.49-blue.svg)](./changelog.md)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Electron%20%7C%20Tauri%20%7C%20Android%20%7C%20Browser-brightgreen.svg)](https://capacitorjs.com/)
 [![Sponsor](https://img.shields.io/badge/Sponsor-GitHub%20Sponsors-ea4aaa?style=flat&logo=github-sponsors)](https://github.com/sponsors/mesmerli)
 
-A modernized **Taiwanese Big Two** card game built with Electron. This project integrates sophisticated heuristic algorithms with an advanced multi-persona research engine powered by **Large Language Models (LLM)**, designed for autonomous strategic gameplay analysis, local WebGPU execution, and evolutionary learning.
+A modernized **Taiwanese & Hong Kong Big Two** card game built with Tauri (also supporting Electron, Android, and Web). This project integrates sophisticated heuristic algorithms with an advanced multi-persona research engine powered by **Large Language Models (LLM)**, designed for autonomous strategic gameplay analysis, local WebGPU execution, and evolutionary learning.
 
 <p align="center">
   <a href="https://mesmerli.github.io/taiwan-big-two-ai/">🌐 <b>Play Online Directly</b></a> &nbsp;|&nbsp;
@@ -21,8 +21,8 @@ A modernized **Taiwanese Big Two** card game built with Electron. This project i
 
 ### 💡 How to get this game:
 * **Support the Developer**: Purchase the official version on the **[Microsoft Store](https://apps.microsoft.com/detail/9PM1S8GKBLK9)** for automatic updates and easy installation.
-* **Windows Version**: Browse the **[Windows Release Folder](./release/Windows/)** to download and install the latest **`taiwan-big2-ai_1.5.47_x64_en-US.msi`** (built with Tauri).
-* **Android Version**: Browse the **[Android Release Folder](./release/Android/)** to download and install the latest **`twbig2ai-1.5.47.apk`** installation package.
+* **Windows Version**: Browse the **[Windows Release Folder](./release/Windows/)** to download and install the latest **`taiwan-big2-ai_1.5.49_x64_en-US.msi`** (built with Tauri).
+* **Android Version**: Browse the **[Android Release Folder](./release/Android/)** to download and install the latest **`twbig2ai-1.5.49.apk`** installation package.
 * **Open Source**: This game is licensed under **AGPLv3**. You are welcome to clone this repository and build it yourself for free. Check out our [Build & Run Guide](./Documents/BuildnRun.md) and [Architecture Overview](./Documents/architecture.md) for more details.
 * **Sponsor**: If you find my AI logic helpful for your own projects, please consider supporting the developer:
 
@@ -56,17 +56,25 @@ The project supports isolated AI personalities, each with its own memory, strate
 - **Memory Evolution**: Agents analyze losses to generate structured **"Learning Notes"** (Rule Extraction) stored in persistent JSON memory.
 - **Keyword Matching**: A refined keyword similarity engine ensures strategic rules accumulate without redundancy.
 
-### 3. Strict Taiwanese Ruleset
-The engine is strictly aligned with traditional **Taiwanese Big Two** rules:
-- **No Flush**: Five cards of the same suit are NOT a valid hand (unlike the HK version).
-- **No Standalone Triples**: Three-of-a-kind cannot be played alone; they are only valid in Full House or Four of a Kind.
-- **Hand Ranks**: Straight Flush > Four of a Kind > Full House > Straight.
-- **Suit Strength**: Spade ♠ > Heart ♥ > Diamond ♦ > Club ♣.
-- **Dragon**: 13-card sequence (3-2) wins immediately.
+### 3. Dynamic Ruleset Engine (Taiwanese vs. Hong Kong)
+The engine implements the **Strategy Pattern** to dynamically switch between rulesets:
+- **Taiwanese Rules**:
+  - **No Flush**: Five cards of the same suit are NOT a valid hand.
+  - **No Standalone Triples**: Three-of-a-kind cannot be played alone; they are only valid in Full House.
+  - **Monsters (Bombs)**: Four of a Kind / Straight Flush can beat Singles or Pairs at any time.
+  - **Suit Strength**: Spade ♠ > Heart ♥ > Diamond ♦ > Club ♣.
+  - **Start Card**: Club 3 ♣.
+  - **Straight Order**: Specialized Taiwanese straight rankings (e.g. `2-3-4-5-6` is largest, `A-2-3-4-5` is smallest).
+- **Hong Kong Rules**:
+  - **Flush Allowed**: Standalone Flushes are valid 5-card hands.
+  - **Standalone Triples Allowed**: Standalone Triples (3 cards) are valid hands.
+  - **Monsters (Bombs)**: Do not beat Singles or Pairs.
+  - **Suit Strength**: Spade ♠ > Heart ♥ > Club ♣ > Diamond ♦.
+  - **Start Card**: Diamond 3 ♦.
 
 ### 4. Adaptive Responsive UI (Mobile Layout)
 - **Automatic Layout Toggle**: Dynamically checks window size and automatically switches between the premium widescreen desktop grid layout and the vertical stack mobile layout when width drops below `900px`.
-- **Cross-Platform Consistency**: Synchronized assets and styles across Electron (desktop) and Capacitor (Android) wrappers to guarantee a fluid responsive gaming experience on all screen sizes and orientations.
+- **Cross-Platform Consistency**: Synchronized assets and styles across Tauri/Electron (desktop) and Capacitor (Android) wrappers to guarantee a fluid responsive gaming experience on all screen sizes and orientations.
 - **Premium Brand Integration**: Rules and settings modal headers are updated with a high-fidelity stylized logo, complete with a purple-themed ambient glow filter.
 
 ---
