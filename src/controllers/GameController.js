@@ -404,7 +404,13 @@ function calculateScores(winnerIndex) {
         let baseLost = hand.length;
         let loserMult = 1;
 
-        if (baseLost >= 10) loserMult *= 2;
+        if (ruleMode === 'taiwan') {
+            if (baseLost >= 10) loserMult *= 2;
+        } else {
+            if (baseLost === 13) loserMult *= 4;
+            else if (baseLost >= 10) loserMult *= 3;
+            else if (baseLost >= 8) loserMult *= 2;
+        }
 
         const twosCount = hand.filter(c => GameLogic.getRank(c) === 12).length;
         loserMult *= Math.pow(2, twosCount);

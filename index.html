@@ -90,26 +90,35 @@
                 </div>
 
                 <div id="tab-rules" class="tab-content active">
+                    <!-- Rule Mode Dropdown -->
+                    <div class="form-group rule-mode-selector-container" style="margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 12px; display: flex; flex-direction: column; gap: 4px;">
+                        <label for="game-rule-mode" data-i18n="ruleModeLabel" style="font-weight: 600; margin-bottom: 5px; color: #e2e8f0; font-size: 13px;">Game Rule Mode</label>
+                        <select id="game-rule-mode" style="width: 100%; background: #1e293b; color: #fff; border: 1px solid #475569; border-radius: 4px; padding: 6px; font-size: 13px;">
+                            <option value="taiwan" data-i18n="ruleModeTaiwan">Taiwanese Rules</option>
+                            <option value="hongkong" data-i18n="ruleModeHongKong">Hong Kong Rules</option>
+                        </select>
+                    </div>
                     <div class="rules-sections">
                         <section>
                             <h3 data-i18n="handsTitle">Hands (牌型)</h3>
                             <ul>
                                 <li><strong data-i18n="rank">Rank:</strong> 2 > A > K > Q > J > 10 > 9 > 8 > 7 > 6 > 5 > 4 > 3</li>
-                                <li><strong data-i18n="suit">Suit:</strong> Spade ♠ > Heart ♥ > Diamond ♦ > Club ♣</li>
-                                <li data-i18n="dragon">Dragon: 13-card sequence. Wins immediately! (2x)</li>
-                                <li data-i18n="fiveCard">Five-card: Str. Flush > 4-of-a-Kind > Full House > Straight</li>
-                                <li data-i18n="bombsRule" class="text-violet-400 font-semibold">Note: 4-of-a-Kind & Str. Flush can beat single cards or pairs!</li>
+                                <li id="rule-desc-suit"></li>
+                                <li id="rule-desc-start"></li>
+                                <li id="rule-desc-dragon"></li>
+                                <li id="rule-desc-fivecard"></li>
+                                <li id="rule-desc-bombs" class="text-violet-400 font-semibold"></li>
                             </ul>
                         </section>
                         <section>
                             <h3 data-i18n="scoringTitle">Scoring (計分)</h3>
                             <ul>
-                                <li data-i18n="baseScore">Base: 1 point per card left.</li>
-                                <li data-i18n="winnerX2">Winner x2: Ends with "2", Pair, or 5-card hand.</li>
-                                <li data-i18n="winnerX4">Winner x4: Ends with 4-of-a-Kind or Str. Flush.</li>
-                                <li data-i18n="loser10">Loser x2: Left with 10+ cards.</li>
-                                <li data-i18n="loserTwo">Loser x2: Per "2" card in hand.</li>
-                                <li data-i18n="loserSpecial">Loser x2: Per 4-of-a-Kind or Str. Flush in hand.</li>
+                                <li id="rule-desc-basescore"></li>
+                                <li id="rule-desc-winner2"></li>
+                                <li id="rule-desc-winner4"></li>
+                                <li id="rule-desc-loser10"></li>
+                                <li id="rule-desc-loserTwo"></li>
+                                <li id="rule-desc-loserSpecial"></li>
                             </ul>
                         </section>
                     </div>
@@ -135,13 +144,6 @@
 
                 <div id="tab-ai-settings" class="tab-content">
                     <div class="settings-form">
-                        <div class="form-group" style="margin-bottom: 15px;">
-                            <label for="game-rule-mode" data-i18n="ruleModeLabel" style="font-weight: 600; margin-bottom: 5px;">Game Rule Mode</label>
-                            <select id="game-rule-mode" style="width: 100%; background: #1e293b; color: #fff; border: 1px solid #475569; border-radius: 4px; padding: 6px; font-size: 13px;">
-                                <option value="taiwan" data-i18n="ruleModeTaiwan">Taiwanese Rules</option>
-                                <option value="hongkong" data-i18n="ruleModeHongKong">Hong Kong Rules</option>
-                            </select>
-                        </div>
                         <div class="form-group" style="flex-direction: row; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                             <label for="review-panel-enabled" data-i18n="reviewPanelEnabledLabel" style="margin-bottom: 0; cursor: pointer;">Enable Match Review Panel</label>
                             <label class="switch">

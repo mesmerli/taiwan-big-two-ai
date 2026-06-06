@@ -34,14 +34,24 @@ class GameLogic {
      * Compare two cards
      * @returns {number} 1 if card1 > card2, -1 if card1 < card2, 0 if equal
      */
+    static getSuitStrength(cardId) {
+        const suit = this.getSuit(cardId);
+        const ruleMode = this.getRuleMode();
+        if (ruleMode === 'hongkong') {
+            const hkStrengths = [1, 0, 2, 3];
+            return hkStrengths[suit];
+        }
+        return suit;
+    }
+
     static compareCards(card1, card2) {
         const r1 = this.getRank(card1);
         const r2 = this.getRank(card2);
         if (r1 > r2) return 1;
         if (r1 < r2) return -1;
 
-        const s1 = this.getSuit(card1);
-        const s2 = this.getSuit(card2);
+        const s1 = this.getSuitStrength(card1);
+        const s2 = this.getSuitStrength(card2);
         if (s1 > s2) return 1;
         if (s1 < s2) return -1;
 

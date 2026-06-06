@@ -8,8 +8,37 @@ function t(key, params = {}) {
 }
 window.t = t;
 
+function updateRulesDescription() {
+    const ruleMode = AppStorage.getItem('ruleMode') || 'taiwan';
+    const suffix = ruleMode === 'taiwan' ? 'TW' : 'HK';
+
+    const elements = {
+        'rule-desc-suit': 'ruleSuit',
+        'rule-desc-start': 'ruleStart',
+        'rule-desc-dragon': 'ruleDragon',
+        'rule-desc-fivecard': 'ruleFiveCard',
+        'rule-desc-bombs': 'ruleBombs',
+        'rule-desc-basescore': 'ruleBaseScore',
+        'rule-desc-winner2': 'ruleWinner2',
+        'rule-desc-winner4': 'ruleWinner4',
+        'rule-desc-loser10': 'ruleLoser10',
+        'rule-desc-loserTwo': 'ruleLoserTwo',
+        'rule-desc-loserSpecial': 'ruleLoserSpecial'
+    };
+
+    for (const [id, keyPrefix] of Object.entries(elements)) {
+        const el = document.getElementById(id);
+        if (el) {
+            const key = keyPrefix + suffix;
+            el.innerHTML = t(key);
+        }
+    }
+}
+window.updateRulesDescription = updateRulesDescription;
+
 function updateLanguage() {
     window.currentLang = currentLang;
+    updateRulesDescription();
 
     if (typeof LicenseService !== 'undefined') {
         const licenseStatus = LicenseService.getLicenseStatusSync();
@@ -304,6 +333,9 @@ if (gameRuleModeInput) {
     gameRuleModeInput.onchange = () => {
         const val = gameRuleModeInput.value;
         AppStorage.setItem('ruleMode', val);
+        if (typeof updateRulesDescription === 'function') {
+            updateRulesDescription();
+        }
         if (typeof renderAll === 'function') {
             renderAll();
         }
