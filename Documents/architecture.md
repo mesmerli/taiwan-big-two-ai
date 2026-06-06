@@ -54,9 +54,58 @@ TwBig2/
 *   **Capacitor** (`android/`): 將前端網頁包裝成 Android 原生 APP。它透過 `capacitor.config.json` 設定，將 `www` 資料夾內的資源直接作為 APP 介面，並可調用原生 API (例如全螢幕、震動等)。
 
 ### 2. 前端展示與控制層 (UI / Presentation)
-*   `index.html` 與 `styles.css`: 構成整個遊戲的桌面。CSS 內包含針對桌面端 (寬度大於 900px) 與行動端 (手機直式) 的不同排版設計 (`.mobile-layout`)。
-*   `renderer.js`: 這是前端的靈魂，負責傾聽使用者的點擊、拖曳、選牌等行為，並與 `gameLogic.js` 溝通以取得目前牌局狀態，隨後操作 DOM 元素更新畫面。同時，`renderer.js` 也要負責偵測當前的執行環境 (Electron、Tauri 或網頁)，決定如何呼叫系統級別 API (例如跳出 Windows Store 的購買視窗)。
-*   `AISummaryController.js` & `AISummaryView.js`: 局後 AI 戰術復盤模組。當遊戲結束後，負責向本機/雲端 LLM 接口發送串流文字請求（Streaming），動態顯示戰術回饋與評分，並支援即時對談問答。
+本專案前端採用了 MVC (Model-View-Controller) 架構，將 UI 互動與對局流程拆分為控制層 (Controllers) 與視圖層 (Views)：
+
+*   **全域入口與事件綁定**：
+    *   `index.html` 與 `styles.css`：構成整個遊戲介面。CSS 內包含針對桌面端與行動端直式版面 (`.mobile-layout`) 的 RWD 排版設計。
+    *   `renderer.js`：前端的主要進入點與事件監聽綁定器，負責協調各子控制器（例如初始化各控制器、向視圖傳遞資料以及動態載入 WebLlmCacheView）。
+
+*   **控制器層 (Controllers)**：
+    *   `src/controllers/GameController.js`：
+        *   **職責**：主控遊戲的生命週期與狀態機（如發牌、出牌、過牌、勝負判定與計分）。
+        *   **關鍵功能**：
+            *   `initGame()`：初始化牌局，洗牌並分發手牌，判定首輪出牌玩家（持有梅花3），並檢查起手是否為「一條龍」。
+            *   `playCards()` & `executePlay()`：處理玩家與 AI 出牌的執行、合法性檢查（透過 `GameLogic`）與出牌後的狀態轉移。
+            *   `passTurn()` & `nextTurn()`：協調玩家與 AI 的過牌與回合切換。
+            *   `calculateScores()`：在牌局結束時根據剩餘張數、怪物牌型（如鐵支、同花順）與大牌倍率計算各玩家的得分。
+            *   `shoutLa()` & `updateShoutButton()`：控制大老二特有的「喊拉」規則。
+    *   `src/controllers/KeyboardController.js`：
+        *   **職責**：管理與實作遊戲內的鍵盤熱鍵操作，提供無滑鼠輔助的流暢體驗。
+        *   **關鍵功能**：
+            *   左右方向鍵（`ArrowLeft` / `ArrowRight`）：在玩家手牌中進行循環選牌。
+            *   上方向鍵（`ArrowUp`）：彈起/出牌或執行拉牌判定。
+            *   下方向鍵（`ArrowDown`）：降下/清除目前選取的卡牌；快速連按三次下鍵可快速重開新局。
+            *   空白鍵（`Space`）：快速執行過牌（Pass）。
+    *   `src/controllers/SettingsController.js`：
+        *   **職責**：管理遊戲設定，包括多國語系切換、音效與靜音設定，以及大語言模型 (LLM) 的 API 配置。
+        *   **關鍵功能**：
+            *   語系與音效管理：串接 `i18n.js` 與 `AudioPlayer`，讀寫本地儲存空間 (`AppStorage`) 狀態，即時切換介面語系與控制靜音。
+            *   LLM 設定面板：處理 API 金鑰、自訂主機網址（Endpoint）與模型選擇的變更儲存，並觸發介面重新渲染。
+    *   `src/controllers/AISummaryController.js`：
+        *   **職責**：負責牌局結束後 AI 戰術復盤（AI Review）的核心業務邏輯與 API 互動。
+        *   **關鍵功能**：
+            *   `showSummary()`：於對局結束時收集 `gameState` 與完整出牌歷程 (`gameLog`)，準備復盤資料。
+            *   連線與拉取：自動檢測本地 WebLLM 或雲端 OpenAI API 連線狀態，動態拉取可用模型清單。
+            *   Prompt 生成與問答：建構包含出牌行為、勝負原因與改進建議的 Prompt，發送至 LLM 服務；同時提供聊天室介面，管理玩家與 AI 的串流 Q&A 即時問答對話歷程。
+
+*   **視圖渲染層 (Views)**：
+    *   `src/views/GameView.js`：
+        *   **職責**：專責遊戲桌面的 DOM 元素繪製與動畫呈現，將 `gameState` 的資料視覺化。
+        *   **關鍵功能**：
+            *   `renderAll()`：重繪所有玩家的手牌、桌面已出牌插槽、玩家狀態與頭像。
+            *   手牌動畫：處理卡牌選取時的彈起/降下效果，並依照出牌狀態調整縮放與旋轉。
+            *   狀態提示：繪製出牌者的對話泡泡、過牌（Pass）指示器、拉牌特效，以及更新出牌與喊拉按鈕的顯示狀態。
+    *   `src/views/AISummaryView.js`：
+        *   **職責**：渲染賽後 AI 戰術復盤面板、統計數據與即時聊天互動介面。
+        *   **關鍵功能**：
+            *   `renderSummaryPanel()` & `showSummary()`：繪製復盤彈出視窗、統計卡片（剩餘張數、總得分倍率）。
+            *   打字機逐字特效（Typewriter Effect）：以平滑的逐字動畫渲染 AI 的戰術總結，增強視覺質感。
+            *   對話聊天室：繪製 AI 聊天室的對話紀錄，並提供 CORS 跨網域警告提示、連線進度條與輸入框捲動定位。
+    *   `src/views/WebLlmCacheView.js`：
+        *   **職責**：負責將本地 WebLLM (WebGPU) 下載的模型快取清單與下載進度呈現在管理面板中。
+        *   **關鍵功能**：
+            *   下載進度條：動態更新下載進度百分比與快取大小。
+            *   模型快取管理：列出已下載的 WebGPU 模型檔案，並提供「清除快取」按鈕與二次確認對話盒，幫助使用者釋放硬碟空間。
 
 ### 3. 核心邏輯層 (Core Logic)
 *   `gameLogic.js`: 完全獨立於 UI 的純邏輯模組 (Pure JS)。負責台灣大老二核心規則之實作與判定：
