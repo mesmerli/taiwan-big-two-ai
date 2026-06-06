@@ -1,271 +1,4 @@
 /**
- * Big Two AI Strategy Engine - Modular Version
- */
-
-/**
- * Base class for AI characters
- */
-class AICharacter {
-    constructor(gameLogic, name) {
-        this.GameLogic = gameLogic;
-        this.name = name;
-        this.type = "NPC";
-        this.isLLM = false;
-    }
-
-    getLogic() {
-        return this.GameLogic || window.GameLogic || (typeof GameLogic !== 'undefined' ? GameLogic : null);
-    }
-
-    /**
-     * Common decision logic shared by all characters
-     */
-    async decide(context) {
-        const Logic = this.getLogic();
-        if (!Logic) return null;
-
-        const { hand, lastPlay, lastPlayerIndex } = context;
-        if (!hand || hand.length === 0) return null;
-
-        const sorted = Logic.sortCards(hand);
-
-        // --- Handle Lead (No active play to beat) ---
-        if (!lastPlay || lastPlay.length === 0) {
-            // First turn rule: Must include 3 of Clubs (Card 0)
-            const hasThreeOfClubs = hand.includes(0);
-            if (hasThreeOfClubs && (lastPlayerIndex === -1 || lastPlayerIndex === undefined)) {
-                const five = Logic.findFiveCardHands(hand).filter(h => h.includes(0));
-                if (five.length > 0) return five[0];
-                const pairs = Logic.findPairs(hand).filter(p => p.includes(0));
-                if (pairs.length > 0) return pairs[0];
-                return [0];
-            }
-            return await this.chooseLead(sorted, context);
-        }
-
-        // --- Handle Following (Beat previous hand) ---
-        return await this.chooseFollow(sorted, context);
-    }
-
-    /**
-     * Default following logic (can be overridden)
-     */
-    async chooseFollow(sorted, context) {
-        const Logic = this.getLogic();
-        const { lastPlay } = context;
-        const targetLen = lastPlay.length;
-
-        if (targetLen === 1) {
-            // Check if any opponent has only 1 card left (lastcard phase)
-            const isLastCard = context.players && context.players.some((p, idx) => idx !== context.playerIndex && p && p.length === 1);
-            
-            // If it's not the lastcard phase and the played card has rank > 9 (King, Ace, 2), pass
-            if (!isLastCard && Logic.getRank(lastPlay[0]) > 9) {
-                return null;
-            }
-
-            if (isLastCard) {
-                // Defensive play: Throw the BIGGEST card that can beat the table play
-                for (let i = sorted.length - 1; i >= 0; i--) {
-                    const c = sorted[i];
-                    if (Logic.compareCards(c, lastPlay[0]) > 0) return [c];
-                }
-            } else {
-                // Check if any opponent has 3 or fewer cards left (near win phase)
-                const isOpponentNearWin = context.players && context.players.some((p, idx) => idx !== context.playerIndex && p && p.length <= 3);
-
-                let candidates = [...sorted];
-                if (!isOpponentNearWin) {
-                    // Strip cards that belong to pairs or 5-card combinations to preserve good hands
-                    const pairs = Logic.findPairs(sorted).flat();
-                    const fiveCardHands = Logic.findFiveCardHands(sorted).flat();
-                    candidates = sorted.filter(c => !pairs.includes(c) && !fiveCardHands.includes(c));
-                    if (candidates.length === 0) {
-                        candidates = sorted;
-                    }
-                }
-
-                // Play the smallest card that beats the table
-                for (let c of candidates) {
-                    if (Logic.compareCards(c, lastPlay[0]) > 0) {
-                        // Big-card preservation: Don't waste Ace (11) or 2 (12) on cards 10 or below (<= 7)
-                        if (Logic.getRank(c) >= 11 && Logic.getRank(lastPlay[0]) <= 7) {
-                            return null;
-                        }
-                        return [c];
-                    }
-                }
-
-                // Fallback: If stripping prevented us from following, try the full sorted hand
-                if (!isOpponentNearWin && candidates !== sorted) {
-                    for (let c of sorted) {
-                        if (Logic.compareCards(c, lastPlay[0]) > 0) {
-                            if (Logic.getRank(c) >= 11 && Logic.getRank(lastPlay[0]) <= 7) {
-                                return null;
-                            }
-                            return [c];
-                        }
-                    }
-                }
-            }
-        } else if (targetLen === 2) {
-            const pairs = Logic.findPairs(sorted);
-            for (let pair of pairs) {
-                if (Logic.compareHands(pair, lastPlay) > 0) return pair;
-            }
-        } else if (targetLen === 5) {
-            const hands = Logic.findFiveCardHands(sorted);
-            for (let h of hands) {
-                if (Logic.compareHands(h, lastPlay) > 0) return h;
-            }
-        }
-        return null;
-    }
-
-    // To be implemented by subclasses
-    async chooseLead(sorted, context) {
-        const { players } = context;
-        const anyOpponentHasOne = players && players.some((p, idx) => idx !== context.playerIndex && p && p.length === 1);
-        return anyOpponentHasOne ? [sorted[sorted.length - 1]] : [sorted[0]];
-    }
-
-    generatePrompt(context) {
-        const { hand, lastPlay, players } = context;
-
-        let prompt = `Current State:
-- My Hand: [${hand.map(c => this.cardToVerboseString(c)).join(', ')}]
-- Table Play to Beat: ${lastPlay && lastPlay.length > 0 ? `[${lastPlay.map(c => this.cardToVerboseString(c)).join(', ')}]` : 'None (You lead)'}
-- Opponent Card Counts: ${players.map((p, i) => {
-            if (i === context.playerIndex) return '';
-            const name = (context.playerNames && context.playerNames[i]) ? context.playerNames[i] : `P${i + 1}`;
-            return `${name}:${p.length}`;
-        }).filter(s => s).join(', ')}
-
-Instruction: ${lastPlay && lastPlay.length > 0 ? 'You must beat the table play or PASS.' : 'You are the leader of this round. Output your move in JSON.'}`;
-
-        return prompt;
-    }
-
-    cardToVerboseString(cardId) {
-        const suits = ['Club', 'Diamond', 'Heart', 'Spade'];
-        const ranks = ['3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A', '2'];
-        const Logic = this.getLogic();
-        return `${suits[Logic.getSuit(cardId)]} ${ranks[Logic.getRank(cardId)]}`;
-    }
-
-    cardToString(cardId) {
-        const suits = ['C', 'D', 'H', 'S'];
-        const ranks = ['3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A', '2'];
-        const Logic = this.getLogic();
-        return `${ranks[Logic.getRank(cardId)]}${suits[Logic.getSuit(cardId)]}`;
-    }
-
-    async localDecide(context) {
-        const Logic = this.getLogic();
-        const { hand, lastPlay, playerIndex, shouted } = context;
-        const sorted = Logic.sortCards(hand);
-
-        // --- SHOUT RESTRICTION ---
-        const isShouted = shouted && shouted[playerIndex];
-        const isLastHand = Logic.isLastHand(hand);
-        const shouldRestrictToFullHand = isShouted && isLastHand && hand.length > 1;
-
-        if (shouldRestrictToFullHand) {
-            const isLead = !lastPlay || lastPlay.length === 0;
-            if (isLead) return sorted;
-            if (Logic.compareHands(sorted, lastPlay) > 0) return sorted;
-            return null; // Must PASS
-        }
-        // -------------------------
-
-        if (!lastPlay || lastPlay.length === 0) {
-            const five = Logic.findFiveCardHands(sorted);
-            if (five.length > 0) return five[0];
-            const { players } = context;
-            const anyOpponentHasOne = players && players.some((p, idx) => idx !== playerIndex && p && p.length === 1);
-            return anyOpponentHasOne ? [sorted[sorted.length - 1]] : [sorted[0]];
-        } else {
-            return await this.chooseFollow(sorted, context);
-        }
-    }
-}
-
-/**
- * Alex - Balanced Strategy
- */
-class AlexAI extends AICharacter {
-    constructor(gameLogic) {
-        super(gameLogic, "Alex");
-        this.avatar = "src/assets/avatars/avatar_alex.png";
-    }
-
-    async chooseLead(sorted, context) {
-        const Logic = this.getLogic();
-        const { players } = context;
-        const anyOpponentHasOne = players && players.some((p, idx) => idx !== context.playerIndex && p && p.length === 1);
-        const anyOpponentHasTwo = players.some((p, idx) => idx !== context.playerIndex && p && p.length === 2);
-
-        if (anyOpponentHasTwo) {
-            const five = Logic.findFiveCardHands(sorted);
-            if (five.length > 0) return five[0];
-            const nonTwos = sorted.filter(c => Logic.getRank(c) < 12);
-            if (nonTwos.length > 0) {
-                return anyOpponentHasOne ? [nonTwos[nonTwos.length - 1]] : [nonTwos[0]];
-            }
-        } else {
-            const five = Logic.findFiveCardHands(sorted);
-            if (five.length > 0) return five[0];
-            const pairs = Logic.findPairs(sorted);
-            if (pairs.length > 0) return pairs[0];
-        }
-        return anyOpponentHasOne ? [sorted[sorted.length - 1]] : [sorted[0]];
-    }
-}
-
-/**
- * Bella - Defensive Strategy (Favors Pairs)
- */
-class BellaAI extends AICharacter {
-    constructor(gameLogic) {
-        super(gameLogic, "Bella");
-        this.avatar = "src/assets/avatars/avatar_bella.png";
-    }
-
-    async chooseLead(sorted, context) {
-        const Logic = this.getLogic();
-        const { players } = context;
-        const anyOpponentHasOne = players && players.some((p, idx) => idx !== context.playerIndex && p && p.length === 1);
-
-        const pairs = Logic.findPairs(sorted);
-        if (pairs.length > 0) return pairs[0];
-
-        const five = Logic.findFiveCardHands(sorted);
-        if (five.length > 0) return five[0];
-
-        return anyOpponentHasOne ? [sorted[sorted.length - 1]] : [sorted[0]];
-    }
-}
-
-/**
- * Chris - Aggressive Strategy
- */
-class ChrisAI extends AICharacter {
-    constructor(gameLogic) {
-        super(gameLogic, "Chris");
-        this.avatar = "src/assets/avatars/avatar_chris.png";
-    }
-
-    async chooseLead(sorted, context) {
-        const Logic = this.getLogic();
-        const five = Logic.findFiveCardHands(sorted);
-        if (five.length > 0) return five[five.length - 1];
-        const nonTwos = sorted.filter(c => Logic.getRank(c) < 12);
-        if (nonTwos.length > 0) return [nonTwos[nonTwos.length - 1]];
-        return [sorted[sorted.length - 1]];
-    }
-}
-
-/**
  * Base LLM Character Class
  * Handles generic LLM reasoning, prompting, and memory persistence.
  */
@@ -393,9 +126,10 @@ class BaseLLMAI extends AICharacter {
     }
 
     setSettings(settings) {
-        this.apiUrl = settings.apiUrl || this.apiUrl;
-        this.modelId = settings.modelId || this.modelId;
-        this.apiKey = settings.apiKey !== undefined ? settings.apiKey : this.apiKey;
+        if (settings.apiUrl !== undefined) this.apiUrl = settings.apiUrl;
+        if (settings.modelId !== undefined) this.modelId = settings.modelId;
+        if (settings.apiKey !== undefined) this.apiKey = settings.apiKey;
+        if (settings.extraPrompt !== undefined) this.extraPrompt = settings.extraPrompt;
 
         const defaultDianaPrompt = `[戰術調整策略 / Tactical Strategy Adjustment]
 1. 組合建設與主動出牌 (Combination Building & Active Play):
@@ -414,12 +148,17 @@ class BaseLLMAI extends AICharacter {
    - 後期利用中等牌（如 7, 8, 9）進行阻礙性出牌，破壞對手正嘗試建立的牌型組合，對其施加心理與實質壓力。`;
 
         this.extraPrompt = (settings.extraPrompt && settings.extraPrompt.trim() !== "") ? settings.extraPrompt : (this.name === "Diana" ? defaultDianaPrompt : (this.name === "Ares" ? defaultAresPrompt : ""));
-        AppStorage.setItem(this.settingsKey, JSON.stringify({
-            apiUrl: this.apiUrl,
-            modelId: this.modelId,
-            apiKey: this.apiKey,
-            extraPrompt: this.extraPrompt
-        }));
+        
+        try {
+            AppStorage.setItem(this.settingsKey, JSON.stringify({
+                apiUrl: this.apiUrl,
+                modelId: this.modelId,
+                apiKey: this.apiKey,
+                extraPrompt: this.extraPrompt
+            }));
+        } catch (e) {
+            console.error(`[${this.name} Engine] Failed to save settings:`, e);
+        }
     }
 
     getSettings() {
@@ -562,11 +301,11 @@ class BaseLLMAI extends AICharacter {
 
         try {
             // Dynamic import of the factory
-            const { AiServiceFactory } = await import('./services/AiServiceFactory.js');
+            const { AiServiceFactory } = await import('../services/AiServiceFactory.js');
             let useLocalWebGPU = AppStorage.getItem('useLocalWebGPU') === 'true';
             if (useLocalWebGPU) {
                 try {
-                    const { WebLlmCacheManager } = await import('./services/WebLlmCacheManager.js');
+                    const { WebLlmCacheManager } = await import('../services/WebLlmCacheManager.js');
                     let activeModelId = this.modelId;
                     if (!activeModelId || activeModelId === 'local-model') {
                         const fullyCached = await WebLlmCacheManager.getFullyCachedStandardModels();
@@ -629,7 +368,7 @@ class BaseLLMAI extends AICharacter {
                     modelId: this.modelId,
                     apiUrl: this.apiUrl,
                     apiKey: this.apiKey,
-                    workerPath: '../aiWorker.js',
+                    workerPath: './aiWorker.js',
                     initProgressCallback: (progress) => {
                         console.log(`[${this.name} WebLLM Load] ${progress.percent}% - ${progress.text}`);
                         if (progressContainerWebGpu) progressContainerWebGpu.classList.remove('hidden');
@@ -679,26 +418,26 @@ class BaseLLMAI extends AICharacter {
 
             const systemPrompt = `Strategic Game Engine for Taiwanese Big Two. 
 Task: Evaluate each legal move from 1-10 based on how likely it leads to a win. Select the move index with the highest score.
-
+ 
 Strict Language Rule: You MUST output all text fields ("strategy" and "trashTalk") strictly in ${isEn ? 'ENGLISH' : 'Traditional Chinese (繁體中文)'}. ${isEn ? 'Do not output any Chinese characters in these fields.' : '請勿在這些欄位中使用英文或簡體中文。'}
-
+ 
 Game Logic (Taiwanese Rules):
 - Rank: 3 < 4 < 5 < 6 < 7 < 8 < 9 < 10 < J < Q < K < A < 2.
 - Suit: Club < Diamond < Heart < Spade.
 - Strategy: Dump small cards early. Use big cards (2s, Aces) to take control or BLOCK opponents marked as [CRITICAL].
-
+ 
 Defensive Rules:
 1. If an opponent is [CRITICAL], do NOT pass easily. Use your best cards to prevent them from finishing.
 2. If an opponent is [AGGRESSIVE], they are likely trying to empty their hand. Be prepared to fight for control.
-
+ 
 Output Schema:
 ${outputSchema}
-
+ 
 Current Persona: ${this.persona.name}
 Role Play Instructions: ${this.persona.desc}
-
+ 
 Current Profile: ${profile}
-
+ 
 ${this.learnings.length > 0 ? `[PAST_LEARNINGS]\n- ${this.learnings.map(l => l.tip).join('\n- ')}\n` : ''}
 ${this.extraPrompt ? `Additional Custom Instructions:\n${this.extraPrompt}` : ''}`;
 
@@ -1016,13 +755,6 @@ ${this.extraPrompt ? `Additional Custom Instructions:\n${this.extraPrompt}` : ''
         return prompt;
     }
 
-    cardToVerboseString(cardId) {
-        const suits = ['Club', 'Diamond', 'Heart', 'Spade'];
-        const ranks = ['3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A', '2'];
-        const Logic = this.getLogic();
-        return `${suits[Logic.getSuit(cardId)]} ${ranks[Logic.getRank(cardId)]}`;
-    }
-
     getTrackedCardsSummary(playedCards, myHand) {
         const Logic = this.getLogic();
         const bigRanks = [10, 11, 12]; // King, Ace, 2
@@ -1068,34 +800,6 @@ ${this.extraPrompt ? `Additional Custom Instructions:\n${this.extraPrompt}` : ''
         }
 
         return result;
-    }
-
-    setSettings(settings) {
-        if (settings.apiUrl !== undefined) this.apiUrl = settings.apiUrl;
-        if (settings.modelId !== undefined) this.modelId = settings.modelId;
-        if (settings.apiKey !== undefined) this.apiKey = settings.apiKey;
-        if (settings.extraPrompt !== undefined) this.extraPrompt = settings.extraPrompt;
-
-        // Save to persistent storage using character-specific key
-        try {
-            AppStorage.setItem(this.settingsKey, JSON.stringify({
-                apiUrl: this.apiUrl,
-                modelId: this.modelId,
-                apiKey: this.apiKey,
-                extraPrompt: this.extraPrompt
-            }));
-        } catch (e) {
-            console.error(`[${this.name} Engine] Failed to save settings:`, e);
-        }
-    }
-
-    getSettings() {
-        return {
-            apiUrl: this.apiUrl,
-            modelId: this.modelId,
-            apiKey: this.apiKey || '',
-            extraPrompt: this.extraPrompt
-        };
     }
 
     async reflect(gameLog, didWin, winnerName, characterNames, myIndex, finalHand) {
@@ -1152,7 +856,7 @@ ${logStr}
         let useLocalWebGPU = AppStorage.getItem('useLocalWebGPU') === 'true';
         if (useLocalWebGPU) {
             try {
-                const { WebLlmCacheManager } = await import('./services/WebLlmCacheManager.js');
+                const { WebLlmCacheManager } = await import('../services/WebLlmCacheManager.js');
                 let activeModelId = this.modelId;
                 if (!activeModelId || activeModelId === 'local-model') {
                     const fullyCached = await WebLlmCacheManager.getFullyCachedStandardModels();
@@ -1190,8 +894,7 @@ ${logStr}
 
         if (useLocalWebGPU) {
             try {
-                const { AiServiceFactory } = await import('./services/AiServiceFactory.js');
-
+                const { AiServiceFactory } = await import('../services/AiServiceFactory.js');
 
                 const progressContainer = document.getElementById('ai-webgpu-progress-container');
                 const progressText = document.getElementById('ai-webgpu-progress-text');
@@ -1204,7 +907,7 @@ ${logStr}
                     modelId: this.modelId,
                     apiUrl: this.apiUrl,
                     apiKey: this.apiKey,
-                    workerPath: '../aiWorker.js',
+                    workerPath: './aiWorker.js',
                     initProgressCallback: (progress) => {
                         console.log(`[${this.name} WebLLM Load] ${progress.percent}% - ${progress.text}`);
                         if (progressContainer) progressContainer.classList.remove('hidden');
@@ -1367,158 +1070,7 @@ ${logStr}
     }
 }
 
-/**
- * Diana (LLM) - The Oracle
- */
-class DianaAI extends BaseLLMAI {
-    constructor(gameLogic) {
-        super(gameLogic, "Diana", "src/assets/avatars/avatar_diana.png");
-    }
-}
-
-/**
- * Ares (LLM) - The God of War
- */
-class AresAI extends BaseLLMAI {
-    constructor(gameLogic) {
-        super(gameLogic, "Ares", "src/assets/avatars/avatar_ares.png");
-    }
-}
-
-
-
-/**
- * Main AI Manager class
- */
-class BigTwoAI {
-    constructor(gameLogic) {
-        this.gameLogic = gameLogic;
-        // All available character blueprints (null = Human)
-        this.availableBlueprints = [null, AlexAI, BellaAI, ChrisAI, DianaAI, AresAI];
-
-        // Active characters in slots 0, 1, 2, 3
-        this.characters = {
-            0: null, // Human
-            1: new AlexAI(gameLogic),
-            2: new BellaAI(gameLogic),
-            3: new ChrisAI(gameLogic)
-        };
-    }
-
-    /**
-     * Swap the character in playerIndex with the one on the bench
-     */
-    randomizeAllPersonas() {
-        for (let i = 0; i < 4; i++) {
-            const char = this.characters[i];
-            if (char && char.isLLM && typeof char.randomizePersona === 'function') {
-                char.randomizePersona();
-            }
-        }
-    }
-
-    swapCharacter(playerIndex) {
-        const currentBlueprint = this.characters[playerIndex] ? this.characters[playerIndex].constructor : null;
-        const otherActiveBlueprints = Object.entries(this.characters)
-            .filter(([idx]) => parseInt(idx) !== playerIndex)
-            .map(([_, c]) => c ? c.constructor : null);
-
-        // Find current index in the pool
-        let currentIndex = this.availableBlueprints.indexOf(currentBlueprint);
-
-        // Search for the next available character in a circle
-        for (let i = 1; i <= this.availableBlueprints.length; i++) {
-            let nextIndex = (currentIndex + i) % this.availableBlueprints.length;
-            let candidateBlueprint = this.availableBlueprints[nextIndex];
-
-            // Prevention: Only slot 0 (the player) can be 'null' (Human). 
-            // This prevents CPUs in slots 1-3 from accidentally becoming Human.
-            if (playerIndex > 0 && candidateBlueprint === null) continue;
-
-            if (!otherActiveBlueprints.includes(candidateBlueprint)) {
-                if (candidateBlueprint === null) {
-                    this.characters[playerIndex] = null;
-                    console.log(`%c[AI Manager] Player ${playerIndex + 1} is now Human control`, 'color: #3498db; font-weight: bold;');
-                    return { name: "You", avatar: "src/assets/avatars/avatar_you.png", type: "Human", isLLM: false };
-                } else {
-                    const newCharacter = new candidateBlueprint(this.gameLogic);
-                    this.characters[playerIndex] = newCharacter;
-                    console.log(`%c[AI Manager] Swapped Player ${playerIndex + 1} to ${newCharacter.name}`, 'color: #3498db; font-weight: bold;');
-                    return newCharacter;
-                }
-            }
-        }
-
-        return this.characters[playerIndex] || { name: "You", avatar: "src/assets/avatars/avatar_you.png", type: "Human", isLLM: false };
-    }
-
-    async findPlay(playerIndex, context) {
-        const character = this.characters[playerIndex];
-        if (!character) return null;
-
-        const enhancedContext = { ...context, playerIndex };
-        return await character.decide(enhancedContext);
-    }
-
-    getCharacter(playerIndex) {
-        return this.characters[playerIndex];
-    }
-
-    setAICharacterSettings(playerIndex, settings) {
-        const char = this.characters[playerIndex];
-        if (char && char.isLLM && typeof char.setSettings === 'function') {
-            char.setSettings(settings);
-            return true;
-        }
-        return false;
-    }
-
-    getNames() {
-        const getCharData = (i) => {
-            const char = this.characters[i];
-            if (!char) return null;
-            return { name: char.name, avatar: char.avatar, type: char.type, isLLM: char.isLLM };
-        };
-        return {
-            0: getCharData(0),
-            1: getCharData(1),
-            2: getCharData(2),
-            3: getCharData(3)
-        };
-    }
-
-    postGameReflection(gameLog, winnerIndex, finalHands) {
-        const names = this.getNames();
-
-        // Helper to get a readable name for any slot
-        const getPlayerName = (idx) => {
-            if (names[idx]) return names[idx].name;
-            return "Player (Human)";
-        };
-
-        const winnerName = getPlayerName(winnerIndex);
-
-        const characterNames = {
-            0: getPlayerName(0),
-            1: getPlayerName(1),
-            2: getPlayerName(2),
-            3: getPlayerName(3)
-        };
-
-        for (let i = 0; i < 4; i++) {
-            const char = this.characters[i];
-            if (char && char.isLLM && typeof char.reflect === 'function') {
-                const didWin = (i === winnerIndex);
-                char.reflect(gameLog, didWin, winnerName, characterNames, i, finalHands ? finalHands[i] : []);
-            }
-        }
-    }
-}
-
-
-// Electron/Browser Export Logic
+// Browser/Electron export
 if (typeof module !== 'undefined') {
-    module.exports = { BigTwoAI, AlexAI, BellaAI, DianaAI };
+    module.exports = { BaseLLMAI };
 }
-
-window.AI = new BigTwoAI(window.GameLogic || (typeof GameLogic !== 'undefined' ? GameLogic : null));

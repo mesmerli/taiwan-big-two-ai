@@ -55,7 +55,7 @@ graph TD
 
 ### 2. 背景工作執行緒 (`aiWorker.js`)
 專案使用標準的 Web Worker 載入內建 AI 引擎 (WebLLM) ESM 模組，並透過 `WebWorkerMLCEngineHandler` 處理所有來自 UI 執行緒的 RPC 請求：
-* **原始碼**：[aiWorker.js](file:///c:/Users/julia/workspace/TwBig2/src/aiWorker.js)
+* **原始碼**：[aiWorker.js](file:///c:/Users/julia/workspace/TwBig2/src/services/aiWorker.js)
 * **特點**：在 Worker 內部建立單一 Handler，接聽事件並無缝橋接至內建 AI 引擎的核心運算。
 
 ### 3. 本地 AI 服務類別 (`WebLlmAiService.js`)
@@ -82,7 +82,7 @@ graph TD
 ## 📈 下載與並行下載安全鎖 (Mutex Lock)
 
 為了防範使用者在模型下載尚未完成時點擊其他下載按鈕、或是多個 NPC 同時觸發預載，進而造成記憶體崩潰或頻寬互搶，專案實作了預載互斥鎖：
-* **全域下載鎖**：當 `aiSummary.js` 中有 active 下載時，所有其他下載觸發點 (如 AI 設定面板、NPC 資訊面板) 均會被攔截並彈出警告訊息。
+* **全域下載鎖**：當 `AISummaryController` 中有 active 下載時，所有其他下載觸發點 (如 AI 設定面板、NPC 資訊面板) 均會被攔截並彈出警告訊息。
 * **下載狀態回寫**：每次進度更新都會回報給 `Manage` 面板，顯示精準的進度條與 % 數。
 
 ### 🔄 模型載入生命週期與資源管理 (Lazy Loading vs Preloading)

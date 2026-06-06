@@ -31,7 +31,7 @@ async function runExample(useLocal = true) {
         useLocalWebGPU: useLocal,
         modelId: useLocal ? 'Qwen2.5-1.5B-Instruct-q4f16_1-MLC' : 'local-model',
         apiUrl: 'http://localhost:1234/v1/chat/completions', // 當降級或非 WebGPU 模式時的連線端點
-        workerPath: '../aiWorker.js', // 指向相對於本檔案或 HTML 的 Worker 路徑
+        workerPath: './aiWorker.js', // 指向相對於本檔案或 HTML 的 Worker 路徑
         
         // 2. 實作進度監聽
         initProgressCallback: (progressInfo) => {

@@ -220,6 +220,7 @@ const path = require('path');
         // 3. Test BGM Transitions
         console.log(`[Step ${testStep++}] 🧪 Testing BGM Transitions...`);
         await window.evaluate(() => {
+            AudioPlayer.soundMode = 0; // Force to 0 (All Sound) to avoid local storage settings flakiness
             window.audioCalls = []; 
         });
 

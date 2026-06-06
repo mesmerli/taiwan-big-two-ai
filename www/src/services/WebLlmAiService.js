@@ -9,13 +9,13 @@ export class WebLlmAiService {
     /**
      * @param {Object} config 配置參數
      * @param {string} [config.modelId] 模型識別碼，預設為 'Qwen2.5-1.5B-Instruct-q4f16_1-MLC'
-     * @param {string} [config.workerPath] Web Worker 腳本的路徑，預設為 '../aiWorker.js'
+     * @param {string} [config.workerPath] Web Worker 腳本的路徑，預設為 './aiWorker.js'
      * @param {Function} [config.initProgressCallback] 模型下載與載入進度回呼函式
      * @param {number} [config.temperature] 溫度參數，預設 0.7
      */
     constructor(config = {}) {
         this.modelId = config.modelId || 'gemma-2-2b-it-q4f16_1-MLC';
-        this.workerPath = config.workerPath || '../aiWorker.js';
+        this.workerPath = config.workerPath || './aiWorker.js';
         this.initProgressCallback = config.initProgressCallback || null;
         this.temperature = config.temperature !== undefined ? config.temperature : 0.1;
         

@@ -20,7 +20,7 @@ taiwan-big-two-ai/
 │   ├── services/               # [NEW] 服務適配層目錄
 │   │   └── systemService.js    # [NEW] 關鍵適配器：處理檔案、外部連結等
 │   ├── env.js                  # 環境偵測與統一 Storage
-│   ├── ai.js                   # AI 決策大腦
+│   ├── ai/                     # AI 決策大腦 (拆分為多個類別檔案)
 │   ├── gameLogic.js            # 遊戲核心規則
 │   ├── i18n.js                 # 多國語系支援
 │   └── renderer.js             # UI 渲染與事件處理

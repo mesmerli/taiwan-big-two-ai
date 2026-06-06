@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.48] - 2026-06-06
+
+### Added
+- **AI Engine Modularization**: Refactored the massive single-file `ai.js` into five single-responsibility class scripts under a new `src/ai/` directory (`AICharacter.js`, `HeuristicAI.js`, `BaseLLMAI.js`, `LLMCharacters.js`, and `BigTwoAI.js`) to follow clean layered architecture design.
+- **Post-Game Tactical Review Decoupling**: Decoupled the obsolete `aiSummary.js` and migrated its initialization logic into `renderer.js`. Separated DOM/view elements into `AISummaryView.js` and business logic into `AISummaryController.js`.
+- **Worker Relocation**: Moved the background worker script `aiWorker.js` to `src/services/aiWorker.js` for cleaner encapsulation and updated all dependent worker path resolutions.
+
+### Fixed
+- **Robust UI Test Pipeline**: Solved flakiness in the Playwright E2E UI test suite related to persisted local storage mute configurations by programmatically resetting `AudioPlayer.soundMode = 0` during audio transition test phases.
+
 ## [1.5.47] - 2026-06-05
 
 ### Added

@@ -36,7 +36,7 @@ export class AiServiceFactory {
             modelId,
             apiUrl,
             apiKey,
-            workerPath = '../aiWorker.js',
+            workerPath = './aiWorker.js',
             initProgressCallback
         } = options;
 
