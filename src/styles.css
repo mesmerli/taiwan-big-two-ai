@@ -209,6 +209,7 @@ button,
     color: #94a3b8;
     padding: 10px; /* Generous 48px hit target area for mobile thumbs */
     touch-action: manipulation;
+    z-index: 50;
 }
 
 .close-btn:hover {

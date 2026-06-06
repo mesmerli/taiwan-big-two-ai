@@ -54,10 +54,9 @@
             <div id="info-icon" class="control-icon" title="Game Rules">i</div>
         </div>
 
-        <!-- Alert Modal -->
         <div id="alert-modal" class="modal hidden">
             <div class="modal-content alert-content">
-                <span class="close-btn">&times;</span>
+                <span class="close-btn" onclick="document.getElementById('alert-modal').classList.add('hidden')">&times;</span>
                 <p id="alert-message"></p>
             </div>
 
@@ -76,7 +75,7 @@
 
         <div id="rules-modal" class="modal hidden">
             <div class="modal-content info-modal-content">
-                <span class="close-btn">&times;</span>
+                <span class="close-btn" onclick="document.getElementById('rules-modal').classList.add('hidden')">&times;</span>
                 <h2>
                     <img src="src/assets/logo.png" alt="Logo" class="rules-logo">
                     <span data-i18n="rulesTitle">Game Rules (大老二規則)</span>
@@ -238,7 +237,7 @@
         <!-- AI Settings Modal -->
         <div id="ai-settings-modal" class="modal hidden">
             <div class="modal-content settings-content">
-                <span class="close-btn">&times;</span>
+                <span class="close-btn" onclick="document.getElementById('ai-settings-modal').classList.add('hidden')">&times;</span>
                 <h2 data-i18n="aiSettingsTitle">AI Settings</h2>
                 <!-- WebGPU Toggle -->
                 <div class="form-group" style="flex-direction: row; justify-content: space-between; align-items: center; margin-bottom: 15px; display: flex;">

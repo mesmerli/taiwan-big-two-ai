@@ -33,11 +33,7 @@ if (window.infoIcon) {
     };
 }
 
-if (window.closeBtn) {
-    closeBtn.onclick = () => {
-        if (rulesModal) rulesModal.classList.add('hidden');
-    };
-}
+
 
 async function loadNpcCacheList() {
     const tabManage = document.getElementById('tab-manage');
