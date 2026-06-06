@@ -14,37 +14,24 @@ const RANKS = {
     JACK: 8, QUEEN: 9, KING: 10, ACE: 11, TWO: 12
 };
 
-class GameLogic {
-    static getRuleMode() {
-        if (typeof AppStorage !== 'undefined' && typeof AppStorage.getItem === 'function') {
-            return AppStorage.getItem('ruleMode') || 'taiwan';
-        }
-        return 'taiwan';
-    }
-
-    static getRank(cardId) {
+class BaseRules {
+    getRank(cardId) {
         return cardId % 13;
     }
 
-    static getSuit(cardId) {
+    getSuit(cardId) {
         return Math.floor(cardId / 13);
     }
 
-    /**
-     * Compare two cards
-     * @returns {number} 1 if card1 > card2, -1 if card1 < card2, 0 if equal
-     */
-    static getSuitStrength(cardId) {
-        const suit = this.getSuit(cardId);
-        const ruleMode = this.getRuleMode();
-        if (ruleMode === 'hongkong') {
-            const hkStrengths = [1, 0, 2, 3];
-            return hkStrengths[suit];
-        }
-        return suit;
+    getStartCard() {
+        return 0;
     }
 
-    static compareCards(card1, card2) {
+    getSuitStrength(cardId) {
+        return this.getSuit(cardId);
+    }
+
+    compareCards(card1, card2) {
         const r1 = this.getRank(card1);
         const r2 = this.getRank(card2);
         if (r1 > r2) return 1;
@@ -58,20 +45,16 @@ class GameLogic {
         return 0;
     }
 
-    static sortCards(cards) {
+    sortCards(cards) {
         return [...cards].sort((a, b) => this.compareCards(a, b));
     }
 
-    /**
-     * Hand Types: 1 (Single), 2 (Pair), 3 (Triple), 5 (5-card hand)
-     */
-    static getHandInfo(cards) {
+    getHandInfo(cards) {
         if (!cards || cards.length === 0) return null;
         const sorted = this.sortCards(cards);
         const len = cards.length;
 
         if (len === 13) {
-            // Dragon check
             const ranks = sorted.map(c => this.getRank(c));
             const isDragon = ranks.every((r, i) => r === i);
             if (isDragon) {
@@ -83,20 +66,12 @@ class GameLogic {
         if (len === 1) return { type: 'SINGLE', value: sorted[0] };
         if (len === 2) {
             if (this.getRank(sorted[0]) === this.getRank(sorted[1])) {
-                return { type: 'PAIR', value: sorted[1] }; // Higher suit card determines value
+                return { type: 'PAIR', value: sorted[1] };
             }
             return null;
         }
-        // Standalone TRIPLE is allowed in HK rules but not in Taiwanese rules
         if (len === 3) {
-            const ruleMode = this.getRuleMode();
-            if (ruleMode === 'hongkong') {
-                if (this.getRank(sorted[0]) === this.getRank(sorted[1]) && 
-                    this.getRank(sorted[1]) === this.getRank(sorted[2])) {
-                    return { type: 'TRIPLE', value: sorted[2] };
-                }
-            }
-            return null;
+            return this.getTripleHandInfo(sorted);
         }
         if (len === 5) {
             return this.getFiveCardHandInfo(sorted);
@@ -104,13 +79,15 @@ class GameLogic {
         return null;
     }
 
-    static getFiveCardHandInfo(sorted) {
+    getTripleHandInfo(sorted) {
+        return null;
+    }
+
+    getFiveCardHandInfo(sorted) {
         const ranks = sorted.map(c => this.getRank(c));
         const suits = sorted.map(c => this.getSuit(c));
-
         const isFlush = suits.every(s => s === suits[0]);
 
-        // Straight check
         let isStraight = true;
         for (let i = 0; i < 4; i++) {
             if (ranks[i + 1] !== ranks[i] + 1) {
@@ -118,76 +95,51 @@ class GameLogic {
                 break;
             }
         }
-        // Special case: A-2-3-4-5 (Wait, check original code for low straight rules)
-        // Original code EvaluateStraight line 722 mentions low straight
-        if (!isStraight) {
-            // Check for A-2-3-4-5 or other combos
-            // In many Big Two variations, A-2-3-4-5 is a valid straight
-            // Let's check if the original code handles this.
-        }
-
-        // Special Straights: 
-        // 2-3-4-5-6 is largest (Ranks: 12, 0, 1, 2, 3) -> Wait, sorting by compareCards puts 12 last.
-        // So 0-1-2-3-12 is 3-4-5-6-2 (Wait, the user said 2-3-4-5-6)
-        // If 2 is rank 12, then 2-3-4-5-6 is ranks [12, 0, 1, 2, 3]
-        // A-2-3-4-5 is ranks [11, 12, 0, 1, 2]
 
         const rankSet = new Set(ranks);
         const is23456 = [0, 1, 2, 3, 12].every(r => rankSet.has(r));
         const isA2345 = [0, 1, 2, 11, 12].every(r => rankSet.has(r));
 
-        if (is23456) {
-            const card2 = sorted.find(c => this.getRank(c) === 12);
-            return { type: isFlush ? 'STRAIGHT_FLUSH' : 'STRAIGHT', value: card2, strength: isFlush ? 5 : 1, special: '23456' };
-        }
-        if (isA2345) {
-            return { type: isFlush ? 'STRAIGHT_FLUSH' : 'STRAIGHT', value: sorted[2], strength: isFlush ? 5 : 1, special: 'A2345' };
-        }
+        const specInfo = this.checkSpecialStraights(sorted, isStraight, isFlush, is23456, isA2345);
+        if (specInfo) return specInfo;
 
         if (isStraight && isFlush) return { type: 'STRAIGHT_FLUSH', value: sorted[4], strength: 5 };
 
-        // Four of a kind
         if (ranks[0] === ranks[3]) return { type: 'FOUR_OF_A_KIND', value: sorted[0], strength: 4 };
         if (ranks[1] === ranks[4]) return { type: 'FOUR_OF_A_KIND', value: sorted[1], strength: 4 };
 
-        // Full House
         if (ranks[0] === ranks[2] && ranks[3] === ranks[4]) return { type: 'FULL_HOUSE', value: sorted[0], strength: 3 };
         if (ranks[0] === ranks[1] && ranks[2] === ranks[4]) return { type: 'FULL_HOUSE', value: sorted[2], strength: 3 };
 
-        if (isFlush) {
-            const ruleMode = this.getRuleMode();
-            if (ruleMode === 'hongkong') return { type: 'FLUSH', value: sorted[4], strength: 2 };
+        if (isFlush && this.allowFlushHand()) {
+            return { type: 'FLUSH', value: sorted[4], strength: 2 };
         }
         if (isStraight) return { type: 'STRAIGHT', value: sorted[4], strength: 1 };
 
         return null;
     }
 
-    /**
-     * Compare two hands of the same type
-     */
-    static compareHands(hand1, hand2) {
+    checkSpecialStraights(sorted, isStraight, isFlush, is23456, isA2345) {
+        return null;
+    }
+
+    allowFlushHand() {
+        return false;
+    }
+
+    allowTripleHand() {
+        return false;
+    }
+
+    compareHands(hand1, hand2) {
         const info1 = this.getHandInfo(hand1);
         const info2 = this.getHandInfo(hand2);
 
         if (!info1 || !info2) return 0;
 
-        const ruleMode = this.getRuleMode();
+        const bombBeat = this.checkBombBeating(info1, info2, hand1.length, hand2.length);
+        if (bombBeat !== null) return bombBeat;
 
-        // Bombs (Four of a Kind and Straight Flush) can beat single or pair
-        const isBomb1 = info1.type === 'FOUR_OF_A_KIND' || info1.type === 'STRAIGHT_FLUSH';
-        const isBomb2 = info2.type === 'FOUR_OF_A_KIND' || info2.type === 'STRAIGHT_FLUSH';
-
-        if (ruleMode === 'taiwan') {
-            if (hand1.length === 5 && (hand2.length === 1 || hand2.length === 2)) {
-                return isBomb1 ? 1 : 0;
-            }
-            if (hand2.length === 5 && (hand1.length === 1 || hand1.length === 2)) {
-                return isBomb2 ? -1 : 0;
-            }
-        }
-
-        // Dragon is the largest
         if (info1.type === 'DRAGON' || info2.type === 'DRAGON') {
             if (info1.type === 'DRAGON' && info2.type === 'DRAGON') {
                 if (info1.isFlush !== info2.isFlush) return info1.isFlush ? 1 : -1;
@@ -197,38 +149,35 @@ class GameLogic {
         }
 
         if (info1.type !== info2.type) {
-            // Different types only allowed if both are 5-card hands
             if (hand1.length === 5 && hand2.length === 5) {
                 return info1.strength > info2.strength ? 1 : -1;
             }
-            return 0; // Invalid comparison
+            return 0;
         }
 
-        // Same type, compare values
         if (info1.type === 'SINGLE' || info1.type === 'PAIR' || info1.type === 'STRAIGHT' || info1.type === 'FLUSH' || info1.type === 'STRAIGHT_FLUSH') {
-            if (ruleMode === 'taiwan') {
-                if (info1.special === '23456' && info2.special !== '23456') return 1;
-                if (info1.special !== '23456' && info2.special === '23456') return -1;
-                if (info1.special === 'A2345' && info2.special !== 'A2345') return -1;
-                if (info1.special !== 'A2345' && info2.special === 'A2345') return 1;
-            }
+            const specComp = this.compareSpecialStraights(info1, info2);
+            if (specComp !== null) return specComp;
 
             return this.compareCards(info1.value, info2.value);
         }
 
-        // Four of a kind, Full House, or Triple: compare the rank of the quad/triple
         if (info1.type === 'FOUR_OF_A_KIND' || info1.type === 'FULL_HOUSE' || info1.type === 'TRIPLE') {
             return this.compareCards(info1.value, info2.value);
         }
 
-
         return 0;
     }
 
-    /**
-     * AI Search Helpers
-     */
-    static findPairs(cards) {
+    checkBombBeating(info1, info2, len1, len2) {
+        return null;
+    }
+
+    compareSpecialStraights(info1, info2) {
+        return null;
+    }
+
+    findPairs(cards) {
         const pairs = [];
         const sorted = this.sortCards(cards);
         for (let i = 0; i < sorted.length - 1; i++) {
@@ -237,7 +186,6 @@ class GameLogic {
                 while (j < sorted.length && this.getRank(sorted[j]) === this.getRank(sorted[i])) {
                     j++;
                 }
-                // Generate all combinations of 2 cards from this rank group
                 for (let x = i; x < j - 1; x++) {
                     for (let y = x + 1; y < j; y++) {
                         pairs.push([sorted[x], sorted[y]]);
@@ -249,7 +197,7 @@ class GameLogic {
         return pairs;
     }
 
-    static findTriples(cards) {
+    findTriples(cards) {
         const triples = [];
         const sorted = this.sortCards(cards);
         for (let i = 0; i < sorted.length - 2; i++) {
@@ -262,7 +210,7 @@ class GameLogic {
         return triples;
     }
 
-    static findFiveCardHands(cards) {
+    findFiveCardHands(cards) {
         const hands = [];
         const sf = this.findStraightFlushes(cards);
         if (sf.length > 0) hands.push(...sf);
@@ -273,8 +221,7 @@ class GameLogic {
         const fh = this.findFullHouses(cards);
         if (fh.length > 0) hands.push(...fh);
 
-        const ruleMode = this.getRuleMode();
-        if (ruleMode === 'hongkong') {
+        if (this.allowFlushHand()) {
             const f = this.findFlushes(cards);
             if (f.length > 0) hands.push(...f);
         }
@@ -285,7 +232,7 @@ class GameLogic {
         return hands;
     }
 
-    static findFlushes(cards) {
+    findFlushes(cards) {
         const flushes = [];
         for (let suit = 0; suit < 4; suit++) {
             const suitCards = cards.filter(c => this.getSuit(c) === suit);
@@ -303,7 +250,7 @@ class GameLogic {
         return flushes;
     }
 
-    static findStraights(cards) {
+    findStraights(cards) {
         const straights = [];
         const sorted = [...new Set(cards.map(c => this.getRank(c)))].sort((a, b) => a - b);
         if (sorted.length < 5) return [];
@@ -323,11 +270,10 @@ class GameLogic {
         return straights;
     }
 
-    static findFullHouses(cards) {
+    findFullHouses(cards) {
         const fhs = [];
         const triples = this.findTriples(cards);
         for (let t of triples) {
-            // Only find pairs from cards NOT already in the triple
             const remaining = cards.filter(c => !t.includes(c));
             const pairs = this.findPairs(remaining);
             for (let p of pairs) {
@@ -337,17 +283,16 @@ class GameLogic {
         return fhs;
     }
 
-    static findFourOfAKinds(cards) {
+    findFourOfAKinds(cards) {
         const fks = [];
         const sorted = this.sortCards(cards);
         for (let i = 0; i < sorted.length - 3; i++) {
             if (this.getRank(sorted[i]) === this.getRank(sorted[i + 3])) {
                 const quad = sorted.slice(i, i + 4);
-                // Pick a kicker from the remaining cards
                 const remaining = cards.filter(c => !quad.includes(c));
                 if (remaining.length > 0) {
                     const sortedRemaining = this.sortCards(remaining);
-                    fks.push([...quad, sortedRemaining[0]]); // Smallest kicker
+                    fks.push([...quad, sortedRemaining[0]]);
                 }
                 i += 3;
             }
@@ -355,7 +300,7 @@ class GameLogic {
         return fks;
     }
 
-    static findStraightFlushes(cards) {
+    findStraightFlushes(cards) {
         const sfs = [];
         for (let suit = 0; suit < 4; suit++) {
             const suitCards = cards.filter(c => this.getSuit(c) === suit);
@@ -366,25 +311,18 @@ class GameLogic {
         return sfs;
     }
 
-    static isLastHand(cards) {
+    isLastHand(cards) {
         if (!cards || cards.length === 0) return false;
         const info = this.getHandInfo(cards);
         return info !== null;
     }
 
-    /**
-     * Get all legal moves for a given hand and table state
-     * @returns {Array<{cards: number[], type: string}>}
-     */
-    static getLegalMoves(hand, lastPlay, lastPlayerIndex, playerIndex, shouted) {
+    getLegalMoves(hand, lastPlay, lastPlayerIndex, playerIndex, shouted) {
         const moves = [];
         const isLead = !lastPlay || lastPlay.length === 0;
         const sortedHand = this.sortCards(hand);
+        const startCard = this.getStartCard();
 
-        const ruleMode = this.getRuleMode();
-        const startCard = ruleMode === 'taiwan' ? 0 : 13;
-
-        // --- SHOUT RESTRICTION ---
         const isShouted = shouted && shouted[playerIndex];
         const isLastHand = this.isLastHand(hand);
         const shouldRestrictToFullHand = isShouted && isLastHand && hand.length > 1;
@@ -402,29 +340,24 @@ class GameLogic {
             const isFirstRound = lastPlayerIndex === -1 || lastPlayerIndex === undefined;
             const hasStartCard = hand.includes(startCard);
 
-            // In the first round, only the player with the starting card can lead
             if (isFirstRound && !hasStartCard) {
                 return [];
             }
 
-            // Singles
             sortedHand.forEach(c => {
-                if (isFirstRound && c !== startCard) return; // Must be starting card if first round
+                if (isFirstRound && c !== startCard) return;
                 moves.push({ cards: [c], type: 'SINGLE' });
             });
-            // Pairs
             this.findPairs(sortedHand).forEach(p => {
                 if (isFirstRound && !p.includes(startCard)) return;
                 moves.push({ cards: p, type: 'PAIR' });
             });
-            // Triples (Hong Kong Rules only)
-            if (ruleMode === 'hongkong') {
+            if (this.allowTripleHand()) {
                 this.findTriples(sortedHand).forEach(t => {
                     if (isFirstRound && !t.includes(startCard)) return;
                     moves.push({ cards: t, type: 'TRIPLE' });
                 });
             }
-            // 5-Card Hands
             this.findFiveCardHands(sortedHand).forEach(h => {
                 if (isFirstRound && !h.includes(startCard)) return;
                 const info = this.getHandInfo(h);
@@ -440,32 +373,16 @@ class GameLogic {
                         moves.push({ cards: [c], type: 'SINGLE' });
                     }
                 });
-                if (ruleMode === 'taiwan') {
-                    // Allow Four of a Kind and Straight Flush to beat single card (Bombs)
-                    this.findFourOfAKinds(sortedHand).forEach(fk => {
-                        moves.push({ cards: fk, type: 'FOUR_OF_A_KIND' });
-                    });
-                    this.findStraightFlushes(sortedHand).forEach(sf => {
-                        moves.push({ cards: sf, type: 'STRAIGHT_FLUSH' });
-                    });
-                }
+                this.addMonsterMovesForSingleOrPair(moves, sortedHand);
             } else if (targetLen === 2) {
                 this.findPairs(sortedHand).forEach(p => {
                     if (this.compareHands(p, lastPlay) > 0) {
                         moves.push({ cards: p, type: 'PAIR' });
                     }
                 });
-                if (ruleMode === 'taiwan') {
-                    // Allow Four of a Kind and Straight Flush to beat pair (Bombs)
-                    this.findFourOfAKinds(sortedHand).forEach(fk => {
-                        moves.push({ cards: fk, type: 'FOUR_OF_A_KIND' });
-                    });
-                    this.findStraightFlushes(sortedHand).forEach(sf => {
-                        moves.push({ cards: sf, type: 'STRAIGHT_FLUSH' });
-                    });
-                }
+                this.addMonsterMovesForSingleOrPair(moves, sortedHand);
             } else if (targetLen === 3) {
-                if (ruleMode === 'hongkong') {
+                if (this.allowTripleHand()) {
                     this.findTriples(sortedHand).forEach(t => {
                         if (this.compareHands(t, lastPlay) > 0) {
                             moves.push({ cards: t, type: 'TRIPLE' });
@@ -486,7 +403,11 @@ class GameLogic {
         return moves;
     }
 
-    static countFourOfAKinds(cards) {
+    addMonsterMovesForSingleOrPair(moves, sortedHand) {
+        // Default: no-op
+    }
+
+    countFourOfAKinds(cards) {
         if (cards.length < 4) return 0;
         const counts = {};
         cards.forEach(c => {
@@ -496,15 +417,13 @@ class GameLogic {
         return Object.values(counts).filter(c => c >= 4).length;
     }
 
-    static countStraightFlushes(cards) {
+    countStraightFlushes(cards) {
         if (cards.length < 5) return 0;
         const sfs = this.findStraightFlushes(cards);
-        // To avoid counting overlapping straights in the same suit, 
-        // we take the unique sets (though findStraightFlushes usually returns distinct rank sets per suit)
         return sfs.length;
     }
 
-    static hasValidMoves(hand, lastPlay) {
+    hasValidMoves(hand, lastPlay) {
         if (!lastPlay) return hand.length > 0;
         const lastInfo = this.getHandInfo(lastPlay);
         if (!lastInfo) return hand.length > 0;
@@ -522,6 +441,185 @@ class GameLogic {
             return hands.some(h => this.compareHands(h, lastPlay) > 0);
         }
         return false;
+    }
+}
+
+class TaiwanRules extends BaseRules {
+    getStartCard() {
+        return 0; // Club 3
+    }
+
+    getSuitStrength(cardId) {
+        return this.getSuit(cardId);
+    }
+
+    checkBombBeating(info1, info2, len1, len2) {
+        const isBomb1 = info1.type === 'FOUR_OF_A_KIND' || info1.type === 'STRAIGHT_FLUSH';
+        const isBomb2 = info2.type === 'FOUR_OF_A_KIND' || info2.type === 'STRAIGHT_FLUSH';
+
+        if (len1 === 5 && (len2 === 1 || len2 === 2)) {
+            return isBomb1 ? 1 : 0;
+        }
+        if (len2 === 5 && (len1 === 1 || len1 === 2)) {
+            return isBomb2 ? -1 : 0;
+        }
+        return null;
+    }
+
+    compareSpecialStraights(info1, info2) {
+        if (info1.special === '23456' && info2.special !== '23456') return 1;
+        if (info1.special !== '23456' && info2.special === '23456') return -1;
+        if (info1.special === 'A2345' && info2.special !== 'A2345') return -1;
+        if (info1.special !== 'A2345' && info2.special === 'A2345') return 1;
+        return null;
+    }
+
+    checkSpecialStraights(sorted, isStraight, isFlush, is23456, isA2345) {
+        if (is23456) {
+            const card2 = sorted.find(c => this.getRank(c) === 12);
+            return { type: isFlush ? 'STRAIGHT_FLUSH' : 'STRAIGHT', value: card2, strength: isFlush ? 5 : 1, special: '23456' };
+        }
+        if (isA2345) {
+            return { type: isFlush ? 'STRAIGHT_FLUSH' : 'STRAIGHT', value: sorted[2], strength: isFlush ? 5 : 1, special: 'A2345' };
+        }
+        return null;
+    }
+
+    addMonsterMovesForSingleOrPair(moves, sortedHand) {
+        this.findFourOfAKinds(sortedHand).forEach(fk => {
+            moves.push({ cards: fk, type: 'FOUR_OF_A_KIND' });
+        });
+        this.findStraightFlushes(sortedHand).forEach(sf => {
+            moves.push({ cards: sf, type: 'STRAIGHT_FLUSH' });
+        });
+    }
+}
+
+class HongKongRules extends BaseRules {
+    getStartCard() {
+        return 13; // Diamond 3
+    }
+
+    getSuitStrength(cardId) {
+        const suit = this.getSuit(cardId);
+        const hkStrengths = [1, 0, 2, 3];
+        return hkStrengths[suit];
+    }
+
+    getTripleHandInfo(sorted) {
+        if (this.getRank(sorted[0]) === this.getRank(sorted[1]) && 
+            this.getRank(sorted[1]) === this.getRank(sorted[2])) {
+            return { type: 'TRIPLE', value: sorted[2] };
+        }
+        return null;
+    }
+
+    allowFlushHand() {
+        return true;
+    }
+
+    allowTripleHand() {
+        return true;
+    }
+}
+
+class GameLogic {
+    static taiwanStrategy = new TaiwanRules();
+    static hkStrategy = new HongKongRules();
+
+    static getRuleMode() {
+        if (typeof AppStorage !== 'undefined' && typeof AppStorage.getItem === 'function') {
+            return AppStorage.getItem('ruleMode') || 'taiwan';
+        }
+        return 'taiwan';
+    }
+
+    static getStrategy() {
+        return this.getRuleMode() === 'hongkong' ? this.hkStrategy : this.taiwanStrategy;
+    }
+
+    static getRank(cardId) {
+        return cardId % 13;
+    }
+
+    static getSuit(cardId) {
+        return Math.floor(cardId / 13);
+    }
+
+    static getStartCard() {
+        return this.getStrategy().getStartCard();
+    }
+
+    static getSuitStrength(cardId) {
+        return this.getStrategy().getSuitStrength(cardId);
+    }
+
+    static compareCards(card1, card2) {
+        return this.getStrategy().compareCards(card1, card2);
+    }
+
+    static sortCards(cards) {
+        return this.getStrategy().sortCards(cards);
+    }
+
+    static getHandInfo(cards) {
+        return this.getStrategy().getHandInfo(cards);
+    }
+
+    static compareHands(hand1, hand2) {
+        return this.getStrategy().compareHands(hand1, hand2);
+    }
+
+    static findPairs(cards) {
+        return this.getStrategy().findPairs(cards);
+    }
+
+    static findTriples(cards) {
+        return this.getStrategy().findTriples(cards);
+    }
+
+    static findFiveCardHands(cards) {
+        return this.getStrategy().findFiveCardHands(cards);
+    }
+
+    static findFlushes(cards) {
+        return this.getStrategy().findFlushes(cards);
+    }
+
+    static findStraights(cards) {
+        return this.getStrategy().findStraights(cards);
+    }
+
+    static findFullHouses(cards) {
+        return this.getStrategy().findFullHouses(cards);
+    }
+
+    static findFourOfAKinds(cards) {
+        return this.getStrategy().findFourOfAKinds(cards);
+    }
+
+    static findStraightFlushes(cards) {
+        return this.getStrategy().findStraightFlushes(cards);
+    }
+
+    static isLastHand(cards) {
+        return this.getStrategy().isLastHand(cards);
+    }
+
+    static getLegalMoves(hand, lastPlay, lastPlayerIndex, playerIndex, shouted) {
+        return this.getStrategy().getLegalMoves(hand, lastPlay, lastPlayerIndex, playerIndex, shouted);
+    }
+
+    static countFourOfAKinds(cards) {
+        return this.getStrategy().countFourOfAKinds(cards);
+    }
+
+    static countStraightFlushes(cards) {
+        return this.getStrategy().countStraightFlushes(cards);
+    }
+
+    static hasValidMoves(hand, lastPlay) {
+        return this.getStrategy().hasValidMoves(hand, lastPlay);
     }
 }
 
