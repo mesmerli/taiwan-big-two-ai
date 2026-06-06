@@ -27,14 +27,20 @@ class AICharacter {
 
         // --- Handle Lead (No active play to beat) ---
         if (!lastPlay || lastPlay.length === 0) {
-            // First turn rule: Must include 3 of Clubs (Card 0)
-            const hasThreeOfClubs = hand.includes(0);
-            if (hasThreeOfClubs && (lastPlayerIndex === -1 || lastPlayerIndex === undefined)) {
-                const five = Logic.findFiveCardHands(hand).filter(h => h.includes(0));
+            // First turn rule: Must include the starting card (Club 3 = 0 for Taiwan, Diamond 3 = 13 for HK)
+            const ruleMode = typeof AppStorage !== 'undefined' ? (AppStorage.getItem('ruleMode') || 'taiwan') : 'taiwan';
+            const startCard = ruleMode === 'taiwan' ? 0 : 13;
+            const hasStartCard = hand.includes(startCard);
+            if (hasStartCard && (lastPlayerIndex === -1 || lastPlayerIndex === undefined)) {
+                if (ruleMode === 'hongkong') {
+                    const triples = Logic.findTriples(hand).filter(t => t.includes(startCard));
+                    if (triples.length > 0) return triples[0];
+                }
+                const five = Logic.findFiveCardHands(hand).filter(h => h.includes(startCard));
                 if (five.length > 0) return five[0];
-                const pairs = Logic.findPairs(hand).filter(p => p.includes(0));
+                const pairs = Logic.findPairs(hand).filter(p => p.includes(startCard));
                 if (pairs.length > 0) return pairs[0];
-                return [0];
+                return [startCard];
             }
             return await this.chooseLead(sorted, context);
         }

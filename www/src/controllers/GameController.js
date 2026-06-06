@@ -88,9 +88,11 @@ function initGame() {
     // Sort human hand
     gameState.players[0] = GameLogic.sortCards(gameState.players[0]);
 
-    // Find who has 3 of Clubs (Card 0)
+    // Find who has the starting card (Club 3 = 0 for Taiwan, Diamond 3 = 13 for HK)
+    const ruleMode = AppStorage.getItem('ruleMode') || 'taiwan';
+    const startCard = ruleMode === 'taiwan' ? 0 : 13;
     for (let i = 0; i < 4; i++) {
-        if (gameState.players[i].includes(0)) {
+        if (gameState.players[i].includes(startCard)) {
             gameState.turn = i;
             break;
         }
@@ -172,9 +174,12 @@ function playCards(shoutArg = false) {
         }
     }
 
-    // Special rule: first play must have 3 of Clubs if it's the very first turn
-    if (gameState.lastPlayerIndex === -1 && !selected.includes(0)) {
-        showAlert(t('mustInclude3C'));
+    // Special rule: first play must have starting card if it's the very first turn
+    const ruleMode = AppStorage.getItem('ruleMode') || 'taiwan';
+    const startCard = ruleMode === 'taiwan' ? 0 : 13;
+    if (gameState.lastPlayerIndex === -1 && !selected.includes(startCard)) {
+        const msg = ruleMode === 'taiwan' ? t('mustInclude3C') : t('mustInclude3D');
+        showAlert(msg);
         return;
     }
 

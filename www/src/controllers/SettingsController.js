@@ -297,6 +297,19 @@ if (muteToggle) {
     AudioPlayer.playBGM();
 }
 
+const gameRuleModeInput = document.getElementById('game-rule-mode');
+if (gameRuleModeInput) {
+    const savedRuleMode = AppStorage.getItem('ruleMode') || 'taiwan';
+    gameRuleModeInput.value = savedRuleMode;
+    gameRuleModeInput.onchange = () => {
+        const val = gameRuleModeInput.value;
+        AppStorage.setItem('ruleMode', val);
+        if (typeof renderAll === 'function') {
+            renderAll();
+        }
+    };
+}
+
 window.currentEditingIndex = -1;
 
 function setupAvatarClickListeners() {

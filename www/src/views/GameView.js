@@ -284,8 +284,10 @@ function updatePlayButtonVisibility() {
             }
             if (GameLogic.compareHands(selected, gameState.lastPlay) <= 0) return false;
         }
-        // First turn rule: Must include 3 of Clubs (Card 0)
-        if (gameState.lastPlayerIndex === -1 && !selected.includes(0)) return false;
+        // First turn rule: Must include the starting card (Club 3 = 0 for Taiwan, Diamond 3 = 13 for HK)
+        const ruleMode = AppStorage.getItem('ruleMode') || 'taiwan';
+        const startCard = ruleMode === 'taiwan' ? 0 : 13;
+        if (gameState.lastPlayerIndex === -1 && !selected.includes(startCard)) return false;
         return true;
     };
 

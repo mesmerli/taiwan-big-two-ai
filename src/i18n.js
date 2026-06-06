@@ -136,7 +136,11 @@ const I18N = {
         builtInAiEngineEnabled: "Built-in AI Engine Active",
         testingConnection: "Testing connection...",
         providerConnected: "{provider} connected",
-        connectionFailedLabel: "Connection failed"
+        connectionFailedLabel: "Connection failed",
+        ruleModeLabel: "Game Rule Mode",
+        ruleModeTaiwan: "Taiwanese Rules",
+        ruleModeHongKong: "Hong Kong Rules",
+        mustInclude3D: "First play must include the 3 of Diamonds!"
     },
     'zh': {
         title: "台灣大老二 AI",
@@ -276,7 +280,11 @@ const I18N = {
         builtInAiEngineEnabled: "內建 AI 引擎已啟用",
         testingConnection: "正在測試連線...",
         providerConnected: "{provider} 連線正常",
-        connectionFailedLabel: "連線失敗"
+        connectionFailedLabel: "連線失敗",
+        ruleModeLabel: "遊戲規則模式",
+        ruleModeTaiwan: "台灣規則 (不開放單出三條)",
+        ruleModeHongKong: "香港規則 (可出三條與同花)",
+        mustInclude3D: "第一手必須包含方塊三！"
     }
 
 };

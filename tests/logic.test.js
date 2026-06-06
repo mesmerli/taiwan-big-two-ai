@@ -1,7 +1,8 @@
-/**
- * Logic Test Suite for Taiwan Big2
- * Run with: node tests/logic.test.js
- */
+global.AppStorage = {
+    _data: { ruleMode: 'taiwan' },
+    getItem(key) { return this._data[key] || null; },
+    setItem(key, val) { this._data[key] = val; }
+};
 
 const GameLogic = require('../src/gameLogic');
 
@@ -135,6 +136,32 @@ runTest("Multiple Pairs Generation (Three Js should yield three pairs)", () => {
     
     return assert(pairs.length === 3, "Should return exactly 3 pairs") &&
            assert(p1 && p2 && p3, "Should contain all combinations: [Club J, Diamond J], [Club J, Spade J], [Diamond J, Spade J]");
+});
+
+
+runTest("HK Rules - Triple Hand Identification", () => {
+    global.AppStorage.setItem('ruleMode', 'hongkong');
+    const triple = [0, 13, 26]; // 3C, 3D, 3H
+    const info = GameLogic.getHandInfo(triple);
+    global.AppStorage.setItem('ruleMode', 'taiwan'); // reset
+    return assert(info && info.type === 'TRIPLE', "Should detect TRIPLE in HK rules");
+});
+
+runTest("HK Rules - Flush Hand Identification", () => {
+    global.AppStorage.setItem('ruleMode', 'hongkong');
+    const flush = [0, 1, 2, 3, 5]; // Clubs: 3, 4, 5, 6, 8
+    const info = GameLogic.getHandInfo(flush);
+    global.AppStorage.setItem('ruleMode', 'taiwan'); // reset
+    return assert(info && info.type === 'FLUSH', "Should detect FLUSH in HK rules");
+});
+
+runTest("HK Rules - Bombs cannot beat singles/pairs", () => {
+    global.AppStorage.setItem('ruleMode', 'hongkong');
+    const single = [12]; // 2 of Clubs (Rank 12)
+    const quad = [0, 13, 26, 39, 1]; // 3-of-a-kind + kicker
+    const compareResult = GameLogic.compareHands(quad, single);
+    global.AppStorage.setItem('ruleMode', 'taiwan'); // reset
+    return assert(compareResult === 0, "Bomb should NOT be able to beat single under HK rules");
 });
 
 

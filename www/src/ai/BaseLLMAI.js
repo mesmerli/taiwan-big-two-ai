@@ -577,8 +577,10 @@ ${this.extraPrompt ? `Additional Custom Instructions:\n${this.extraPrompt}` : ''
         const moves = [];
 
         const isLead = !lastPlay || lastPlay.length === 0;
+        const ruleMode = typeof AppStorage !== 'undefined' ? (AppStorage.getItem('ruleMode') || 'taiwan') : 'taiwan';
+        const startCard = ruleMode === 'taiwan' ? 0 : 13;
         const isFirstRound = lastPlayerIndex === -1 || lastPlayerIndex === undefined;
-        const hasThreeOfClubs = hand.includes(0);
+        const hasStartCard = hand.includes(startCard);
 
         // --- SHOUT RESTRICTION ---
         // If we have shouted "La" and our current hand is a valid combination, 
@@ -621,18 +623,24 @@ ${this.extraPrompt ? `Additional Custom Instructions:\n${this.extraPrompt}` : ''
         if (isLead) {
             // Singles
             sortedHand.forEach(c => {
-                if (isFirstRound && hasThreeOfClubs && c !== 0) return;
+                if (isFirstRound && hasStartCard && c !== startCard) return;
                 moves.push({ cards: [c], description: `[${this.cardToVerboseString(c)}] (SINGLE)` });
             });
             // Pairs
             Logic.findPairs(sortedHand).forEach(p => {
-                if (isFirstRound && hasThreeOfClubs && !p.includes(0)) return;
+                if (isFirstRound && hasStartCard && !p.includes(startCard)) return;
                 moves.push({ cards: p, description: `[${p.map(c => this.cardToVerboseString(c)).join(', ')}] (PAIR)` });
             });
-
+            // Triples (Hong Kong Rules only)
+            if (ruleMode === 'hongkong') {
+                Logic.findTriples(sortedHand).forEach(t => {
+                    if (isFirstRound && hasStartCard && !t.includes(startCard)) return;
+                    moves.push({ cards: t, description: `[${t.map(c => this.cardToVerboseString(c)).join(', ')}] (TRIPLE)` });
+                });
+            }
             // 5-Card Hands
             Logic.findFiveCardHands(sortedHand).forEach(h => {
-                if (isFirstRound && hasThreeOfClubs && !h.includes(0)) return;
+                if (isFirstRound && hasStartCard && !h.includes(startCard)) return;
                 const info = Logic.getHandInfo(h);
                 moves.push({ cards: h, description: `[${h.map(c => this.cardToVerboseString(c)).join(', ')}] (${info.type})` });
             });
@@ -650,7 +658,14 @@ ${this.extraPrompt ? `Additional Custom Instructions:\n${this.extraPrompt}` : ''
                         moves.push({ cards: p, description: `[${p.map(c => this.cardToVerboseString(c)).join(', ')}] (PAIR beats table)` });
                     }
                 });
-
+            } else if (targetLen === 3) {
+                if (ruleMode === 'hongkong') {
+                    Logic.findTriples(sortedHand).forEach(t => {
+                        if (Logic.compareHands(t, lastPlay) > 0) {
+                            moves.push({ cards: t, description: `[${t.map(c => this.cardToVerboseString(c)).join(', ')}] (TRIPLE beats table)` });
+                        }
+                    });
+                }
             } else if (targetLen === 5) {
                 Logic.findFiveCardHands(sortedHand).forEach(h => {
                     if (Logic.compareHands(h, lastPlay) > 0) {
@@ -677,6 +692,8 @@ ${this.extraPrompt ? `Additional Custom Instructions:\n${this.extraPrompt}` : ''
         const Logic = this.getLogic();
 
         let prompt = `[GAME STATE]\n`;
+        const ruleMode = typeof AppStorage !== 'undefined' ? (AppStorage.getItem('ruleMode') || 'taiwan') : 'taiwan';
+        prompt += `- Game Rules Mode: ${ruleMode === 'taiwan' ? 'Taiwanese Rules (No stand-alone triples; Four of a Kind / Straight Flush can beat single or pair)' : 'Hong Kong Rules (Stand-alone triples and flushes are allowed; Four of a Kind / Straight Flush CANNOT beat single or pair)'}\n`;
         prompt += `- Your Hand: [${hand.map(c => this.cardToVerboseString(c)).join(', ')}]\n`;
 
         // Opponent Profiling
