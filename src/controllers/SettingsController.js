@@ -412,7 +412,6 @@ function setupAvatarClickListeners() {
 
                     fetchAvailableModels(apiUrlInput.value, settings.apiKey || '', settings.modelId || '');
                     updateLearningsUI(char);
-                    loadNpcCacheList();
                 }
             };
         }
