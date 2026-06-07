@@ -32,6 +32,7 @@ export class AISummaryController {
 
         this.panel = AISummaryView.panel;
         this.closeBtn = document.getElementById('ai-review-close-btn');
+        this.refreshBtn = document.getElementById('ai-review-refresh-btn');
         this.newGameBtn = document.getElementById('ai-review-newgame-btn');
         this.corsCloseBtn = document.getElementById('ai-cors-close-btn');
         this.corsRetryBtn = AISummaryView.corsRetryBtn;
@@ -39,6 +40,13 @@ export class AISummaryController {
         if (!this.panel) return;
 
         if (this.closeBtn) this.closeBtn.onclick = () => this.hidePanel();
+        if (this.refreshBtn) {
+            this.refreshBtn.onclick = () => {
+                if (this.lastGameState) {
+                    this.showSummary(this.lastGameState, this.lastWinnerIndex);
+                }
+            };
+        }
         
         this.toggleHandle = document.getElementById('ai-review-toggle-handle');
         if (this.toggleHandle) {
@@ -222,6 +230,10 @@ export class AISummaryController {
     async updateLanguage() {
         this.testConnectionAndPopulateModels();
         
+        if (this.refreshBtn) {
+            this.refreshBtn.title = t('aiReviewRetryBtn');
+        }
+        
         const titleEl = document.getElementById('ai-review-title');
         if (titleEl) {
             const displayName = this.activeModel || 'AI';
@@ -267,9 +279,15 @@ export class AISummaryController {
             modelList.innerHTML = '';
         }
 
+        this.connectionSessionId = (this.connectionSessionId || 0) + 1;
+        const currentSessionId = this.connectionSessionId;
+
         if (this.reviewUseWebGPU) {
             const { WebLlmCacheManager } = await import('../services/WebLlmCacheManager.js');
+            if (currentSessionId !== this.connectionSessionId) return;
+
             const localModels = await WebLlmCacheManager.getFullyCachedStandardModels();
+            if (currentSessionId !== this.connectionSessionId) return;
 
             if (localModels.length === 0) {
                 if (statusEl) {
@@ -300,9 +318,13 @@ export class AISummaryController {
             if (modelList) {
                 if (savedModelId && !localModels.some(m => m.id === savedModelId)) {
                     const cachedList = await WebLlmCacheManager.listCachedModels();
+                    if (currentSessionId !== this.connectionSessionId) return;
+
                     const isSavedCached = cachedList.some(c => c.toLowerCase() === savedModelId.toLowerCase());
                     if (isSavedCached) {
                         const completion = await WebLlmCacheManager.getCacheCompletion(savedModelId);
+                        if (currentSessionId !== this.connectionSessionId) return;
+
                         if (completion === 100) {
                             const customOption = document.createElement('option');
                             customOption.value = savedModelId;
@@ -319,7 +341,6 @@ export class AISummaryController {
                     }
                 }
             }
-            this.retrySummary();
             return;
         }
 
@@ -360,6 +381,8 @@ export class AISummaryController {
             });
             clearTimeout(id);
 
+            if (currentSessionId !== this.connectionSessionId) return;
+
             if (response.ok) {
                 const data = await response.json();
                 if (statusEl) {
@@ -367,21 +390,19 @@ export class AISummaryController {
                     statusEl.style.color = '#10b981';
                 }
 
-                this.retrySummary();
-
                 if (modelList) {
                     const seen = new Set();
                     let hasSavedModel = false;
                     if (data && data.data) {
                         data.data.forEach((model) => {
-                            const mId = model.id;
-                            if (!mId || seen.has(mId)) return;
-                            seen.add(mId);
-                            if (mId === savedModelId) hasSavedModel = true;
-                            const option = document.createElement('option');
-                            option.value = mId;
-                            option.textContent = mId;
-                            modelList.appendChild(option);
+                             const mId = model.id;
+                             if (!mId || seen.has(mId)) return;
+                             seen.add(mId);
+                             if (mId === savedModelId) hasSavedModel = true;
+                             const option = document.createElement('option');
+                             option.value = mId;
+                             option.textContent = mId;
+                             modelList.appendChild(option);
                         });
                     }
                     if (savedModelId && !hasSavedModel) {
@@ -396,6 +417,7 @@ export class AISummaryController {
                 throw new Error('Response not OK');
             }
         } catch (e) {
+            if (currentSessionId !== this.connectionSessionId) return;
             console.warn('[AI Summary] Settings connection check failed:', e);
             if (statusEl) {
                 statusEl.textContent = t('connectionFailed');
@@ -411,12 +433,6 @@ export class AISummaryController {
         }
     }
 
-    retrySummary() {
-        if (this.lastGameState && this.lastConnectionStatus === 'failed') {
-            console.log('[AI Summary] Retrying failed summary...');
-            this.showSummary(this.lastGameState, this.lastWinnerIndex);
-        }
-    }
 
     async checkConnection() {
         try {
@@ -480,7 +496,24 @@ export class AISummaryController {
             `;
         }
 
+        this.summarySessionId = (this.summarySessionId || 0) + 1;
+        const currentSummarySessionId = this.summarySessionId;
+
         if (this.reviewUseWebGPU) {
+            const { WebLlmCacheManager } = await import('../services/WebLlmCacheManager.js');
+            if (currentSummarySessionId !== this.summarySessionId) return;
+
+            const localModels = await WebLlmCacheManager.getFullyCachedStandardModels();
+            if (currentSummarySessionId !== this.summarySessionId) return;
+            
+            if (localModels.length === 0) {
+                this.updateConnectionStatus('needs_download');
+                if (AISummaryView.summaryContainer) {
+                    AISummaryView.summaryContainer.innerHTML = `<div class="text-red-400 text-xs border border-red-950 bg-red-950/20 p-3 rounded-lg flex flex-col gap-2"><span>${t('builtInAiEngineActiveNeedsDownload')}</span></div>`;
+                }
+                return;
+            }
+
             this.updateConnectionStatus('connected');
             let activeModel = typeof AppStorage !== 'undefined' ? (AppStorage.getItem('reviewLlmModel') || '').trim() : '';
             if (!activeModel) activeModel = 'AI';
@@ -492,6 +525,7 @@ export class AISummaryController {
         } else {
             this.updateConnectionStatus('checking');
             const isConnected = await this.checkConnection();
+            if (currentSummarySessionId !== this.summarySessionId) return;
 
             if (!isConnected) {
                 this.updateConnectionStatus('failed');
@@ -513,7 +547,9 @@ export class AISummaryController {
         
         try {
             await this.requestAISummary(gameState, winnerIndex, this.currentAbortController.signal);
+            if (currentSummarySessionId !== this.summarySessionId) return;
         } catch (err) {
+            if (currentSummarySessionId !== this.summarySessionId) return;
             AISummaryView.stopLoadingAnimation();
             if (err.name === 'AbortError') {
                 console.log('[AI Summary] Fetch aborted.');

@@ -311,6 +311,10 @@ export class AISummaryView {
                 this.indicatorText.textContent = t('providerConnected', { provider });
             }
             this.indicatorText.className = 'text-xs text-emerald-400 font-medium';
+        } else if (status === 'needs_download') {
+            this.indicator.className = 'w-2.5 h-2.5 rounded-full bg-red-500 shadow-md shadow-red-500/50';
+            this.indicatorText.textContent = t('builtInAiEngineEnabledNeedsDownload');
+            this.indicatorText.className = 'text-xs text-red-400 font-medium';
         } else {
             this.indicator.className = 'w-2.5 h-2.5 rounded-full bg-red-500 shadow-md shadow-red-500/50';
             this.indicatorText.textContent = t('connectionFailedLabel');
