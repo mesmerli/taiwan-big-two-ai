@@ -109,7 +109,7 @@ function updateLanguage() {
         if (rulesSpLink) {
             rulesSpLink.onclick = (e) => {
                 e.preventDefault();
-                openLink('https://github.com/sponsors/mesmerli');
+                openLink('https://ko-fi.com/mesmerli');
             };
         }
     }

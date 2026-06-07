@@ -3,7 +3,7 @@
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![Version](https://img.shields.io/badge/Version-1.5.49-blue.svg)](./changelog.md)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Electron%20%7C%20Tauri%20%7C%20Android%20%7C%20Browser-brightgreen.svg)](https://capacitorjs.com/)
-[![Sponsor](https://img.shields.io/badge/Sponsor-GitHub%20Sponsors-ea4aaa?style=flat&logo=github-sponsors)](https://github.com/sponsors/mesmerli)
+[![Ko-fi](https://img.shields.io/badge/Sponsor-Ko--fi-F16061?style=flat&logo=ko-fi)](https://ko-fi.com/mesmerli)
 
 A modernized **Taiwanese & Hong Kong Big Two** card game built with Tauri (also supporting Electron, Android, and Web). This project integrates sophisticated heuristic algorithms with an advanced multi-persona research engine powered by **Large Language Models (LLM)**, designed for autonomous strategic gameplay analysis, local WebGPU execution, and evolutionary learning.
 
@@ -26,7 +26,7 @@ A modernized **Taiwanese & Hong Kong Big Two** card game built with Tauri (also 
 * **Open Source**: This game is licensed under **AGPLv3**. You are welcome to clone this repository and build it yourself for free. Check out our [Build & Run Guide](./Documents/BuildnRun.md) and [Architecture Overview](./Documents/architecture.md) for more details.
 * **Sponsor**: If you find my AI logic helpful for your own projects, please consider supporting the developer:
 
-  [![Sponsor](https://img.shields.io/badge/Sponsor-GitHub%20Sponsors-ea4aaa?style=for-the-badge&logo=github-sponsors)](https://github.com/sponsors/mesmerli)
+  [![Ko-fi](https://img.shields.io/badge/Ko--fi-F16061?style=for-the-badge&logo=ko-fi&logoColor=white)](https://ko-fi.com/mesmerli)
 
 ### 📸 Screenshots
 
