@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.50] - 2026-06-08
+
+### Fixed
+- **Triples under Hong Kong Rules**: Fixed a bug where players (human and AI) could not play standalone triples (three of a kind) under Hong Kong rules due to a missing length check case in `GameLogic.hasValidMoves`.
+
 ## [1.5.49] - 2026-06-07
 
 ### Added

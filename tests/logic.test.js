@@ -164,6 +164,21 @@ runTest("HK Rules - Bombs cannot beat singles/pairs", () => {
     return assert(compareResult === 0, "Bomb should NOT be able to beat single under HK rules");
 });
 
+runTest("HK Rules - hasValidMoves for triples", () => {
+    global.AppStorage.setItem('ruleMode', 'hongkong');
+    const handWithBetterTriple = [12, 25, 38]; // 2C, 2D, 2H (Triple 2s)
+    const handWithWorseTriple = [0, 13, 26]; // 3C, 3D, 3H (Triple 3s)
+    const lastPlayTriple = [1, 14, 27]; // 4C, 4D, 4H (Triple 4s)
+    
+    // Triple 2s beats Triple 4s (under HK rules 2 is rank 12, higher than 4 which is rank 1)
+    const canMoveBetter = GameLogic.hasValidMoves(handWithBetterTriple, lastPlayTriple);
+    // Triple 3s cannot beat Triple 4s
+    const canMoveWorse = GameLogic.hasValidMoves(handWithWorseTriple, lastPlayTriple);
+    
+    global.AppStorage.setItem('ruleMode', 'taiwan'); // reset
+    return assert(canMoveBetter === true, "Better triple should be a valid move") &&
+           assert(canMoveWorse === false, "Worse triple should NOT be a valid move");
+});
 
 console.log(`\n${colors.cyan}Summary: ${passedCount}/${totalCount} tests passed.${colors.reset}`);
 

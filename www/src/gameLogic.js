@@ -436,6 +436,13 @@ class BaseRules {
             const pairs = this.findPairs(hand);
             return pairs.some(p => this.compareHands(p, lastPlay) > 0);
         }
+        if (len === 3) {
+            if (this.allowTripleHand()) {
+                const triples = this.findTriples(hand);
+                return triples.some(t => this.compareHands(t, lastPlay) > 0);
+            }
+            return false;
+        }
         if (len === 5) {
             const hands = this.findFiveCardHands(hand);
             return hands.some(h => this.compareHands(h, lastPlay) > 0);
