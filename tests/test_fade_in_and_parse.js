@@ -50,7 +50,7 @@ server.listen(TEST_PORT, '127.0.0.1', async () => {
         });
 
         const window = await electronApp.firstWindow();
-        
+
         window.on('console', msg => {
             console.log(`[BROWSER CONSOLE] [${msg.type()}] ${msg.text()}`);
         });
@@ -106,7 +106,7 @@ server.listen(TEST_PORT, '127.0.0.1', async () => {
 
         // 3. Verify parseRoastAndAnalysis styled tags are present
         console.log('🔍 Checking styled blocks for [檢討] and [分析]...');
-        
+
         // Find elements with text containing [檢討] or [Review] inside the summary container
         const reviewSpanExists = await window.evaluate(() => {
             const spans = Array.from(document.querySelectorAll('#ai-summary span'));

@@ -193,10 +193,41 @@ function updateLanguage() {
 
                 const avatarEl = playerEl.querySelector('.avatar');
                 if (avatarEl) {
-                    if (data.avatar && data.avatar.includes('src/assets/avatars/')) {
-                        avatarEl.innerHTML = `<img src="${data.avatar}" alt="${data.name}">`;
+                    if (data.name === "橘貓" || data.name === "OrangeCat" || data.isDynamic) {
+                        const canvasId = `canvas-avatar-${i}`;
+                        let canvasEl = document.getElementById(canvasId);
+                        if (!canvasEl) {
+                            avatarEl.innerHTML = `<canvas id="${canvasId}" width="100" height="100" style="width: 100%; height: 100%; border-radius: 50%; display: block;"></canvas>`;
+                            canvasEl = document.getElementById(canvasId);
+                        }
+                        
+                        // Initialize DynamicAvatar if not exists, or update if the image changed
+                        if (!window.activeDynamicAvatars) window.activeDynamicAvatars = {};
+                        const hasInstance = !!window.activeDynamicAvatars[i];
+                        const urlChanged = hasInstance && window.activeDynamicAvatars[i].spriteUrl !== data.avatar;
+                        
+                        if (!hasInstance || urlChanged) {
+                            window.activeDynamicAvatars[i] = new DynamicAvatar(canvasEl, data.avatar, {
+                                onTensionChange: (y) => {
+                                    if (y > 0.8) {
+                                        playerEl.classList.add('tension-high');
+                                    } else {
+                                        playerEl.classList.remove('tension-high');
+                                    }
+                                }
+                            });
+                        }
                     } else {
-                        avatarEl.textContent = data.avatar;
+                        // Cleanup dynamic avatar if swapped away
+                        if (window.activeDynamicAvatars && window.activeDynamicAvatars[i]) {
+                            delete window.activeDynamicAvatars[i];
+                            playerEl.classList.remove('tension-high');
+                        }
+                        if (data.avatar && data.avatar.includes('src/assets/avatars/')) {
+                            avatarEl.innerHTML = `<img src="${data.avatar}" alt="${data.name}">`;
+                        } else {
+                            avatarEl.textContent = data.avatar;
+                        }
                     }
                     if (data.isLLM) avatarEl.classList.add('llm-glow');
                     else avatarEl.classList.remove('llm-glow');
@@ -211,7 +242,26 @@ function updateLanguage() {
                 PLAYER_NAMES[i] = t('youName');
                 const avatarEl = playerEl.querySelector('.avatar');
                 if (avatarEl) {
-                    avatarEl.innerHTML = `<img src="src/assets/avatars/avatar_you.png" alt="You">`;
+                    const canvasId = `canvas-avatar-0`;
+                    let canvasEl = document.getElementById(canvasId);
+                    if (!canvasEl) {
+                        avatarEl.innerHTML = `<canvas id="${canvasId}" width="100" height="100" style="width: 100%; height: 100%; border-radius: 50%; display: block;"></canvas>`;
+                        canvasEl = document.getElementById(canvasId);
+                    }
+                    
+                    // Initialize human dynamic avatar (Panda)
+                    if (!window.activeDynamicAvatars) window.activeDynamicAvatars = {};
+                    if (!window.activeDynamicAvatars[0]) {
+                        window.activeDynamicAvatars[0] = new DynamicAvatar(canvasEl, "src/assets/avatars/panda_sprite.png", {
+                            onTensionChange: (y) => {
+                                if (y > 0.8) {
+                                    playerEl.classList.add('tension-high');
+                                } else {
+                                    playerEl.classList.remove('tension-high');
+                                }
+                            }
+                        });
+                    }
                     avatarEl.classList.remove('llm-glow');
                 }
                 const gearIcon = playerEl.querySelector('.settings-icon');

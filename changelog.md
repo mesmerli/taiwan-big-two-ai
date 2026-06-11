@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.51] - 2026-06-11
+
+### Added
+- **Dynamic Telemetry Avatars**: Integrated dynamic emotional avatars for Player 1 (Human: Panda), Player 2 (Beaver), Player 3 (Shiba Dog), and Player 4 (Orange Cat). Avatars adapt in real-time to the player's psychological state ($X$ representing situation status and $Y$ representing tension level).
+- **High-Tension Shaking Animation**: Implemented avatar-focused CSS shake keyframe animations when tension exceeds 0.8. The outer card borders remain steady to avoid distracting players.
+- **Interactive Avatar Test Panel**: Upgraded `avatar_demo.html` with interactive sliders, 2D quadrant clicking/dragging, a preset dropdown menu (supporting Orange Cat, Shiba, Panda, and Beaver), and a local file upload picker allowing users to test custom sprite sheets with automatic grid cell recalculation.
+
+### Fixed
+- **Shiba Inu Head Resolution Grid Cut**: Fixed the 4-head cropping issue with Shiba Dog sprite sheets by enforcing dynamic `onload` cell dimension calculations (`cellWidth = width/cols`, `cellHeight = height/rows`).
+- **Dynamic Avatar Swapping Bug**: Fixed character avatar swap logic inside settings where switching dynamic characters failed to update the sprite sheet due to caching.
+
 ## [1.5.50] - 2026-06-08
 
 ### Fixed

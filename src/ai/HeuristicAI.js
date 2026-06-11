@@ -73,7 +73,82 @@ class ChrisAI extends AICharacter {
     }
 }
 
+/**
+ * OrangeCat - Tricky Strategy using DynamicAvatar
+ */
+class OrangeCatAI extends AICharacter {
+    constructor(gameLogic) {
+        super(gameLogic, "橘貓");
+        this.avatar = "src/assets/avatars/orange_cat_sprite.png";
+        this.isDynamic = true;
+    }
+
+    async chooseLead(sorted, context) {
+        const Logic = this.getLogic();
+        const { players } = context;
+        const anyOpponentHasOne = players && players.some((p, idx) => idx !== context.playerIndex && p && p.length === 1);
+        
+        const five = Logic.findFiveCardHands(sorted);
+        if (five.length > 0) return five[Math.floor(Math.random() * five.length)];
+        
+        const pairs = Logic.findPairs(sorted);
+        if (pairs.length > 0) return pairs[0];
+
+        return anyOpponentHasOne ? [sorted[sorted.length - 1]] : [sorted[0]];
+    }
+}
+
+/**
+ * ShibaDog - Playful Strategy using DynamicAvatar
+ */
+class ShibaDogAI extends AICharacter {
+    constructor(gameLogic) {
+        super(gameLogic, "柴犬");
+        this.avatar = "src/assets/avatars/shiba_dog_sprite.png";
+        this.isDynamic = true;
+    }
+
+    async chooseLead(sorted, context) {
+        const Logic = this.getLogic();
+        const { players } = context;
+        const anyOpponentHasOne = players && players.some((p, idx) => idx !== context.playerIndex && p && p.length === 1);
+        
+        const pairs = Logic.findPairs(sorted);
+        if (pairs.length > 0) return pairs[Math.floor(Math.random() * pairs.length)];
+
+        const five = Logic.findFiveCardHands(sorted);
+        if (five.length > 0) return five[0];
+
+        return anyOpponentHasOne ? [sorted[sorted.length - 1]] : [sorted[0]];
+    }
+}
+
+/**
+ * Beaver - Solid Strategy using DynamicAvatar
+ */
+class BeaverAI extends AICharacter {
+    constructor(gameLogic) {
+        super(gameLogic, "河狸");
+        this.avatar = "src/assets/avatars/castor_sprite.png";
+        this.isDynamic = true;
+    }
+
+    async chooseLead(sorted, context) {
+        const Logic = this.getLogic();
+        const { players } = context;
+        const anyOpponentHasOne = players && players.some((p, idx) => idx !== context.playerIndex && p && p.length === 1);
+        
+        const five = Logic.findFiveCardHands(sorted);
+        if (five.length > 0) return five[0];
+
+        const pairs = Logic.findPairs(sorted);
+        if (pairs.length > 0) return pairs[0];
+
+        return anyOpponentHasOne ? [sorted[sorted.length - 1]] : [sorted[0]];
+    }
+}
+
 // Browser/Electron export
 if (typeof module !== 'undefined') {
-    module.exports = { AlexAI, BellaAI, ChrisAI };
+    module.exports = { AlexAI, BellaAI, ChrisAI, OrangeCatAI, ShibaDogAI, BeaverAI };
 }

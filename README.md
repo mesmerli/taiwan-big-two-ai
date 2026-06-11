@@ -1,7 +1,7 @@
 # Taiwan Big2 AI (台灣大老二 AI 版)
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
-[![Version](https://img.shields.io/badge/Version-1.5.49-blue.svg)](./changelog.md)
+[![Version](https://img.shields.io/badge/Version-1.5.51-blue.svg)](./changelog.md)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Electron%20%7C%20Tauri%20%7C%20Android%20%7C%20Browser-brightgreen.svg)](https://capacitorjs.com/)
 [![Ko-fi](https://img.shields.io/badge/Sponsor-Ko--fi-F16061?style=flat&logo=ko-fi)](https://ko-fi.com/mesmerli)
 
@@ -21,8 +21,8 @@ A modernized **Taiwanese & Hong Kong Big Two** card game built with Tauri (also 
 
 ### 💡 How to get this game:
 * **Support the Developer**: Purchase the official version on the **[Microsoft Store](https://apps.microsoft.com/detail/9PM1S8GKBLK9)** for automatic updates and easy installation.
-* **Windows Version**: Browse the **[Windows Release Folder](./release/Windows/)** to download and install the latest **`taiwan-big2-ai_1.5.49_x64_en-US.msi`** (built with Tauri).
-* **Android Version**: Browse the **[Android Release Folder](./release/Android/)** to download and install the latest **`twbig2ai-1.5.49.apk`** installation package.
+* **Windows Version**: Browse the **[Windows Release Folder](./release/Windows/)** to download and install the latest **`taiwan-big2-ai_1.5.51_x64_en-US.msi`** (built with Tauri).
+* **Android Version**: Browse the **[Android Release Folder](./release/Android/)** to download and install the latest **`twbig2ai-1.5.51.apk`** installation package.
 * **Open Source**: This game is licensed under **AGPLv3**. You are welcome to clone this repository and build it yourself for free. Check out our [Build & Run Guide](./Documents/BuildnRun.md) and [Architecture Overview](./Documents/architecture.md) for more details.
 * **Sponsor**: If you find my AI logic helpful for your own projects, please consider supporting the developer:
 

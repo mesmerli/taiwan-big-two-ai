@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>玩家動態心理指標頭像 - 互動測試面板</title>
+    <!-- Google Fonts: Outfit & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0b0f19 0%, #111827 50%, #1e1b4b 100%);
+            --panel-bg: rgba(17, 24, 39, 0.7);
+            --panel-border: rgba(255, 255, 255, 0.08);
+            --accent-purple: #8b5cf6;
+            --accent-purple-glow: rgba(139, 92, 246, 0.4);
+            --accent-red: #ef4444;
+            --accent-red-glow: rgba(239, 68, 68, 0.6);
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: var(--bg-gradient);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1rem;
+            overflow-x: hidden;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1100px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 1.5rem;
+        }
+
+        @media (max-width: 900px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* 標題樣式 */
+        header {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        header h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #a78bfa, #f472b6, #fb7185);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.05em;
+        }
+
+        header p {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.5;
+        }
+
+        /* 玻璃磨砂面板 */
+        .glass-panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 20px;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-panel:hover {
+            border-color: rgba(255, 255, 255, 0.12);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+        }
+
+        .panel-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #f3f4f6;
+            border-left: 4px solid var(--accent-purple);
+            padding-left: 0.75rem;
+            margin-bottom: 0.25rem;
+        }
+
+        /* 控制滑桿區 */
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .slider-value {
+            font-family: monospace;
+            font-size: 1.1rem;
+            color: #f472b6;
+            font-weight: 600;
+            background: rgba(244, 114, 182, 0.1);
+            padding: 0.15rem 0.5rem;
+            border-radius: 6px;
+            border: 1px solid rgba(244, 114, 182, 0.2);
+        }
+
+        .slider-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+            transition: background 0.2s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--accent-purple);
+            cursor: pointer;
+            box-shadow: 0 0 10px var(--accent-purple-glow);
+            transition: transform 0.1s, background-color 0.2s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            background: #a78bfa;
+        }
+
+        .range-ticks {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-top: 0.25rem;
+        }
+
+        /* 頭像展示區 */
+        .avatar-showcase {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1.5rem;
+            position: relative;
+        }
+
+        .avatar-frame {
+            width: 220px;
+            height: 220px;
+            border-radius: 50%;
+            background: rgba(15, 23, 42, 0.6);
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            overflow: visible;
+        }
+
+        /* Y 軸高張力狀態下的 CSS 震動與紅光脈衝效果 */
+        .avatar-frame.tension-high {
+            border-color: var(--accent-red);
+            box-shadow: 0 0 25px var(--accent-red-glow), inset 0 0 15px var(--accent-red-glow);
+            animation: shake 0.15s infinite, pulse 1.5s infinite alternate;
+        }
+
+        #avatar-canvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            display: block;
+        }
+
+        .tension-badge {
+            position: absolute;
+            bottom: -5px;
+            background: var(--accent-red);
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            box-shadow: 0 4px 10px rgba(239, 68, 68, 0.5);
+            display: none;
+            letter-spacing: 0.05em;
+            animation: bounce 0.5s infinite alternate;
+        }
+
+        .avatar-frame.tension-high .tension-badge {
+            display: block;
+        }
+
+        /* 情緒文字解說卡 */
+        .emotion-info {
+            text-align: center;
+            min-height: 80px;
+        }
+
+        .emotion-name {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #fb7185;
+            margin-bottom: 0.25rem;
+            transition: color 0.3s;
+        }
+
+        .emotion-desc {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        /* 2D 心理指標視覺網格 */
+        .grid-container {
+            width: 100%;
+            aspect-ratio: 1.5;
+            background: rgba(15, 23, 42, 0.8);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            position: relative;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+
+        .grid-label-x {
+            position: absolute;
+            bottom: 6px;
+            right: 12px;
+            font-size: 0.7rem;
+            color: #6b7280;
+            font-weight: 600;
+        }
+
+        .grid-label-y {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            font-size: 0.7rem;
+            color: #6b7280;
+            font-weight: 600;
+        }
+
+        .quadrant-line-h {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 50%;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .quadrant-line-v {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            width: 1px;
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .tracker-dot {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: #a78bfa;
+            border: 2px solid white;
+            border-radius: 50%;
+            transform: translate(-50%, 50%);
+            box-shadow: 0 0 10px #8b5cf6;
+            pointer-events: none;
+            transition: left 0.1s ease-out, bottom 0.1s ease-out;
+            z-index: 10;
+        }
+
+        /* 區域標示 */
+        .zone-highlight {
+            position: absolute;
+            border: 1px dashed rgba(139, 92, 246, 0.25);
+            background: rgba(139, 92, 246, 0.03);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.65rem;
+            color: rgba(255, 255, 255, 0.2);
+            text-align: center;
+            pointer-events: none;
+            transition: background 0.3s;
+        }
+
+        .zone-highlight.active {
+            background: rgba(139, 92, 246, 0.15);
+            border-color: rgba(139, 92, 246, 0.6);
+            color: rgba(255, 255, 255, 0.85);
+            font-weight: 600;
+        }
+
+        /* 數據與導出功能 */
+        .telemetry-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 0.875rem;
+        }
+
+        .telemetry-row:last-child {
+            border-bottom: none;
+        }
+
+        .telemetry-label {
+            color: var(--text-secondary);
+        }
+
+        .telemetry-val {
+            font-family: monospace;
+            color: #f3f4f6;
+            font-weight: 500;
+        }
+
+        .action-button {
+            background: linear-gradient(135deg, var(--accent-purple) 0%, #7c3aed 100%);
+            border: none;
+            color: white;
+            padding: 0.85rem 1.5rem;
+            border-radius: 12px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .action-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
+            background: linear-gradient(135deg, #9333ea 0%, #6d28d9 100%);
+        }
+
+        .action-button:active {
+            transform: translateY(1px);
+        }
+
+        /* 導出預覽區 */
+        .export-preview-box {
+            display: none;
+            flex-direction: column;
+            gap: 0.75rem;
+            padding: 1rem;
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            margin-top: 0.5rem;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .export-preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .export-preview-content {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .export-preview-img {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            background: #111827;
+        }
+
+        .export-url-textarea {
+            flex: 1;
+            height: 48px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 6px;
+            color: #34d399;
+            font-family: monospace;
+            font-size: 0.65rem;
+            padding: 0.4rem;
+            resize: none;
+            outline: none;
+        }
+
+        /* Keyframes */
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(0px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(2px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(2px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 15px rgba(239, 68, 68, 0.5); }
+            100% { box-shadow: 0 0 35px rgba(239, 68, 68, 0.8), inset 0 0 20px rgba(239, 68, 68, 0.5); }
+        }
+
+        @keyframes bounce {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-4px); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>玩家動態心理頭像測試</h1>
+        <p>此工具用於即時模擬「台灣大老二撲克牌遊戲」中的玩家心理 telemetry 座標 (X, Y 軸)，藉以驅動並渲染出最合適的 Q 版表情貼圖。</p>
+    </header>
+
+    <div class="container">
+        <!-- 左側：輸入與數值面板 -->
+        <div class="glass-panel">
+            <h2 class="panel-title">選擇頭像與心理指標輸入</h2>
+            
+            <!-- 選擇角色與自訂圖檔 -->
+            <div class="control-group">
+                <label class="slider-label">選擇角色預設或自訂圖檔</label>
+                <div style="display: flex; gap: 0.75rem; align-items: center;">
+                    <select id="preset-select" style="flex: 1; padding: 0.6rem; border-radius: 8px; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--panel-border); color: var(--text-primary); outline: none; font-family: inherit; font-size: 0.9rem; cursor: pointer;">
+                        <option value="src/assets/avatars/orange_cat_sprite.png">橘貓 (Orange Cat)</option>
+                        <option value="src/assets/avatars/shiba_dog_sprite.png">柴犬 (Shiba Dog)</option>
+                        <option value="src/assets/avatars/panda_sprite.png">貓熊 (Panda)</option>
+                        <option value="src/assets/avatars/castor_sprite.png">河狸 (Beaver)</option>
+                    </select>
+                    <label for="input-sprite-file" style="cursor: pointer; background: rgba(139, 92, 246, 0.2); border: 1px solid var(--accent-purple); color: var(--text-primary); padding: 0.6rem 1rem; border-radius: 8px; font-size: 0.85rem; font-weight: 600; display: inline-block; transition: all 0.2s; white-space: nowrap;">
+                        選擇圖檔
+                    </label>
+                    <input type="file" id="input-sprite-file" accept="image/*" style="display: none;">
+                </div>
+            </div>
+            
+            <!-- X 軸滑桿 -->
+            <div class="control-group">
+                <div class="slider-label">
+                    <span>X 軸：局勢順逆 (牌爛 ↔ 聽牌)</span>
+                    <span id="val-x" class="slider-value">0.00</span>
+                </div>
+                <div class="slider-container">
+                    <input type="range" id="input-x" min="-1.0" max="1.0" step="0.05" value="0.0">
+                </div>
+                <div class="range-ticks">
+                    <span>-1.0 (極度逆風)</span>
+                    <span>0.0 (普通)</span>
+                    <span>1.0 (極度順風)</span>
+                </div>
+            </div>
+
+            <!-- Y 軸滑桿 -->
+            <div class="control-group">
+                <div class="slider-label">
+                    <span>Y 軸：情緒張力 (平靜 ↔ 抓狂)</span>
+                    <span id="val-y" class="slider-value">0.20</span>
+                </div>
+                <div class="slider-container">
+                    <input type="range" id="input-y" min="0.0" max="1.0" step="0.05" value="0.2">
+                </div>
+                <div class="range-ticks">
+                    <span>0.0 (內斂沉穩)</span>
+                    <span>0.5 (起伏)</span>
+                    <span>1.0 (浮誇狂暴)</span>
+                </div>
+            </div>
+
+            <!-- 2D 坐標軸區域視覺化圖表 -->
+            <div class="control-group">
+                <label class="slider-label">2D 象限區間視覺化 (Emotion Quadrant Chart)</label>
+                <div class="grid-container" id="quadrant-chart">
+                    <div class="quadrant-line-h"></div>
+                    <div class="quadrant-line-v"></div>
+                    <span class="grid-label-y">張力 Y 軸</span>
+                    <span class="grid-label-x">局勢 X 軸</span>
+                    
+                    <!-- 點擊指示器 -->
+                    <div class="tracker-dot" id="tracker-dot"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右側：頭像渲染與特效面板 -->
+        <div class="glass-panel">
+            <h2 class="panel-title">動態渲染頭像 (Dynamic Canvas View)</h2>
+
+            <div class="avatar-showcase">
+                <!-- 頭像框框 (支援震動特效與紅光 glow) -->
+                <div class="avatar-frame" id="avatar-frame">
+                    <canvas id="avatar-canvas" width="200" height="200"></canvas>
+                    <div class="tension-badge">張力飆高！⚡</div>
+                </div>
+
+                <!-- 目前情緒標籤與描述 -->
+                <div class="emotion-info">
+                    <div class="emotion-name" id="emotion-name">讀取中...</div>
+                    <div class="emotion-desc" id="emotion-desc">正在加載表情配置物件...</div>
+                </div>
+            </div>
+
+            <!-- 狀態追蹤面板 -->
+            <div>
+                <h3 class="slider-label" style="margin-bottom: 0.5rem;">數據 telemetry 偵測</h3>
+                <div class="telemetry-row">
+                    <span class="telemetry-label">目前座標 (X, Y)</span>
+                    <span class="telemetry-val" id="tel-coords">(0.00, 0.20)</span>
+                </div>
+                <div class="telemetry-row">
+                    <span class="telemetry-label">雪碧圖索引 (Index)</span>
+                    <span class="telemetry-val" id="tel-index">-</span>
+                </div>
+                <div class="telemetry-row">
+                    <span class="telemetry-label">當前裁切座標 (sx, sy)</span>
+                    <span class="telemetry-val" id="tel-pixels">sx: 0px, sy: 0px</span>
+                </div>
+            </div>
+
+            <!-- 導出 Base64 功能 -->
+            <button class="action-button" id="btn-export">
+                <span>📸</span> 導出當前表情 (Base64 PNG)
+            </button>
+
+            <!-- 導出結果預覽區 -->
+            <div class="export-preview-box" id="export-box">
+                <div class="export-preview-header">
+                    <span>導出成功！可用於 Discord API 發送或儲存</span>
+                    <a href="#" style="color: #8b5cf6; text-decoration: none;" id="btn-close-export">關閉</a>
+                </div>
+                <div class="export-preview-content">
+                    <img class="export-preview-img" id="export-preview-img" src="" alt="Exported">
+                    <textarea class="export-url-textarea" id="export-base64-text" readonly onclick="this.select()"></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 載入核心組件腳本 -->
+    <script src="src/views/DynamicAvatar.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const canvas = document.getElementById("avatar-canvas");
+            const inputX = document.getElementById("input-x");
+            const inputY = document.getElementById("input-y");
+            
+            const valX = document.getElementById("val-x");
+            const valY = document.getElementById("val-y");
+            
+            const emotionName = document.getElementById("emotion-name");
+            const emotionDesc = document.getElementById("emotion-desc");
+            const avatarFrame = document.getElementById("avatar-frame");
+            
+            const telCoords = document.getElementById("tel-coords");
+            const telIndex = document.getElementById("tel-index");
+            const telPixels = document.getElementById("tel-pixels");
+            
+            const btnExport = document.getElementById("btn-export");
+            const exportBox = document.getElementById("export-box");
+            const exportPreviewImg = document.getElementById("export-preview-img");
+            const exportBase64Text = document.getElementById("export-base64-text");
+            const btnCloseExport = document.getElementById("btn-close-export");
+            
+            const quadrantChart = document.getElementById("quadrant-chart");
+            const trackerDot = document.getElementById("tracker-dot");
+
+            const presetSelect = document.getElementById("preset-select");
+            const inputSpriteFile = document.getElementById("input-sprite-file");
+
+            // 1. 初始化 2D 圖表各表情區間標籤
+            stickersMetadata.forEach(sticker => {
+                const zone = document.createElement("div");
+                zone.className = "zone-highlight";
+                zone.id = `zone-${sticker.index}`;
+                zone.innerText = sticker.name;
+
+                // 將 X (-1 to 1) 轉換為百分比 (0 to 100%)
+                const left = ((sticker.xRange[0] + 1) / 2) * 100;
+                const width = ((sticker.xRange[1] - sticker.xRange[0]) / 2) * 100;
+                
+                // 將 Y (0 to 1) 轉換為百分比 (0 to 100% 由下而上)
+                const bottom = sticker.yRange[0] * 100;
+                const height = (sticker.yRange[1] - sticker.yRange[0]) * 100;
+
+                zone.style.left = `${left}%`;
+                zone.style.width = `${width}%`;
+                zone.style.bottom = `${bottom}%`;
+                zone.style.height = `${height}%`;
+
+                quadrantChart.appendChild(zone);
+            });
+
+            // 2. 初始化 DynamicAvatar
+            // 載入我們產生的橘貓雪碧圖
+            const avatar = new DynamicAvatar(canvas, "src/assets/avatars/orange_cat_sprite.png", {
+                onStateChange: (state) => {
+                    // 表情發生改變時更新 UI
+                    emotionName.innerText = state.name;
+                    emotionDesc.innerText = state.description;
+                    
+                    // 更新 2D 視覺圖表中 active 狀態的區塊
+                    document.querySelectorAll(".zone-highlight").forEach(z => z.classList.remove("active"));
+                    const activeZone = document.getElementById(`zone-${state.index}`);
+                    if (activeZone) {
+                        activeZone.classList.add("active");
+                    }
+
+                    // 更新 telemetry 資訊
+                    telIndex.innerText = `${state.index}`;
+                    telPixels.innerText = `sx: ${state.grid.col * 200}px, sy: ${state.grid.row * 200}px`;
+                },
+                onTensionChange: (y) => {
+                    // 當張力大於 0.8 時，加入紅光與震動特效
+                    if (y > 0.8) {
+                        avatarFrame.classList.add("tension-high");
+                    } else {
+                        avatarFrame.classList.remove("tension-high");
+                    }
+                }
+            });
+
+            // 選擇預設或自訂圖檔的處理事件
+            function updateAvatarSprite(url) {
+                avatar.spriteUrl = url;
+                avatar.isLoaded = false;
+                if (url.startsWith("data:")) {
+                    avatar.spriteImage.src = url;
+                } else {
+                    avatar.spriteImage.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + 't=' + Date.now();
+                }
+            }
+
+            presetSelect.addEventListener("change", (e) => {
+                updateAvatarSprite(e.target.value);
+            });
+
+            inputSpriteFile.addEventListener("change", (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        updateAvatarSprite(event.target.result);
+                        // 清空 file input 的 value，以便使用者能重選同張圖
+                        inputSpriteFile.value = "";
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // 3. 事件監聽：滑桿數值變更
+            function updateTelemetry() {
+                const x = parseFloat(inputX.value);
+                const y = parseFloat(inputY.value);
+
+                // 更新文字顯示
+                valX.innerText = x.toFixed(2);
+                valY.innerText = y.toFixed(2);
+                telCoords.innerText = `(${x.toFixed(2)}, ${y.toFixed(2)})`;
+
+                // 更新 2D 指標點的位置
+                const dotLeft = ((x + 1) / 2) * 100;
+                const dotBottom = y * 100;
+                trackerDot.style.left = `${dotLeft}%`;
+                trackerDot.style.bottom = `${dotBottom}%`;
+
+                // 更新頭像狀態與渲染
+                avatar.updatePsychologicalState(x, y);
+            }
+
+            inputX.addEventListener("input", updateTelemetry);
+            inputY.addEventListener("input", updateTelemetry);
+
+            // 支援在 2D 圖表上直接點擊/拖移來定位
+            function handleQuadrantClick(e) {
+                const rect = quadrantChart.getBoundingClientRect();
+                const clickX = e.clientX - rect.left;
+                const clickY = e.clientY - rect.top;
+
+                // 轉換回 -1.0 到 1.0 (X) 與 0.0 到 1.0 (Y，因為畫布 Y 軸是倒置的，所以用 1 - percent)
+                const x = ((clickX / rect.width) * 2) - 1;
+                const y = 1 - (clickY / rect.height);
+
+                // 設定滑桿值並更新
+                inputX.value = x.toFixed(2);
+                inputY.value = y.toFixed(2);
+                updateTelemetry();
+            }
+
+            let isDragging = false;
+            quadrantChart.addEventListener("mousedown", (e) => {
+                isDragging = true;
+                handleQuadrantClick(e);
+            });
+            window.addEventListener("mousemove", (e) => {
+                if (isDragging) handleQuadrantClick(e);
+            });
+            window.addEventListener("mouseup", () => {
+                isDragging = false;
+            });
+
+            // 4. 導出頭像功能
+            btnExport.addEventListener("click", () => {
+                const base64Str = avatar.exportCurrentAvatar();
+                exportPreviewImg.src = base64Str;
+                exportBase64Text.value = base64Str;
+                exportBox.style.display = "flex";
+            });
+
+            btnCloseExport.addEventListener("click", (e) => {
+                e.preventDefault();
+                exportBox.style.display = "none";
+            });
+
+            // 延遲一下讓 Image 載入並進行首次渲染
+            setTimeout(() => {
+                updateTelemetry();
+            }, 100);
+        });
+    </script>
+</body>
+</html>
