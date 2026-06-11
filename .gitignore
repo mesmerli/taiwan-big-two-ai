@@ -41,7 +41,7 @@ palmOS/
 .winapp
 Package.appxmanifest
 winapp.yaml
-Assets/
+/Assets/
 
 # Native Addons
 build/
