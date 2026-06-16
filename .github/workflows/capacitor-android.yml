@@ -23,6 +23,9 @@ jobs:
           distribution: 'zulu'
           java-version: '21'
 
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -36,6 +39,9 @@ jobs:
         run: |
           npm run sync-www
           npx cap sync android
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
 
       - name: Build Release APK
         run: |
