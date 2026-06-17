@@ -5,14 +5,14 @@ class BigTwoAI {
     constructor(gameLogic) {
         this.gameLogic = gameLogic;
         // All available character blueprints (null = Human)
-        this.availableBlueprints = [null, AlexAI, BellaAI, ChrisAI, DianaAI, AresAI];
+        this.availableBlueprints = [null, AlexAI, BellaAI, ChrisAI, OrangeCatAI, ShibaDogAI, BeaverAI, DianaAI, AresAI];
 
         // Active characters in slots 0, 1, 2, 3
         this.characters = {
             0: null, // Human
-            1: new AlexAI(gameLogic),
-            2: new BellaAI(gameLogic),
-            3: new ChrisAI(gameLogic)
+            1: new BeaverAI(gameLogic),   // Player 2 is Beaver!
+            2: new ShibaDogAI(gameLogic),  // Player 3 is Shiba Dog!
+            3: new OrangeCatAI(gameLogic)  // Player 4 is Orange Cat!
         };
     }
 
@@ -88,7 +88,7 @@ class BigTwoAI {
         const getCharData = (i) => {
             const char = this.characters[i];
             if (!char) return null;
-            return { name: char.name, avatar: char.avatar, type: char.type, isLLM: char.isLLM };
+            return { name: char.name, avatar: char.avatar, type: char.type, isLLM: char.isLLM, isDynamic: char.isDynamic };
         };
         return {
             0: getCharData(0),

@@ -85,6 +85,7 @@ function updateLanguage() {
         
         const rulesGhLink = document.getElementById('rules-github-link');
         const rulesSpLink = document.getElementById('rules-sponsor-link');
+        const rulesStoreLink = document.getElementById('rules-store-link');
         const openLink = (url) => {
             if (typeof SystemService !== 'undefined') {
                 SystemService.openExternal(url);
@@ -110,6 +111,12 @@ function updateLanguage() {
             rulesSpLink.onclick = (e) => {
                 e.preventDefault();
                 openLink('https://ko-fi.com/mesmerli');
+            };
+        }
+        if (rulesStoreLink) {
+            rulesStoreLink.onclick = (e) => {
+                e.preventDefault();
+                openLink('https://apps.microsoft.com/detail/9PM1S8GKBLK9');
             };
         }
     }
@@ -189,7 +196,13 @@ function updateLanguage() {
                     suffix = t('npcSuffix');
                 }
 
-                PLAYER_NAMES[i] = data.name + suffix;
+                let nameKey = data.name;
+                if (data.name === '橘貓' || data.name === 'OrangeCat' || data.name === 'Orange Cat') nameKey = 'charOrangeCat';
+                else if (data.name === '柴犬' || data.name === 'ShibaDog' || data.name === 'Shiba Dog') nameKey = 'charShibaDog';
+                else if (data.name === '河狸' || data.name === 'Beaver') nameKey = 'charBeaver';
+
+                const displayName = (I18N[currentLang][nameKey]) ? t(nameKey) : data.name;
+                PLAYER_NAMES[i] = displayName + suffix;
 
                 const avatarEl = playerEl.querySelector('.avatar');
                 if (avatarEl) {

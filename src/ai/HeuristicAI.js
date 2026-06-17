@@ -129,7 +129,7 @@ class ShibaDogAI extends AICharacter {
 class BeaverAI extends AICharacter {
     constructor(gameLogic) {
         super(gameLogic, "河狸");
-        this.avatar = "src/assets/avatars/castor_sprite.png";
+        this.avatar = "src/assets/avatars/beaver_sprite.png";
         this.isDynamic = true;
     }
 

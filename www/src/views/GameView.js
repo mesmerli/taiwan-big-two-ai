@@ -57,12 +57,46 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     };
 });
 
+function updateDynamicAvatars() {
+    if (!window.activeDynamicAvatars) return;
+    for (const [i, avatarInstance] of Object.entries(window.activeDynamicAvatars)) {
+        const playerIndex = parseInt(i);
+        const hand = gameState.players[playerIndex];
+        if (!hand) continue;
+
+        // X: 局勢順逆
+        const progress = 1.0 - (hand.length / 13);
+        let x = (progress * 2.0) - 1.0;
+        if (gameState.lastPlayerIndex === -1 || gameState.lastPlayerIndex === playerIndex) {
+            x += 0.2;
+        }
+        x = Math.max(-1.0, Math.min(1.0, x));
+
+        // Y: 情緒張力
+        let y = 0.15;
+        if (gameState.turn === playerIndex) y += 0.15;
+        
+        const othersCloseToWin = gameState.players.some((p, idx) => idx !== playerIndex && p.length <= 2);
+        const othersShouted = gameState.shouted.some((s, idx) => idx !== playerIndex && s);
+        if (othersCloseToWin || othersShouted) {
+            y += 0.5;
+        }
+        if (gameState.lastPlay && gameState.lastPlayerIndex !== playerIndex) {
+            y += 0.2;
+        }
+        y = Math.max(0.0, Math.min(1.0, y));
+
+        avatarInstance.updatePsychologicalState(x, y);
+    }
+}
+
 function renderAll() {
     renderHumanHand();
     renderAIPlayers();
     renderPlayerActions();
     updateStatus();
     updatePlayButtonVisibility();
+    updateDynamicAvatars();
 }
 
 function renderHumanHand() {

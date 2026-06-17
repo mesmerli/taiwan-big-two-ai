@@ -2,6 +2,50 @@
 
 All notable changes to the **Taiwan Big2 AI** project will be documented in this file.
 
+### [1.5.52] - 2026-06-17
+
+#### Added
+- **Microsoft Store Links**: Integrated Microsoft Store links ("or Microsoft Store" / "或微軟商店") in the copyright/sponsorship section of both the "About" page and "Rules" modal tab.
+
+#### Fixed
+- **Modal Viewport Responsiveness**: Fixed the layout issue where the Game Rules modal height exceeded the screen height on mobile/small viewports by setting `max-height: 90vh` and enabling inner vertical scrolling for active tab contents. Reduced modal padding on mobile layout.
+- **Post-Game Review Avatars**: Fixed the bug where animal players' dynamic avatars (Panda, Orange Cat, Shiba Dog, Beaver) were wrongly displayed as static human avatars on the post-game review panel. Prioritized exporting the active dynamic avatar canvas frame with a fallback to crop sprite sheet grids.
+- **Removed High-Tension Shaking & Glowing Visuals**: Removed the high-tension avatar shaking and red-glow effects to maintain UI clean and distraction-free when player tension is high.
+
+### [1.5.51] - 2026-06-11
+
+#### Added
+- **Dynamic Telemetry Avatars**: Integrated dynamic emotional avatars for Player 1 (Human: Panda), Player 2 (Beaver), Player 3 (Shiba Dog), and Player 4 (Orange Cat). Avatars adapt in real-time to the player's psychological state ($X$ representing situation status and $Y$ representing tension level).
+- **High-Tension Shaking Animation**: Implemented avatar-focused CSS shake keyframe animations when tension exceeds 0.8. The outer card borders remain steady to avoid distracting players.
+- **Interactive Avatar Test Panel**: Upgraded `avatar_demo.html` with interactive sliders, 2D quadrant clicking/dragging, a preset dropdown menu (supporting Orange Cat, Shiba, Panda, and Beaver), and a local file upload picker allowing users to test custom sprite sheets with automatic grid cell recalculation.
+
+#### Fixed
+- **Shiba Inu Head Resolution Grid Cut**: Fixed the 4-head cropping issue with Shiba Dog sprite sheets by enforcing dynamic `onload` cell dimension calculations (`cellWidth = width/cols`, `cellHeight = height/rows`).
+- **Dynamic Avatar Swapping Bug**: Fixed character avatar swap logic inside settings where switching dynamic characters failed to update the sprite sheet due to caching.
+
+### [1.5.50] - 2026-06-08
+
+#### Fixed
+- **Triples under Hong Kong Rules**: Fixed a bug where players (human and AI) could not play standalone triples (three of a kind) under Hong Kong rules due to a missing length check case in `GameLogic.hasValidMoves`.
+
+### [1.5.49] - 2026-06-07
+
+#### Added
+- **Dynamic Rules Mode Selection**: Integrated dynamic switching between Taiwanese and Hong Kong game rules within Settings. Configures starting card rules, scoring structures, and hand combinations (supporting stand-alone Triples and Flushes under Hong Kong rules).
+
+#### Fixed
+- **Score Calculation Reference Error**: Fixed a runtime `ReferenceError: ruleMode is not defined` in `GameController.js` when calculating game-over scores.
+
+### [1.5.48] - 2026-06-06
+
+#### Added
+- **AI Engine Modularization**: Refactored the massive single-file `ai.js` into five single-responsibility class scripts under a new `src/ai/` directory (`AICharacter.js`, `HeuristicAI.js`, `BaseLLMAI.js`, `LLMCharacters.js`, and `BigTwoAI.js`) to follow clean layered architecture design.
+- **Post-Game Tactical Review Decoupling**: Decoupled the obsolete `aiSummary.js` and migrated its initialization logic into `renderer.js`. Separated DOM/view elements into `AISummaryView.js` and business logic into `AISummaryController.js`.
+- **Worker Relocation**: Moved the background worker script `aiWorker.js` to `src/services/aiWorker.js` for cleaner encapsulation and updated all dependent worker path resolutions.
+
+#### Fixed
+- **Robust UI Test Pipeline**: Solved flakiness in the Playwright E2E UI test suite related to persisted local storage mute configurations by programmatically resetting `AudioPlayer.soundMode = 0` during audio transition test phases.
+
 ### [1.5.47] - 2026-06-05
 
 ### Added

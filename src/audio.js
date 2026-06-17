@@ -1,3 +1,14 @@
+const PERSONA_VOICE_MAP = {
+    '橘貓': 'cat',
+    'orangecat': 'cat',
+    'orange': 'cat',
+    '柴犬': 'dog',
+    'shibadog': 'dog',
+    'shiba': 'dog',
+    '河狸': 'beaver',
+    'beaver': 'beaver'
+};
+
 /**
  * Simple Audio Engine using Web Audio API
  */
@@ -98,12 +109,19 @@ class SoundEngine {
         // Play Voice only in Mode 0 (All)
         if (this.soundMode !== 0) return;
 
-        const personaKey = persona.toLowerCase().split(' ')[0];
+        const personaKeyRaw = persona.toLowerCase().split(' ')[0];
+        const personaKey = PERSONA_VOICE_MAP[personaKeyRaw] || personaKeyRaw;
+
         const audioPath = `src/assets/mp3/pass_${personaKey}.mp3`;
 
         const audio = new Audio(audioPath);
         audio.play().catch(err => {
             console.warn(`Failed to play character-specific Pass (${audioPath}):`, err);
+            const fallbackPath = `src/assets/mp3/pass_default.mp3`;
+            const fallbackAudio = new Audio(fallbackPath);
+            fallbackAudio.play().catch(fallbackErr => {
+                console.warn(`Failed to play default Pass (${fallbackPath}):`, fallbackErr);
+            });
         });
     }
 
@@ -130,12 +148,19 @@ class SoundEngine {
         // Play Voice only in Mode 0 (All)
         if (this.soundMode !== 0) return;
         
-        const personaKey = persona.toLowerCase().split(' ')[0];
+        const personaKeyRaw = persona.toLowerCase().split(' ')[0];
+        const personaKey = PERSONA_VOICE_MAP[personaKeyRaw] || personaKeyRaw;
+
         const audioPath = `src/assets/mp3/la_${personaKey}.mp3`;
         
         const audio = new Audio(audioPath);
         audio.play().catch(err => {
             console.warn(`Failed to play character-specific La (${audioPath}):`, err);
+            const fallbackPath = `src/assets/mp3/la_default.mp3`;
+            const fallbackAudio = new Audio(fallbackPath);
+            fallbackAudio.play().catch(fallbackErr => {
+                console.warn(`Failed to play default La (${fallbackPath}):`, fallbackErr);
+            });
         });
     }
 }

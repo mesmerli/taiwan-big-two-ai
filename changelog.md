@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.52] - 2026-06-17
+
+### Added
+- **Microsoft Store Links**: Integrated Microsoft Store links ("or Microsoft Store" / "或微軟商店") in the copyright/sponsorship section of both the "About" page and "Rules" modal tab.
+
+### Fixed
+- **Modal Viewport Responsiveness**: Fixed the layout issue where the Game Rules modal height exceeded the screen height on mobile/small viewports by setting `max-height: 90vh` and enabling inner vertical scrolling for active tab contents. Reduced modal padding on mobile layout.
+- **Post-Game Review Avatars**: Fixed the bug where animal players' dynamic avatars (Panda, Orange Cat, Shiba Dog, Beaver) were wrongly displayed as static human avatars on the post-game review panel. Prioritized exporting the active dynamic avatar canvas frame with a fallback to crop sprite sheet grids.
+- **Removed High-Tension Shaking & Glowing Visuals**: Removed the high-tension avatar shaking and red-glow effects to maintain UI clean and distraction-free when player tension is high.
+
 ## [1.5.51] - 2026-06-11
 
 ### Added

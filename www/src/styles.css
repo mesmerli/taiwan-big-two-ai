@@ -1184,6 +1184,17 @@ body {
 
 .info-modal-content {
     max-width: 650px; /* Slightly wider for tabs */
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.info-modal-content .tab-content.active {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+    -webkit-overflow-scrolling: touch;
+    padding-right: 8px; /* Extra spacing for scrollbar */
 }
 
 .keyboard-sections {
@@ -1291,6 +1302,20 @@ body {
 /* ==========================================
    📱 MOBILE ERGONOMIC VERTICAL STACK LAYOUT
    ========================================== */
+.mobile-layout .modal-content {
+    padding: 20px;
+    border-radius: 14px;
+}
+
+.mobile-layout .modal-content h2 {
+    margin-bottom: 10px;
+}
+
+.mobile-layout .rules-footer {
+    margin-top: 15px;
+    padding-top: 10px;
+}
+
 .mobile-layout #game-container {
     display: flex;
     flex-direction: column;

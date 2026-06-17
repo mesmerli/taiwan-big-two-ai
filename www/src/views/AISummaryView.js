@@ -407,12 +407,31 @@ export class AISummaryView {
             cardDiv.className = cardClasses;
 
             let avatarImgSrc = 'src/assets/avatars/avatar_you.png';
-            if (idx === 1) avatarImgSrc = 'src/assets/avatars/avatar_alex.png';
-            if (idx === 2) avatarImgSrc = 'src/assets/avatars/avatar_bella.png';
-            if (idx === 3) {
-                const p4 = document.getElementById('player-4');
-                const p4Img = p4 ? p4.querySelector('.avatar img') : null;
-                avatarImgSrc = p4Img ? p4Img.getAttribute('src') : 'src/assets/avatars/avatar_diana.png';
+            if (window.activeDynamicAvatars && window.activeDynamicAvatars[idx]) {
+                try {
+                    avatarImgSrc = window.activeDynamicAvatars[idx].exportCurrentAvatar();
+                } catch (e) {
+                    console.warn("Failed to export dynamic avatar:", e);
+                }
+            } else if (window.AI) {
+                const char = window.AI.getCharacter(idx);
+                if (char && char.avatar) {
+                    avatarImgSrc = char.avatar;
+                } else {
+                    if (idx === 1) avatarImgSrc = 'src/assets/avatars/avatar_alex.png';
+                    else if (idx === 2) avatarImgSrc = 'src/assets/avatars/avatar_bella.png';
+                    else if (idx === 3) avatarImgSrc = 'src/assets/avatars/avatar_diana.png';
+                }
+            } else {
+                if (idx === 1) avatarImgSrc = 'src/assets/avatars/avatar_alex.png';
+                else if (idx === 2) avatarImgSrc = 'src/assets/avatars/avatar_bella.png';
+                else if (idx === 3) avatarImgSrc = 'src/assets/avatars/avatar_diana.png';
+            }
+
+            let avatarHtml = `<img src="${avatarImgSrc}" class="w-full h-full object-cover">`;
+            if (avatarImgSrc && avatarImgSrc.includes('_sprite.png')) {
+                // Display the first frame of the sprite sheet if it couldn't be exported
+                avatarHtml = `<div style="width: 100%; height: 100%; background-image: url('${avatarImgSrc}'); background-size: 400% 200%; background-position: 0% 0%; background-repeat: no-repeat;"></div>`;
             }
 
             const winText = t('winnerLabel');
@@ -448,7 +467,7 @@ export class AISummaryView {
                 <div class="flex items-center gap-2 justify-between w-full">
                     <div class="flex items-center gap-2 truncate flex-1">
                         <div class="w-7 h-7 rounded-full bg-slate-800 border border-slate-700 overflow-hidden flex-shrink-0 flex items-center justify-center">
-                            <img src="${avatarImgSrc}" class="w-full h-full object-cover">
+                            ${avatarHtml}
                         </div>
                         <div class="truncate">
                             <div class="font-bold text-slate-200 truncate">${name}</div>
