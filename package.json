@@ -79,7 +79,7 @@
   "devDependencies": {
     "@capacitor/android": "^8.3.4",
     "@capacitor/cli": "^8.3.4",
-    "@microsoft/winappcli": "latest",
+
     "@tauri-apps/cli": "^2.11.2",
     "cross-env": "^10.1.0",
     "electron": "^30.0.0",
@@ -92,6 +92,9 @@
   },
   "dependencies": {
     "@capacitor/core": "^8.3.4"
+  },
+  "optionalDependencies": {
+    "@microsoft/winappcli": "latest"
   },
   "buildTarget": "GITHUB"
 }
